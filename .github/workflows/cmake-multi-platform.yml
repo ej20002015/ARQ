@@ -73,7 +73,7 @@ jobs:
       id: check
       shell: bash
       run: |
-        ls -lart ${{ steps.strings.outputs.build-output-dir }}
+        ls -lart ${{ github.workspace }}/.build; dir ${{ github.workspace }}\.build
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
