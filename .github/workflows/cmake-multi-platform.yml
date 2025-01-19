@@ -72,8 +72,9 @@ jobs:
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
       id: check
       shell: bash
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: |
-        ls -lart ${{ github.workspace }}/.build; dir ${{ github.workspace }}\.build
+        ls -lart
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
