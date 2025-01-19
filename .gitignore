@@ -1,0 +1,5 @@
+# CMake output
+.build
+
+# VSCode
+.vs
