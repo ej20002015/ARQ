@@ -172,11 +172,11 @@ function(TMQ_define_dynalib_bench DYNALIB_NAME)
                    ${SOURCES}
                    ${HEADERS})
 
-    target_link_libraries(${BENCH_TARGET_NAME} ${DYNALIB_NAME} benchmark::benchmark)
     if(WIN32)
+        target_link_libraries(${BENCH_TARGET_NAME} ${DYNALIB_NAME} benchmark::benchmark)
         target_compile_definitions(${BENCH_TARGET_NAME} PRIVATE _CRT_SECURE_NO_WARNINGS)
     else()
-        target_link_libraries(${BENCH_TARGET_NAME} PRIVATE pthread)  # Only needed on Linux
+        target_link_libraries(${BENCH_TARGET_NAME} ${DYNALIB_NAME} benchmark::benchmark pthread)
     endif()
 
     TMQ_add_lib_include_dir(${BENCH_TARGET_NAME} ${DYNALIB_NAME})
