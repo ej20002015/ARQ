@@ -3,6 +3,7 @@
 #include <exception>
 #include <format>
 #include <string>
+#include <cstdint>
 
 namespace TMQ
 {
@@ -25,7 +26,7 @@ class TMQException : public std::exception
 		m_str = std::format( "TMQException: [{}]: {}", static_cast<uint16_t>( m_code ), str );
 	}
 
-	char const* what() const override { return m_str.c_str(); }
+	char const* what() const noexcept override { return m_str.c_str(); }
 
 	[[nodiscard]] ErrCode code() const noexcept { return m_code; }
 
