@@ -1,0 +1,2 @@
+TMQ_define_dynalib(TMQUtils)
+TMQ_define_dynalib_tests(TMQUtils)
