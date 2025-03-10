@@ -9,17 +9,17 @@ namespace MktType
 
 struct Base
 {
-	std::string user;
-	std::chrono::system_clock::time_point lastUpdated;
+	std::string lastUpdatedBy;
+	std::chrono::system_clock::time_point lastUpdatedTm;
 
 protected:
 	Base()
-		: lastUpdated( std::chrono::system_clock::now() )
+		: lastUpdatedTm( std::chrono::system_clock::now() )
 	{
 	}
 
 	Base( const std::string& u )
-		: user( u ), lastUpdated( std::chrono::system_clock::now() )
+		: lastUpdatedBy( u ), lastUpdatedTm( std::chrono::system_clock::now() )
 	{
 	}
 };

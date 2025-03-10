@@ -1,2 +1,7 @@
 TMQ_define_dynalib(TMQCore)
+TMQ_add_lib_include_dir(TMQCore TMQUtils)
+append_link_libraries(TMQCore TMQUtils)
+
 TMQ_define_dynalib_tests(TMQCore)
+TMQ_add_lib_include_dir(TMQCore TMQUtils)
+append_link_libraries(TMQCore TMQUtils)

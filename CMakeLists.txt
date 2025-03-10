@@ -151,7 +151,7 @@ function(TMQ_define_dynalib_tests DYNALIB_NAME)
                    ${SOURCES}
                    ${HEADERS})
 
-    target_link_libraries(${TESTS_TARGET_NAME} ${DYNALIB_NAME} GTest::gtest_main)
+    target_link_libraries(${TESTS_TARGET_NAME} ${DYNALIB_NAME} GTest::gtest_main GTest::gmock_main)
     TMQ_add_lib_include_dir(${TESTS_TARGET_NAME} ${DYNALIB_NAME})
 
     set_target_properties(${TESTS_TARGET_NAME} PROPERTIES FOLDER "tests")

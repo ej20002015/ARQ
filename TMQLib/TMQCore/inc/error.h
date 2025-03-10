@@ -16,6 +16,8 @@ enum class ErrCode : uint16_t // TODO: Make a generic enum generator
 	OUT_OF_BOUNDS,
 };
 
+// TODO: Change to the OmegaException class from cppcon talk
+
 class TMQException : public std::exception
 {
   public:
