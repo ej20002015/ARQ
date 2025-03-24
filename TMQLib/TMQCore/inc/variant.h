@@ -1,8 +1,8 @@
 #pragma once
+#include <TMQCore/dll.h>
 
-#include "dll.h"
-#include <TMQCore/core.h>
-#include <TMQCore/error.h>
+#include <TMQUtils/core.h>
+#include <TMQUtils/error.h>
 
 #include <chrono>
 #include <optional>
@@ -30,7 +30,7 @@ public:
 	[[nodiscard]] const Variant& at( const uint32_t row, const uint32_t col = 0 ) const
 	{
 		if( row >= m_nRows || col >= m_nCols )
-			throw TMQException( "VariantArr: Out of bounds access", ErrCode::OUT_OF_BOUNDS );
+			throw TMQException( "VariantArr: Out of bounds access" );
 
 		return m_data[row * m_nCols + col]; // Row-major ordering
 	}
@@ -121,7 +121,7 @@ public:
 		if( std::holds_alternative<T>( m_val ) )
 			return std::get<T>( m_val );
 		else
-			throw TMQException( "Variant: Type mismatch", ErrCode::INVALID_INPUT );
+			throw TMQException( "Variant: Type mismatch" );
 	}
 
 	// Strict type-safe accessor

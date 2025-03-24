@@ -1,4 +1,4 @@
-#include "dll.h"
+#include <TMQMessaging/dll.h>
 
 namespace TMQ
 {

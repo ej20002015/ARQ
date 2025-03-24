@@ -61,63 +61,83 @@ set_target_properties( benchmark_main PROPERTIES FOLDER "vendor/gbenchmark")
 #     )
 # endfunction()
 
-function(add_namespaced_include_directory TARGET NAMESPACE INCLUDE_DIRECTORY_PATH)
-    # Get the build directory (this will be the one passed via the -B flag)
-    set(BUILD_DIR ${CMAKE_BINARY_DIR})
-    set(NAMESPACED_INCLUDES_DIR "${BUILD_DIR}/namespaced_includes")
+set(MASTER_INC_DIR "${CMAKE_BINARY_DIR}/inc")
 
-    # Create "namespaced_includes" directory if it doesn't exist
-    if (NOT EXISTS ${NAMESPACED_INCLUDES_DIR})
-        file(MAKE_DIRECTORY ${NAMESPACED_INCLUDES_DIR})
+# Function to create symlinks in the 'inc/' directory for all TMQ* libraries' 'inc' directories
+function(create_master_inc_dir)
+    set(INC_DIR ${MASTER_INC_DIR})
+    if (NOT EXISTS ${INC_DIR})
+        file(MAKE_DIRECTORY ${INC_DIR})
     endif()
 
-    # Create the subdirectory for the target if it doesn't exist
-    set(TARGET_DIR "${NAMESPACED_INCLUDES_DIR}/${TARGET}")
-    if (NOT EXISTS ${TARGET_DIR})
-        file(MAKE_DIRECTORY ${TARGET_DIR})
-    endif()
+    # file(GLOB_RECURSE TMQ_LIBS "${CMAKE_SOURCE_DIR}/TMQLib/*")
 
-    set(NAMESPACE_DIR "${TARGET_DIR}/${NAMESPACE}")
+    # message("Checking directories and files found by GLOB_RECURSE:")
+    # foreach(FILE_PATH IN LISTS TMQ_LIBS)
+    #     message("  - ${FILE_PATH}")
+    # endforeach()
 
-    # Convert paths to native format (for Windows, this uses backslashes)
-    #cmake_path(${INCLUDE_DIRECTORY_PATH} TO_NATIVE_PATH ${INCLUDE_DIRECTORY_PATH})
-    cmake_path(CONVERT "${INCLUDE_DIRECTORY_PATH}" TO_NATIVE_PATH_LIST INCLUDE_DIRECTORY_PATH)
-    cmake_path(CONVERT "${NAMESPACE_DIR}" TO_NATIVE_PATH_LIST NAMESPACE_DIR)
+    # # Filter only directories that contain 'inc' directory
+    # set(TMQ_INC_DIRS)
+    # foreach(DIR IN LISTS TMQ_LIBS)
+    #     if(EXISTS "${DIR}/inc")
+    #         list(APPEND TMQ_INC_DIRS "${DIR}/inc")
+    #     endif()
+    # endforeach()
 
-    if (NOT EXISTS ${NAMESPACE_DIR})
-        # Define the symlink command based on the platform
-        if(WIN32)
-            # Windows uses cmd's mklink for creating symlinks
-            set(SYMLINK_COMMAND "cmd" "/c" "mklink" "/D" "${NAMESPACE_DIR}" "${INCLUDE_DIRECTORY_PATH}")
-        else()
-            # Unix-like systems (Linux, macOS) use 'ln -s' for symlinks
-            set(SYMLINK_COMMAND "ln" "-s" "${INCLUDE_DIRECTORY_PATH}" "${NAMESPACE_DIR}")
+    # message("Found the following 'inc' directories:")
+    # foreach(INC_DIR_PATH IN LISTS TMQ_INC_DIRS)
+    #     message("  - ${INC_DIR_PATH}")
+    # endforeach()
+
+    file(GLOB_RECURSE TMQ_LIBS_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/TMQLib/TMQ*/inc")
+
+    # Filter only directories that contain 'inc' directory
+    set(TMQ_INC_DIRS)
+    foreach(DIR IN LISTS TMQ_LIBS_DIRS)
+        if(DIR MATCHES "inc$")
+            list(APPEND TMQ_INC_DIRS ${DIR})
         endif()
+    endforeach()
 
-        message("${SYMLINK_COMMAND}")
+    foreach(INC_DIR_PATH IN LISTS TMQ_INC_DIRS)
+        string(REGEX MATCH "TMQLib/([^/]+)/inc" LIBRARY_NAME ${INC_DIR_PATH})
+        string(REGEX REPLACE "TMQLib/([^/]+)/inc" "\\1" LIBRARY_NAME ${LIBRARY_NAME})
 
-        # Execute the symlink creation command
-        execute_process(
-            COMMAND ${SYMLINK_COMMAND}
-            RESULT_VARIABLE result
-            OUTPUT_QUIET
-        )
-        if(result)
-            message(WARNING "Failed to create symlink for: ${INCLUDE_DIRECTORY_PATH}")
+        # Define the symlink path in the root 'inc' directory
+        set(SYMLINK_PATH "${INC_DIR}/${LIBRARY_NAME}")
+
+        # Convert paths to native format (for Windows, this uses backslashes)
+        cmake_path(CONVERT "${INC_DIR_PATH}" TO_NATIVE_PATH_LIST INC_DIR_PATH)
+        cmake_path(CONVERT "${SYMLINK_PATH}" TO_NATIVE_PATH_LIST SYMLINK_PATH)
+
+        if (NOT EXISTS ${SYMLINK_PATH})
+            message("Creating symlink from ${INC_DIR_PATH} to ${SYMLINK_PATH}")
+
+            if(WIN32)
+                # For Windows, use mklink (note: mklink needs administrative privileges)
+                set(SYMLINK_COMMAND "cmd" "/c" "mklink" "/D" "${SYMLINK_PATH}" "${INC_DIR_PATH}")
+            else()
+                # For Unix-based systems, use 'ln -s' to create symlink
+                set(SYMLINK_COMMAND "ln" "-s" "${INC_DIR_PATH}" "${SYMLINK_PATH}")
+            endif()
+
+            message("${SYMLINK_COMMAND}")
+
+            # Execute the symlink creation command
+            execute_process(
+                COMMAND ${SYMLINK_COMMAND}
+                RESULT_VARIABLE result
+                OUTPUT_QUIET
+            )
+            if(result)
+                message(WARNING "Failed to create symlink for: ${INCLUDE_DIRECTORY_PATH}")
+            endif()
         endif()
-    endif()
-
-    # Add the target's main include directory to the target's include directories
-    target_include_directories(${TARGET} PUBLIC "${TARGET_DIR}")
+    endforeach()
 endfunction()
 
-function(TMQ_add_lib_include_dir TARGET LIBNAME)
-    # Define the include directory path based on the libname
-    set(INCLUDE_DIRECTORY_PATH "${CMAKE_SOURCE_DIR}/TMQLib/${LIBNAME}/inc")
-
-    # Call the previously defined ADD_NAMESPACED_INCLUDE_DIRECTORY function
-    ADD_NAMESPACED_INCLUDE_DIRECTORY(${TARGET} ${LIBNAME} ${INCLUDE_DIRECTORY_PATH})
-endfunction()
+create_master_inc_dir()
 
 function(TMQ_define_dynalib TARGET)
     file(GLOB SOURCES  "${CMAKE_SOURCE_DIR}/TMQLib/${TARGET}/src/*.cpp")
@@ -131,8 +151,7 @@ function(TMQ_define_dynalib TARGET)
                 ${INCLUDES})
 
     # Specify the library's include directories
-    target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-    TMQ_add_lib_include_dir(${TARGET} ${TARGET})
+    target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src ${MASTER_INC_DIR})
 
     target_compile_definitions(${TARGET} PRIVATE "${TARGET}_EXPORTS")
 
@@ -151,8 +170,8 @@ function(TMQ_define_dynalib_tests DYNALIB_NAME)
                    ${SOURCES}
                    ${HEADERS})
 
-    target_link_libraries(${TESTS_TARGET_NAME} ${DYNALIB_NAME} GTest::gtest_main GTest::gmock_main)
-    TMQ_add_lib_include_dir(${TESTS_TARGET_NAME} ${DYNALIB_NAME})
+    target_link_libraries(${TESTS_TARGET_NAME} PRIVATE ${DYNALIB_NAME} GTest::gtest_main GTest::gmock_main)
+    target_include_directories(${TESTS_TARGET_NAME} PRIVATE ${MASTER_INC_DIR})
 
     set_target_properties(${TESTS_TARGET_NAME} PROPERTIES FOLDER "tests")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
@@ -179,7 +198,7 @@ function(TMQ_define_dynalib_bench DYNALIB_NAME)
         target_link_libraries(${BENCH_TARGET_NAME} ${DYNALIB_NAME} benchmark::benchmark pthread)
     endif()
 
-    TMQ_add_lib_include_dir(${BENCH_TARGET_NAME} ${DYNALIB_NAME})
+    target_include_directories(${BENCH_TARGET_NAME} PRIVATE ${MASTER_INC_DIR})
 
     set_target_properties(${BENCH_TARGET_NAME} PROPERTIES FOLDER "benchmarks")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
@@ -223,7 +242,7 @@ function(append_include_directories TARGET NEW_INCLUDES)
     target_include_directories(${TARGET} PUBLIC ${CURRENT_INCLUDES})
 endfunction()
 
-function(append_link_libraries TARGET NEW_LIBRARIES)
+function(append_link_libraries TARGET)
     # Get the current linked libraries for the target (both private and public)
     get_target_property(CURRENT_LIBRARIES ${TARGET} LINK_LIBRARIES)
 
@@ -233,30 +252,26 @@ function(append_link_libraries TARGET NEW_LIBRARIES)
     endif()
 
     # Append the new libraries to the existing list
-    list(APPEND CURRENT_LIBRARIES ${NEW_LIBRARIES})
+    foreach(NEW_LIBRARY IN ITEMS ${ARGN})
+        list(APPEND CURRENT_LIBRARIES ${NEW_LIBRARY})
+    endforeach()
 
     # Set the updated list of linked libraries back to the target
     target_link_libraries(${TARGET} PRIVATE ${CURRENT_LIBRARIES})
 endfunction()
 
-# Aeron set up
+# Aeron set up (TODO: Move to it's own TMQAeron project)
 
 set(CMAKE_FOLDER "vendor/aeron")
 add_subdirectory(vendor/aeron)
 unset(CMAKE_FOLDER)
-set(AERON_CLIENT_CPP_WRAPPER_SOURCE_PATH "${CMAKE_SOURCE_DIR}/vendor/aeron/aeron-client/src/main/cpp_wrapper")
-set(AERON_CLIENT_C_SOURCE_PATH "${CMAKE_SOURCE_DIR}/vendor/aeron/aeron-client/src/main/c")
+set(AERON_CLIENT_CPP_WRAPPER_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/aeron/aeron-client/src/main/cpp_wrapper")
+set(AERON_CLIENT_C_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/aeron/aeron-client/src/main/c")
 set(AERON_CLIENT_CPP_WRAPPER_LINK_LIB "aeron_client_wrapper")
 set(AERON_CLIENT_C_LINK_LIB "aeron")
 add_definitions(-DCLIENT_SHARED)
 
-# Because OUTPUT option may not use generator expressions,
-# extract name of file from target's properties.
-# get_target_property(AERON_BASENAME aeron OUTPUT_NAME)
-# get_target_property(AERON_SUFFIX aeron SUFFIX)
-set(AERON_BASENAME "aeron")
-set(AERON_SUFFIX ".dll")
-set(AERON_FILENAME ${AERON_BASENAME}${AERON_SUFFIX})
+set(AERON_FILENAME "aeron.dll")
 # make copied file be dependent from one which is build.
 # Note, that DEPENDS here creates dependencies both from the target
 # and from the file it creates.
@@ -271,6 +286,15 @@ add_custom_target(copy_aeron_dll ALL
     DEPENDS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/${AERON_FILENAME}
 )
 
+# ClickHouse setup
+
+set(CMAKE_FOLDER "vendor/clickhouse-cpp")
+add_subdirectory(vendor/clickhouse-cpp)
+unset(CMAKE_FOLDER)
+set(CLICKHOUSE_CPP_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp")
+set(CLICKHOUSE_CPP_CONTRIB_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp/contrib/absl")
+set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
+
 set_target_properties(copy_aeron_dll PROPERTIES FOLDER "custom_targets")
 
 # Add TMQLib subdirectories
@@ -279,7 +303,10 @@ add_subdirectory(TMQLib/TMQUtils)
 add_subdirectory(TMQLib/TMQMarket)
 add_subdirectory(TMQLib/TMQSolace)
 add_subdirectory(TMQLib/TMQMessaging)
+add_subdirectory(TMQLib/TMQClickHouse)
+add_subdirectory(TMQLib/TMQSerialisation)
 
 # Add tools subdirectories
 add_subdirectory(tools/aeron_publisher)
 add_subdirectory(tools/aeron_subscriber)
+add_subdirectory(tools/clickhouse_test)

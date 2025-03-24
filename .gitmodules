@@ -1,3 +1,6 @@
 [submodule "vendor/aeron"]
 	path = vendor/aeron
 	url = git@github.com:aeron-io/aeron.git
+[submodule "vendor/clickhouse-cpp"]
+	path = vendor/clickhouse-cpp
+	url = https://github.com/ClickHouse/clickhouse-cpp.git

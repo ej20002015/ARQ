@@ -62,10 +62,9 @@ TEST( VariantTests, MutatingValues )
 // Test Exception Storage
 TEST( VariantTests, ExceptionHandling )
 {
-    TMQException ex( "Error occurred", ErrCode::INVALID_INPUT );
+    TMQException ex( "Error occurred" );
     Variant exVar = ex;
     EXPECT_TRUE( exVar.is<TMQException>() );
-    EXPECT_EQ( exVar.as<TMQException>().code(), ErrCode::INVALID_INPUT );
 }
 
 // Test Accessing Incorrect Types

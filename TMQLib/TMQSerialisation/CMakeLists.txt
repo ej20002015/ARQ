@@ -1,0 +1,2 @@
+TMQ_define_dynalib(TMQSerialisation)
+TMQ_define_dynalib_tests(TMQSerialisation)

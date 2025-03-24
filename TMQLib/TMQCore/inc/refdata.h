@@ -1,5 +1,10 @@
+#pragma once
+
 #include <TMQUtils/hashers.h>
 #include <TMQUtils/buffer.h>
+#include <TMQCore/refdata_entities.h>
+
+#include "refdata_source.h"
 
 #include <string>
 #include <chrono>
@@ -8,75 +13,11 @@
 #include <shared_mutex>
 #include <functional>
 
-// TEST
-#include <iostream>
-
 namespace TMQ
 {
 
-struct RDEntity
-{
-	std::string ID;
-	std::chrono::system_clock::time_point lastUpdated;
-};
-
-template<typename T>
-concept c_RDEntity = std::is_base_of_v<RDEntity, T>;
-
-template<c_RDEntity T>
-class RDEntityTraits
-{
-public:
-	static consteval const char* const schemaName() { static_assert( false ); }
-};
-
-struct User : public RDEntity
-{
-	std::string firstname;
-	std::string surname;
-	std::string desk;
-	uint32_t age;
-};
-
-template<>
-class RDEntityTraits<User>
-{
-public:
-	static consteval const char* const schemaName() { return "Users"; }
-};
-
-class RefDataSource
-{
-public:
-	virtual ~RefDataSource() = default;
-
-	virtual std::vector<OwningBuffer> fetchLatest() = 0;
-	virtual std::vector<OwningBuffer> fetchAsOf( const std::chrono::system_clock::time_point ts ) = 0;
-};
-
-class TSDBRefDataSource : public RefDataSource
-{
-public:
-	std::vector<OwningBuffer> fetchLatest()
-	{
-		return std::vector<OwningBuffer>();
-	}
-
-	std::vector<OwningBuffer> fetchAsOf( const std::chrono::system_clock::time_point ts )
-	{
-		return std::vector<OwningBuffer>();
-	}
-};
-
 template<c_RDEntity T>
 using RDDataMap = std::unordered_map<std::string, T, TransparentStringHash, std::equal_to<>>;
-
-// TODO: Have some way of setting this
-static std::shared_ptr<RefDataSource> getGlobalRefDataSource()
-{
-	static auto globalSource = std::make_shared<TSDBRefDataSource>();
-	return globalSource;
-}
 
 template<c_RDEntity T>
 class BaseRDCache
@@ -96,34 +37,6 @@ protected:
 	std::shared_ptr<RefDataSource> m_rdSource;
 };
 
-template <c_RDEntity T>
-class TypedRefDataSource
-{
-public:
-	static std::vector<T> fetchLatest( RefDataSource& source )
-	{
-		std::vector<OwningBuffer> rawData = source.fetchLatest();
-		return deserialize<T>( rawData );
-	}
-
-	static std::vector<T> fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
-	{
-		std::vector<OwningBuffer> rawData = source.fetchAsOf( ts );
-		return deserialize<T>( rawData );
-	}
-
-private:
-	static std::vector<T> deserialize( const std::vector<OwningBuffer>& rawData )
-	{
-		std::vector<T> result;
-		for( const auto& blob : rawData )
-		{
-			//TODO
-		}
-		return result;
-	}
-};
-
 template<c_RDEntity T>
 class LiveRDCache : public BaseRDCache<T>
 {
@@ -132,17 +45,20 @@ public:
 	using BaseRDCache<T>::m_data;
 	using BaseRDCache<T>::m_rdSource;
 
-	LiveRDCache();
+	LiveRDCache()
+	{
+		reload();
+	}
 
 	void reload()
 	{
 		std::unique_lock<std::shared_mutex> lock( m_mutex );
 
-		std::vector<T> records = TypedRefDataSource<T>::fetchLatest( *m_rdSource );
+		std::vector<T> records = TypedRDSource<T>::fetchLatest( *m_rdSource );
 		m_data = std::make_shared<RDDataMap<T>>();
 		for( const auto record : records )
 		{
-			m_data->insert( std::make_pair( record.ID, record ) );
+			m_data->insert( std::make_pair( RDEntityTraits<T>::getID( record ), record ) );
 		}
 	}
 
@@ -155,13 +71,6 @@ public:
 private:
 	mutable std::shared_mutex m_mutex;
 };
-
-template<c_RDEntity T>
-inline LiveRDCache<T>::LiveRDCache()
-{
-	this->m_data = std::make_shared<RDDataMap<T>>();
-	this->m_data->insert( std::make_pair( "Evan", User() ) );
-}
 
 template<c_RDEntity T>
 class LiveRDManager
@@ -204,14 +113,16 @@ public:
 	using BaseRDCache<T>::m_data;
 	using BaseRDCache<T>::m_rdSource;
 
-	HistoricRDCache( const std::chrono::system_clock::time_point ts );
+	HistoricRDCache( const std::chrono::system_clock::time_point ts )
+	{
+		std::vector<T> records = TypedRDSource<T>::fetchAsOf( *m_rdSource );
+		m_data = std::make_shared<RDDataMap<T>>();
+		for( const auto record : records )
+		{
+			m_data->insert( std::make_pair( RDEntityTraits<T>::getID( record ), record ) );
+		}
+	}
 };
-
-template<c_RDEntity T>
-inline HistoricRDCache<T>::HistoricRDCache( const std::chrono::system_clock::time_point ts )
-{
-	TypedRefDataSource<T>::fetchAsOf( *m_rdSource );
-}
 
 template<c_RDEntity T>
 class RefData
@@ -249,7 +160,10 @@ public:
 private:
 	void reload()
 	{
-		m_data = m_rdCache->getData();
+		if( m_rdCache )
+			m_data = m_rdCache->getData();
+		else
+			m_data = LiveRDManager<T>::get().getData();
 	}
 
 private:

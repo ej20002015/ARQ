@@ -6,29 +6,29 @@
 namespace TMQ
 {
 
-struct TestRefDataEntity : public RDEntity
-{
-	std::string x;
-	uint32_t y;
-};
-
-template<>
-static std::vector<TestRefDataEntity> TypedRefDataSource<TestRefDataEntity>::fetchLatest( RefDataSource& source )
-{
-    return {
-        { "bob", std::chrono::system_clock::now(), "bob", 3 }
-    };
-}
-
-template<>
-static std::vector<TestRefDataEntity> TypedRefDataSource<TestRefDataEntity>::fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
-{
-    return {
-        { "bob", std::chrono::system_clock::now(), "bob", 3 }
-    };
-}
-
-}
+//struct TestRefDataEntity : public RDEntity
+//{
+//	std::string x;
+//	uint32_t y;
+//};
+//
+//template<>
+//static std::vector<TestRefDataEntity> TypedRefDataSource<TestRefDataEntity>::fetchLatest( RefDataSource& source )
+//{
+//    return {
+//        { "bob", std::chrono::system_clock::now(), "bob", 3 }
+//    };
+//}
+//
+//template<>
+//static std::vector<TestRefDataEntity> TypedRefDataSource<TestRefDataEntity>::fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
+//{
+//    return {
+//        { "bob", std::chrono::system_clock::now(), "bob", 3 }
+//    };
+//}
+//
+//}
 
 using namespace TMQ;
 
@@ -44,11 +44,15 @@ public:
 
 TEST( RefDataTests, GeneralUse )
 {
-    LiveRDManager<TestRefDataEntity>::onReload();
+    int y = 0;
+}
 
-    RefData<TestRefDataEntity> rd;
-    auto tmp = rd.get( "bob" );
-    int x = 0;
+TEST( RefDataTests, TempUserTest )
+{
+    RefData<User> rd;
+    auto tmp = rd.get( "First0Last0" );
+}
+
 }
 
 //TEST( RefDataSourceTests, FetchLatestReturnsData )

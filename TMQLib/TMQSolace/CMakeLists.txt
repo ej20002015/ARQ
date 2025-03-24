@@ -1,4 +1,3 @@
 TMQ_define_dynalib(TMQSolace)
-TMQ_add_lib_include_dir(TMQSolace TMQUtils)
 
 TMQ_define_dynalib_tests(TMQSolace)
