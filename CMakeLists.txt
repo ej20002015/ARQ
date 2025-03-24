@@ -286,6 +286,8 @@ add_custom_target(copy_aeron_dll ALL
     DEPENDS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/${AERON_FILENAME}
 )
 
+set_target_properties(copy_aeron_dll PROPERTIES FOLDER "custom_targets")
+
 # ClickHouse setup
 
 set(CMAKE_FOLDER "vendor/clickhouse-cpp")
@@ -295,7 +297,13 @@ set(CLICKHOUSE_CPP_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp")
 set(CLICKHOUSE_CPP_CONTRIB_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp/contrib/absl")
 set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
 
-set_target_properties(copy_aeron_dll PROPERTIES FOLDER "custom_targets")
+# Flatbuffers setup
+
+set(CMAKE_FOLDER "vendor/flatbuffers")
+add_subdirectory(vendor/flatbuffers ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+unset(CMAKE_FOLDER)
+set(FLATBUFFERS_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/flatbuffers/include")
+set(FLATBUFFERS_LINK_LIB "flatbuffers")
 
 # Add TMQLib subdirectories
 add_subdirectory(TMQLib/TMQCore)

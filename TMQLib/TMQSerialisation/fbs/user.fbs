@@ -1,0 +1,14 @@
+namespace fbs;
+
+table User {
+    _lastUpdatedBy:string;
+    _lastUpdatedTm:ulong;
+    _enabled:bool;
+
+    firstname:string;
+	surname:string;
+	desk:string;
+    age:uint;
+}
+
+root_type User;
