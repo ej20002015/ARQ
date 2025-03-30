@@ -1,0 +1,9 @@
+- Clean up RefData and other APIs a little
+- Fix Linux build
+- Integration testing for TMQClickHouse?
+- Create DSH equivalent class and use in TMQClickHouse
+  - What should library dependencies look like in this case?
+- Create FXSpot trade class and valuation class?
+- Get it to a place where there is PV code
+- Create required mkt data structs
+- Hook up RefData into messaging service (both subscribed to reload, and publish to get others to reload)

@@ -1,9 +1,7 @@
 #pragma once
 
-#include <exception>
 #include <format>
 #include <string>
-#include <cstdint>
 #include <source_location>
 #include <ostream>
 // TODO: Get stackstraces on exception

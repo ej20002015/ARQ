@@ -317,4 +317,3 @@ add_subdirectory(TMQLib/TMQSerialisation)
 # Add tools subdirectories
 add_subdirectory(tools/aeron_publisher)
 add_subdirectory(tools/aeron_subscriber)
-add_subdirectory(tools/clickhouse_test)

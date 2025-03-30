@@ -16,7 +16,7 @@ class RefDataSource
 public:
 	struct FetchData
 	{
-		std::chrono::system_clock::time_point lastUpdatedTm;
+		std::chrono::system_clock::time_point lastUpdatedTs;
 		std::string lastUpdatedBy;
 		std::string blob;
 	};
@@ -85,7 +85,7 @@ private:
 		for( const auto& resRow : fetchRes )
 		{
 			result.emplace_back( TMQ::deserialise<T>( resRow.blob ) );
-			result.back()._lastUpdatedTm = resRow.lastUpdatedTm;
+			result.back()._lastUpdatedTs = resRow.lastUpdatedTs;
 			result.back()._lastUpdatedBy = resRow.lastUpdatedBy;
 			result.back()._active = true; // If returned from fetch then must be an active record
 		}

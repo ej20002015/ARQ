@@ -1,7 +1,6 @@
 #pragma once
 
 #include <TMQUtils/hashers.h>
-#include <TMQUtils/buffer.h>
 #include <TMQCore/refdata_entities.h>
 
 #include "refdata_source.h"
@@ -27,6 +26,8 @@ public:
 
 	virtual std::weak_ptr<RDDataMap<T>> getData() const { return m_data; }
 
+	virtual void reload() = 0;
+
 protected:
 	BaseRDCache( const std::shared_ptr<RefDataSource>& source = nullptr )
 		: m_rdSource( source ? source : getGlobalRefDataSource() )
@@ -51,16 +52,14 @@ public:
 		reload();
 	}
 
-	void reload()
+	void reload() override
 	{
 		std::unique_lock<std::shared_mutex> lock( m_mutex );
 
 		std::vector<T> records = TypedRDSource<T>::fetchLatest( *m_rdSource );
 		m_data = std::make_shared<RDDataMap<T>>();
 		for( const auto record : records )
-		{
 			m_data->insert( std::make_pair( RDEntityTraits<T>::getID( record ), record ) );
-		}
 	}
 
 	std::weak_ptr<RDDataMap<T>> getData() const override
@@ -77,9 +76,9 @@ template<c_RDEntity T>
 class LiveRDManager
 {
 public:
-	static LiveRDCache<T>& get()
+	static std::shared_ptr<LiveRDCache<T>> get()
 	{
-		static LiveRDCache<T> inst;
+		static auto inst = std::make_shared<LiveRDCache<T>>();
 		return inst;
 	}
 
@@ -120,10 +119,10 @@ public:
 		std::vector<T> records = TypedRDSource<T>::fetchAsOf( *m_rdSource );
 		m_data = std::make_shared<RDDataMap<T>>();
 		for( const auto record : records )
-		{
 			m_data->insert( std::make_pair( RDEntityTraits<T>::getID( record ), record ) );
-		}
 	}
+
+	void reload() override {}
 };
 
 template<c_RDEntity T>
@@ -131,7 +130,7 @@ class RefData
 {
 public:
 	RefData()
-		: m_dataPtr( LiveRDManager<T>::get().getData() )
+		: m_dataPtr( LiveRDManager<T>::get()->getData() )
 	{}
 
 	RefData( const std::chrono::system_clock::time_point ts )
@@ -165,7 +164,7 @@ private:
 		if( m_rdCache )
 			m_dataPtr = m_rdCache->getData();
 		else
-			m_dataPtr = LiveRDManager<T>::get().getData();
+			m_dataPtr = LiveRDManager<T>::get()->getData();
 	}
 
 private:
@@ -193,17 +192,20 @@ public:
 	{}
 
 	template<c_RDEntity T>
-	bool insert( std::vector<T>&& data )
+	bool insert( std::vector<T>&& data, const std::shared_ptr<BaseRDCache<T>>& rdCache = nullptr )
 	{
-		if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH )
-			LiveRDManager<T>::onReload();
 		if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH || m_staleCheck == StaleCheck::FROM_LIVERD )
 		{
+			const std::shared_ptr<BaseRDCache<T>> rdCacheRef = rdCache ? rdCache : LiveRDManager<T>::get();
+
+			if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH )
+				rdCacheRef->reload();
+
 			for( const T& dataItem : data )
 			{
-				RefData<T> rd;
+				RefData<T> rd( rdCacheRef );
 				const auto cachedData = rd.get( RDEntityTraits<T>::getID( dataItem ) );
-				if( cachedData && cachedData->get()._lastUpdatedTm > dataItem._lastUpdatedTm )
+				if( cachedData && cachedData->get()._lastUpdatedTs > dataItem._lastUpdatedTs )
 					return false;
 			}
 		}
@@ -213,9 +215,9 @@ public:
 	}
 
 	template<c_RDEntity T>
-	bool insert( T&& data )
+	bool insert( T&& data, const std::shared_ptr<BaseRDCache<T>> rdCache = nullptr )
 	{
-		return insert( std::vector<T>{ std::move( data ) } );
+		return insert( std::vector<T>{ std::move( data ) }, rdCache );
 	}
 
 private:

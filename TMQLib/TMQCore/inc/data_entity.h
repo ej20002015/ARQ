@@ -8,7 +8,7 @@ namespace TMQ
 
 struct DataEntity
 {
-	std::chrono::system_clock::time_point _lastUpdatedTm;
+	std::chrono::system_clock::time_point _lastUpdatedTs;
 	std::string _lastUpdatedBy;
 };
 

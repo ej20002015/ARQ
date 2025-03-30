@@ -9,9 +9,6 @@ TMQ::User createTestUser()
     user.surname = "Doe";
     user.desk = "A1";
     user.age = 30;
-    user._lastUpdatedBy = "admin";
-    user._lastUpdatedTm = std::chrono::system_clock::now();
-    user._active = true;
     return user;
 }
 
@@ -37,6 +34,4 @@ TEST( SerRefdataEntitiesTest, DeserialiseUser )
     EXPECT_EQ( deserializedUser.surname, "Doe" );
     EXPECT_EQ( deserializedUser.desk, "A1" );
     EXPECT_EQ( deserializedUser.age, 30 );
-    EXPECT_EQ( deserializedUser._lastUpdatedBy, "admin" );
-    EXPECT_EQ( deserializedUser._active, true );
 }

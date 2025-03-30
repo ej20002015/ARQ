@@ -1,2 +1,0 @@
-TMQ_define_tools_exe(clickhouse_test)
-append_link_libraries(clickhouse_test TMQClickHouse)
