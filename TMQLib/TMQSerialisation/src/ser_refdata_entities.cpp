@@ -16,9 +16,6 @@ std::string serialise( User&& user )
 
 	const auto fbUser = fbs::CreateUserDirect( 
 		builder,
-		user._lastUpdatedBy.c_str(),
-		tpToLong( user._lastUpdatedTm ),
-		user._active,
 		user.firstname.c_str(),
 		user.surname.c_str(),
 		user.desk.c_str(),
@@ -39,9 +36,9 @@ User deserialise( const std::string_view buffer )
 	const fbs::User* const fbUserDeserialised = fbs::GetUser( bufPtr );
 
 	User user = {
-		fbUserDeserialised->_lastUpdatedBy()->c_str(),
-		longToTp( fbUserDeserialised->_lastUpdatedTm() ),
-		fbUserDeserialised->_active(),
+		std::chrono::system_clock::time_point(),
+		"",
+		false,
 		fbUserDeserialised->firstname()->c_str(),
 		fbUserDeserialised->surname()->c_str(),
 		fbUserDeserialised->desk()->c_str(),

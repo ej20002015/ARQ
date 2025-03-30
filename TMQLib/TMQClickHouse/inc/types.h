@@ -20,6 +20,12 @@ T extractColVal( std::shared_ptr<clickhouse::Column> column, size_t row )
     {
         return column->As<clickhouse::ColumnUInt64>()->At( row );
     }
+    else if constexpr( std::is_same_v<T, std::chrono::system_clock::time_point> )
+    {
+        return std::chrono::system_clock::time_point(
+            std::chrono::duration_cast<std::chrono::system_clock::duration>( std::chrono::nanoseconds( column->As<clickhouse::ColumnInt64>()->At( row ) ) )
+        );
+    }
     else if constexpr( std::is_same_v<T, int32_t> )
     {
         return column->As<clickhouse::ColumnInt32>()->At( row );

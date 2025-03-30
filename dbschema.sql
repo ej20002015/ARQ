@@ -2,10 +2,11 @@ CREATE DATABASE RefData;
 
 CREATE TABLE RefData.Users
 (
-    ID String,
-    Ts UInt64,
-    Active UInt8,
-    Blob String
+    `ID` String,
+    `LastUpdatedTs` Datetime64(9) DEFAULT now64(9),
+    `LastUpdatedBy` String,
+    `Active` UInt8,
+    `Blob` String
 )
-ENGINE = MergeTree()
-ORDER BY (ID, Ts);
+ENGINE = MergeTree
+ORDER BY (`ID`, `LastUpdatedTs`)

@@ -1,10 +1,6 @@
 namespace fbs;
 
 table User {
-    _lastUpdatedBy:string;
-    _lastUpdatedTm:ulong;
-    _active:bool;
-
     firstname:string;
 	surname:string;
 	desk:string;

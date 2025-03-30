@@ -144,10 +144,14 @@ void CHQuery::execute( const std::string_view query )
 
 // Explicit template instantiations for all possible QuerySchemas go here
 
+
 using StringSchema = QuerySchema<std::string>;
 template TMQClickHouse_API QueryResult<StringSchema> CHQuery::select<StringSchema>( const std::string_view query );
 
-using RDSchema = QuerySchema<std::string, std::chrono::system_clock::time_point, bool, std::string>;
-template TMQClickHouse_API void CHQuery::insert<RDSchema>( const std::string_view tableName, const std::vector<typename RDSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDSchema::TupleType>>& colNames );
+using RDFetchSchema = QuerySchema<std::chrono::system_clock::time_point, std::string, std::string>;
+template TMQClickHouse_API QueryResult<RDFetchSchema> CHQuery::select<RDFetchSchema>( const std::string_view query );
+
+using RDInsertSchema = QuerySchema<std::string, std::string, bool, std::string>;
+template TMQClickHouse_API void CHQuery::insert<RDInsertSchema>( const std::string_view tableName, const std::vector<typename RDInsertSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDInsertSchema::TupleType>>& colNames );
 
 }

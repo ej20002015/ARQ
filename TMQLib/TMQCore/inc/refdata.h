@@ -183,6 +183,7 @@ public:
 	template<c_RDEntity T>
 	void insert( std::vector<T>&& data )
 	{
+		// TODO: Check timestamps from LiveRDCache to see if data is stale - do a reload as well
 		TypedRDSource<T>::insert( *m_rdSource, std::move( data ) );
 	}
 
