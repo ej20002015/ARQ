@@ -45,8 +45,8 @@ public:
 TMQ::User createTestUser()
 {
     TMQ::User user;
-    user.firstname = "John";
-    user.surname = "Doe";
+    user.firstname = "Sally";
+    user.surname = "Jones";
     user.desk = "A1";
     user.age = 30;
     user._active = true;
@@ -76,6 +76,11 @@ TEST( RefDataTests, GeneralUse )
     //}
 
     //ins.insert<TMQ::User>( std::move( users ) );
+
+    TMQ::RefDBInserter ins( TMQ::RefDBInserter::StaleCheck::FROM_LIVERD_FORCE_REFRESH );
+
+    bool valid = ins.insert<TMQ::User>( createTestUser() );
+    std::cout << valid << std::endl;
 }
 
 TEST( RefDataTests, TempUserTest )

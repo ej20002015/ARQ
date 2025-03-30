@@ -176,25 +176,51 @@ private:
 class RefDBInserter
 {
 public:
-	RefDBInserter( const std::shared_ptr<RefDataSource>& source = nullptr )
+	enum class StaleCheck
+	{
+		NONE = 0,
+		FROM_LIVERD,
+		FROM_LIVERD_FORCE_REFRESH
+	};
+
+public:
+	RefDBInserter( const std::shared_ptr<RefDataSource>& source = nullptr, const StaleCheck staleCheck = StaleCheck::NONE )
 		: m_rdSource( source ? source : getGlobalRefDataSource() )
+		, m_staleCheck( staleCheck )
+	{}
+	RefDBInserter( const StaleCheck staleCheck )
+		: RefDBInserter( nullptr, staleCheck )
 	{}
 
 	template<c_RDEntity T>
-	void insert( std::vector<T>&& data )
+	bool insert( std::vector<T>&& data )
 	{
-		// TODO: Check timestamps from LiveRDCache to see if data is stale - do a reload as well
+		if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH )
+			LiveRDManager<T>::onReload();
+		if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH || m_staleCheck == StaleCheck::FROM_LIVERD )
+		{
+			for( const T& dataItem : data )
+			{
+				RefData<T> rd;
+				const auto cachedData = rd.get( RDEntityTraits<T>::getID( dataItem ) );
+				if( cachedData && cachedData->get()._lastUpdatedTm > dataItem._lastUpdatedTm )
+					return false;
+			}
+		}
+
 		TypedRDSource<T>::insert( *m_rdSource, std::move( data ) );
+		return true;
 	}
 
 	template<c_RDEntity T>
-	void insert( T&& data )
+	bool insert( T&& data )
 	{
-		TypedRDSource<T>::insert( *m_rdSource, std::vector<T>{ std::move( data ) } );
+		return insert( std::vector<T>{ std::move( data ) } );
 	}
 
 private:
 	std::shared_ptr<RefDataSource> m_rdSource;
+	StaleCheck m_staleCheck;
 };
 
 }
