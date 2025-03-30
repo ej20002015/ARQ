@@ -18,7 +18,7 @@ std::string serialise( User&& user )
 		builder,
 		user._lastUpdatedBy.c_str(),
 		tpToLong( user._lastUpdatedTm ),
-		user._enabled,
+		user._active,
 		user.firstname.c_str(),
 		user.surname.c_str(),
 		user.desk.c_str(),
@@ -32,15 +32,16 @@ std::string serialise( User&& user )
     return std::string( reinterpret_cast<const char*>( buffer ), size );
 }
 
-User deserialise( const std::string& buffer )
+template<>
+User deserialise( const std::string_view buffer )
 {
-	const uint8_t* const bufPtr = reinterpret_cast<const uint8_t*>( buffer.c_str() );
+	const uint8_t* const bufPtr = reinterpret_cast<const uint8_t*>( buffer.data() );
 	const fbs::User* const fbUserDeserialised = fbs::GetUser( bufPtr );
 
 	User user = {
 		fbUserDeserialised->_lastUpdatedBy()->c_str(),
 		longToTp( fbUserDeserialised->_lastUpdatedTm() ),
-		fbUserDeserialised->_enabled(),
+		fbUserDeserialised->_active(),
 		fbUserDeserialised->firstname()->c_str(),
 		fbUserDeserialised->surname()->c_str(),
 		fbUserDeserialised->desk()->c_str(),
@@ -49,5 +50,7 @@ User deserialise( const std::string& buffer )
 
 	return user;
 }
+
+template TMQSerialisation User deserialise( const std::string_view buffer );
 
 }

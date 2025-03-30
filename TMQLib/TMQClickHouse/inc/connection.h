@@ -23,9 +23,9 @@ public:
 		return inst;
 	}
 
-	TMQ_API std::unique_ptr<clickhouse::Client> getConn();
+	TMQClickHouse_API std::unique_ptr<clickhouse::Client> getConn();
 
-	TMQ_API void retConn( std::unique_ptr<clickhouse::Client> conn );
+	TMQClickHouse_API void retConn( std::unique_ptr<clickhouse::Client> conn );
 
 private:
 	CHConnPool() = default;

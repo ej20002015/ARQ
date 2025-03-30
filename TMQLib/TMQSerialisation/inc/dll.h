@@ -2,14 +2,14 @@
 
 #ifdef _WIN32
 	#ifdef TMQSerialisation_EXPORTS
-		#define TMQ_API __declspec( dllexport )
+		#define TMQSerialisation __declspec( dllexport )
 	#else
-		#define TMQ_API __declspec( dllimport )
+		#define TMQSerialisation __declspec( dllimport )
 	#endif
 #else
 	#ifdef __GNUC__
-		#define TMQ_API __attribute__( ( visibility( "default" ) ) )
+		#define TMQSerialisation __attribute__( ( visibility( "default" ) ) )
 	#else
-		#define TMQ_API
+		#define TMQSerialisation
 	#endif
 #endif

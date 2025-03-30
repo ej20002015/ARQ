@@ -4,6 +4,7 @@
 #include <tuple>
 #include <vector>
 #include <string>
+#include <array>
 
 namespace TMQ
 {
@@ -28,7 +29,12 @@ public:
     template<c_QuerySchema Schema>
     static QueryResult<Schema> select( const std::string_view query );
 
-    TMQ_API static void execute( const std::string_view query );
+    template<c_QuerySchema Schema>
+    static void insert( const std::string_view tableName,
+                        const std::vector<typename Schema::TupleType>& data,
+                        const std::array<std::string_view, std::tuple_size_v<typename Schema::TupleType>>& colNames );
+
+    TMQClickHouse_API static void execute( const std::string_view query );
 };
 
 }

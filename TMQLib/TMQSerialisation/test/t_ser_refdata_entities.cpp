@@ -1,6 +1,5 @@
 #include <gtest/gtest.h>
 #include <TMQSerialisation/ser_refdata_entities.h>
-#include <TMQUtils/error.h>
 
 // Helper function to create a User object
 TMQ::User createTestUser()
@@ -12,7 +11,7 @@ TMQ::User createTestUser()
     user.age = 30;
     user._lastUpdatedBy = "admin";
     user._lastUpdatedTm = std::chrono::system_clock::now();
-    user._enabled = true;
+    user._active = true;
     return user;
 }
 
@@ -31,7 +30,7 @@ TEST( SerRefdataEntitiesTest, DeserialiseUser )
 {
     TMQ::User user = createTestUser();
     std::string serializedData = TMQ::serialise( std::move( user ) );
-    TMQ::User deserializedUser = TMQ::deserialise( serializedData );
+    TMQ::User deserializedUser = TMQ::deserialise<TMQ::User>( serializedData );
 
     // Check that the deserialized data matches the original data
     EXPECT_EQ( deserializedUser.firstname, "John" );
@@ -39,5 +38,5 @@ TEST( SerRefdataEntitiesTest, DeserialiseUser )
     EXPECT_EQ( deserializedUser.desk, "A1" );
     EXPECT_EQ( deserializedUser.age, 30 );
     EXPECT_EQ( deserializedUser._lastUpdatedBy, "admin" );
-    EXPECT_EQ( deserializedUser._enabled, true );
+    EXPECT_EQ( deserializedUser._active, true );
 }

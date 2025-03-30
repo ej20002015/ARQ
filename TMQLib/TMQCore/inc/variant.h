@@ -19,13 +19,13 @@ class VariantArr
 public:
 	VariantArr() = default;
 
-	TMQ_API VariantArr( const uint32_t rows, const uint32_t cols = 1 );
+	TMQCore_API VariantArr( const uint32_t rows, const uint32_t cols = 1 );
 
-	TMQ_API VariantArr( const VariantArr& other );
-	TMQ_API VariantArr& operator=( const VariantArr& other );
+	TMQCore_API VariantArr( const VariantArr& other );
+	TMQCore_API VariantArr& operator=( const VariantArr& other );
 
-	TMQ_API VariantArr( VariantArr&& other ) noexcept;
-	TMQ_API VariantArr& operator=( VariantArr&& other ) noexcept;
+	TMQCore_API VariantArr( VariantArr&& other ) noexcept;
+	TMQCore_API VariantArr& operator=( VariantArr&& other ) noexcept;
 
 	[[nodiscard]] const Variant& at( const uint32_t row, const uint32_t col = 0 ) const
 	{

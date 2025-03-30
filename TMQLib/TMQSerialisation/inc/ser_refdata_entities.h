@@ -6,11 +6,14 @@
 namespace TMQ
 {
 
+// To be specialised for each RDEntity
+template<c_RDEntity T>
+T deserialise( const std::string_view buffer );
+
 /*
 * --------- User ---------
 */
 
-TMQ_API std::string serialise( User&& user );
-TMQ_API User deserialise( const std::string& buffer );
+TMQSerialisation std::string serialise( User&& user );
 
 }

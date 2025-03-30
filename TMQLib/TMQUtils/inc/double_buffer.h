@@ -57,6 +57,6 @@ private:
 	static_assert( std::atomic<uint8_t>::is_always_lock_free );
 };
 
-TMQ_API int dummyFunction();
+TMQUtils_API int dummyFunction();
 
 }

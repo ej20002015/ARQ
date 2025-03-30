@@ -45,7 +45,8 @@ public:
 	using BaseRDCache<T>::m_data;
 	using BaseRDCache<T>::m_rdSource;
 
-	LiveRDCache()
+	LiveRDCache( const std::shared_ptr<RefDataSource>& source = nullptr )
+		: BaseRDCache<T>( source )
 	{
 		reload();
 	}
@@ -113,7 +114,8 @@ public:
 	using BaseRDCache<T>::m_data;
 	using BaseRDCache<T>::m_rdSource;
 
-	HistoricRDCache( const std::chrono::system_clock::time_point ts )
+	HistoricRDCache( const std::chrono::system_clock::time_point ts, const std::shared_ptr<RefDataSource>& source = nullptr )
+		: BaseRDCache<T>( source )
 	{
 		std::vector<T> records = TypedRDSource<T>::fetchAsOf( *m_rdSource );
 		m_data = std::make_shared<RDDataMap<T>>();
@@ -129,7 +131,7 @@ class RefData
 {
 public:
 	RefData()
-		: m_data( LiveRDManager<T>::get().getData() )
+		: m_dataPtr( LiveRDManager<T>::get().getData() )
 	{}
 
 	RefData( const std::chrono::system_clock::time_point ts )
@@ -138,16 +140,16 @@ public:
 
 	RefData( const std::shared_ptr<BaseRDCache<T>>& rdCache )
 		: m_rdCache( rdCache )
-		, m_data( rdCache->getData() )
+		, m_dataPtr( rdCache->getData() )
 	{}
 
 	[[nodiscard]] std::optional<std::reference_wrapper<const T>> get( const std::string_view id )
 	{
-		auto data = m_data.lock();
+		auto data = m_dataPtr.lock();
 		if( !data )
 		{
 			reload();
-			data = m_data.lock();
+			data = m_dataPtr.lock();
 		}
 
 		const auto it = data->find( id );
@@ -161,14 +163,37 @@ private:
 	void reload()
 	{
 		if( m_rdCache )
-			m_data = m_rdCache->getData();
+			m_dataPtr = m_rdCache->getData();
 		else
-			m_data = LiveRDManager<T>::get().getData();
+			m_dataPtr = LiveRDManager<T>::get().getData();
 	}
 
 private:
 	std::shared_ptr<BaseRDCache<T>> m_rdCache;
-	std::weak_ptr<RDDataMap<T>> m_data;
+	std::weak_ptr<RDDataMap<T>> m_dataPtr;
+};
+
+class RefDBInserter
+{
+public:
+	RefDBInserter( const std::shared_ptr<RefDataSource>& source = nullptr )
+		: m_rdSource( source ? source : getGlobalRefDataSource() )
+	{}
+
+	template<c_RDEntity T>
+	void insert( std::vector<T>&& data )
+	{
+		TypedRDSource<T>::insert( *m_rdSource, std::move( data ) );
+	}
+
+	template<c_RDEntity T>
+	void insert( T&& data )
+	{
+		TypedRDSource<T>::insert( *m_rdSource, std::vector<T>{ std::move( data ) } );
+	}
+
+private:
+	std::shared_ptr<RefDataSource> m_rdSource;
 };
 
 }

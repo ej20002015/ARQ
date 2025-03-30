@@ -3,6 +3,6 @@
 namespace TMQ
 {
 
-TMQ_API int foo();
+TMQMessaging_API int foo();
 
 }

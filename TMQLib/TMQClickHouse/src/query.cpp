@@ -6,6 +6,8 @@
 
 #include <clickhouse/client.h>
 
+#include <array>
+
 namespace TMQ
 {
 
@@ -18,7 +20,7 @@ Tuple extractRowImpl( const clickhouse::Block& block, size_t row, std::index_seq
 template<typename Tuple>
 Tuple extractRow( const clickhouse::Block& block, size_t row )
 {
-    return extractRowImpl<Tuple>( block, row, std::make_index_sequence<std::tuple_size_v<Tuple>>{} );
+    return extractRowImpl<Tuple>( block, row, std::make_index_sequence<std::tuple_size_v<Tuple>>() );
 }
 
 template<c_QuerySchema Schema>
@@ -51,6 +53,81 @@ QueryResult<Schema> CHQuery::select( const std::string_view query )
     return result;
 }
 
+template<typename Tuple, size_t... Indices>
+void prepareColsImpl( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr, std::index_sequence<Indices...> )
+{
+    ( 
+        ( colsArr[Indices] = std::make_shared<typename CHColType<std::tuple_element_t<Indices, Tuple>>::Type>() ),
+        ...
+    );
+}
+
+template<typename Tuple>
+void prepareCols( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr )
+{
+    prepareColsImpl<Tuple>( colsArr, std::make_index_sequence<std::tuple_size_v<Tuple>>() );
+}
+
+template<typename Tuple, size_t... Indices>
+void insertRowImpl( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr, const Tuple& row, std::index_sequence<Indices...> )
+{
+    ( 
+        ( static_cast<typename CHColType<std::tuple_element_t<Indices, Tuple>>::Type*>( colsArr[Indices].get() )->Append( convToCHType( std::get<Indices>( row ) ) ) ),
+        ... 
+    );
+}
+
+template<typename Tuple>
+void insertRow( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr, const Tuple& row )
+{
+    insertRowImpl<Tuple>( colsArr, row, std::make_index_sequence<std::tuple_size_v<Tuple>>() );
+}
+
+template<typename Tuple, size_t... Indices>
+void appendColsImpl( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr, const std::array<std::string_view, std::tuple_size_v<Tuple>>& colNames, clickhouse::Block& block, std::index_sequence<Indices...> )
+{
+    (
+        ( block.AppendColumn( colNames[Indices].data(), colsArr[Indices]) ),
+        ...
+    );
+}
+
+template<typename Tuple>
+void appendCols( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr, const std::array<std::string_view, std::tuple_size_v<Tuple>>& colNames, clickhouse::Block& block )
+{
+    appendColsImpl<Tuple>( colsArr, colNames, block, std::make_index_sequence<std::tuple_size_v<Tuple>>() );
+}
+
+template<c_QuerySchema Schema>
+void CHQuery::insert( const std::string_view tableName, 
+                      const std::vector<typename Schema::TupleType>& data,
+                      const std::array<std::string_view, std::tuple_size_v<typename Schema::TupleType>>& colNames )
+{
+    CHConn conn;
+
+    try
+    {
+        using Tuple = typename Schema::TupleType;
+        using ColsArr = std::array<clickhouse::ColumnRef, std::tuple_size_v<typename Schema::TupleType>>;
+
+        ColsArr colsArr;
+        prepareCols<Tuple>( colsArr );
+
+        for( const auto& row : data )
+            insertRow<Tuple>( colsArr, row );
+
+        clickhouse::Block block;
+        appendCols<Tuple>( colsArr, colNames, block );
+
+        conn.client().Insert( tableName.data(), block );
+    }
+    catch( const std::exception& e )
+    {
+        throw TMQException( std::format( "Error executing INSERT query: {0}", e.what() ) );
+    }
+}
+
+
 void CHQuery::execute( const std::string_view query )
 {
     CHConn conn;
@@ -67,6 +144,10 @@ void CHQuery::execute( const std::string_view query )
 
 // Explicit template instantiations for all possible QuerySchemas go here
 
-template TMQ_API QueryResult<QuerySchema<std::string>> CHQuery::select<QuerySchema<std::string>>( const std::string_view query );
+using StringSchema = QuerySchema<std::string>;
+template TMQClickHouse_API QueryResult<StringSchema> CHQuery::select<StringSchema>( const std::string_view query );
+
+using RDSchema = QuerySchema<std::string, std::chrono::system_clock::time_point, bool, std::string>;
+template TMQClickHouse_API void CHQuery::insert<RDSchema>( const std::string_view tableName, const std::vector<typename RDSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDSchema::TupleType>>& colNames );
 
 }

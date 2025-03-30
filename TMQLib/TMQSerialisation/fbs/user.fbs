@@ -3,7 +3,7 @@ namespace fbs;
 table User {
     _lastUpdatedBy:string;
     _lastUpdatedTm:ulong;
-    _enabled:bool;
+    _active:bool;
 
     firstname:string;
 	surname:string;

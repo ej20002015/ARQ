@@ -1,8 +1,10 @@
-#include <string>
+#pragma once
+#include <TMQSolace/dll.h>
 
 #include <TMQUtils/buffer.h>
 
-#include "dll.h"
+#include <string>
+
 
 namespace TMQ
 {
@@ -21,6 +23,6 @@ class Solace
 	static SolaceRet pub( const std::string_view topic, OwningBuffer data );
 };
 
-TMQ_API int foo();
+TMQSolace_API int foo();
 
 }

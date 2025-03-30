@@ -1,12 +1,9 @@
-// TODO: Rename file and create pre-compiled header
-
 #pragma once
+#include <TMQCore/dll.h>
 
 #include <type_traits>
 
-#include "dll.h"
-
-TMQ_API int multiply( const int x, const int y );
+TMQCore_API int multiply( const int x, const int y );
 
 namespace TMQ
 {

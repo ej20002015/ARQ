@@ -7,7 +7,7 @@ namespace TMQ
 
 struct RDEntity : public DataEntity
 {
-	bool _enabled = false;
+	bool _active = false;
 };
 
 template<typename T>
@@ -17,7 +17,7 @@ template<c_RDEntity T>
 class RDEntityTraits
 {
 public:
-	static consteval const char* const table() { static_assert( false ); }
+	static consteval const char* const table()    { static_assert( false ); }
 	static std::string getID( const T& rdEntity ) { static_assert( false ); }
 };
 
@@ -39,38 +39,8 @@ template<>
 class RDEntityTraits<User>
 {
 public:
-	static consteval const char* const table() { return "Users"; }
+	static consteval const char* const table()   { return "Users"; }
 	static std::string getID( const User& user ) { return user.firstname + user.surname; }
-	static User deserialise( const std::string_view blob )
-	{
-		User user;
-
-		size_t offset = 0;
-
-		// Deserialize the `firstname` string
-		uint32_t firstnameLength = *reinterpret_cast< const uint32_t* >( blob.data() + offset );
-		offset += sizeof( uint32_t );  // move the offset past the length
-		user.firstname = std::string( blob.data() + offset, firstnameLength );
-		offset += firstnameLength;  // move the offset past the string
-
-		// Deserialize the `surname` string
-		uint32_t surnameLength = *reinterpret_cast< const uint32_t* >( blob.data() + offset );
-		offset += sizeof( uint32_t );
-		user.surname = std::string( blob.data() + offset, surnameLength );
-		offset += surnameLength;
-
-		// Deserialize the `desk` string
-		uint32_t deskLength = *reinterpret_cast< const uint32_t* >( blob.data() + offset );
-		offset += sizeof( uint32_t );
-		user.desk = std::string( blob.data() + offset, deskLength );
-		offset += deskLength;
-
-		// Deserialize the `age` field
-		user.age = *reinterpret_cast< const uint32_t* >( blob.data() + offset );
-		offset += sizeof( uint32_t );
-
-		return user;
-	}
 };
 
 }

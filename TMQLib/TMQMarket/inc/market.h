@@ -1,8 +1,7 @@
 #pragma once
+#include <TMQMarket/dll.h>
 
-#include "dll.h"
-
-#include "TMQMarket/types.h"
+#include <TMQMarket/types.h>
 #include <TMQUtils/hashers.h>
 
 #include <unordered_map>
@@ -107,6 +106,6 @@ private:
 	std::set<Listener*> m_listeners;
 };
 
-TMQ_API std::string MktDummyFunction();
+TMQMarket_API std::string MktDummyFunction();
 
 }

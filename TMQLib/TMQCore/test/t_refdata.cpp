@@ -42,15 +42,47 @@ public:
     static constexpr const char* DATA = "HELLO";
 };
 
+TMQ::User createTestUser()
+{
+    TMQ::User user;
+    user.firstname = "John";
+    user.surname = "Doe";
+    user.desk = "A1";
+    user.age = 30;
+    user._active = true;
+    // Set during insert
+    /*user._lastUpdatedBy = "admin";
+    user._lastUpdatedTm = std::chrono::system_clock::now();*/
+    return user;
+}
+
 TEST( RefDataTests, GeneralUse )
 {
-    int y = 0;
+    //TMQ::RefDBInserter ins;
+
+    //std::vector<TMQ::User> users;
+    //users.reserve( 10'000 ); // Reserve space to avoid reallocations
+
+    //for( int i = 0; i < 10'000; ++i )
+    //{
+    //    TMQ::User user;
+    //    user.firstname = "John" + std::to_string( i );
+    //    user.surname = "Doe";
+    //    user.desk = "A" + std::to_string( i % 100 ); // Cycle desks from A0 to A99
+    //    user.age = 20 + ( i % 40 ); // Ages between 20 and 59
+    //    user._active = ( i % 10 ) != 0; // Mark every 10th user as inactive
+
+    //    users.push_back( std::move( user ) );
+    //}
+
+    //ins.insert<TMQ::User>( std::move( users ) );
 }
 
 TEST( RefDataTests, TempUserTest )
 {
     RefData<User> rd;
-    auto tmp = rd.get( "First0Last0" );
+    auto tmp = rd.get( "John1Doe" );
+    std::cout << tmp->get()._lastUpdatedTm;
 }
 
 }

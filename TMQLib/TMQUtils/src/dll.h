@@ -2,14 +2,14 @@
 
 #ifdef _WIN32
 	#ifdef TMQUtils_EXPORTS
-		#define TMQ_API __declspec( dllexport )
+		#define TMQUtils_API __declspec( dllexport )
 	#else
-		#define TMQ_API __declspec( dllimport )
+		#define TMQUtils_API __declspec( dllimport )
 	#endif
 #else
 	#ifdef __GNUC__
-		#define TMQ_API __attribute__( ( visibility( "default" ) ) )
+		#define TMQUtils_API __attribute__( ( visibility( "default" ) ) )
 	#else
-		#define TMQ_API
+		#define TMQUtils_API
 	#endif
 #endif
