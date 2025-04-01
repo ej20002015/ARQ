@@ -1,6 +1,8 @@
 - Clean up RefData and other APIs a little
 - Fix Linux build
 - Integration testing for TMQClickHouse?
+- Add logger
+- Add stack trace library
 - Create DSH equivalent class and use in TMQClickHouse
   - What should library dependencies look like in this case?
 - Create FXSpot trade class and valuation class?

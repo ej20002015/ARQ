@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <thread>
 #include <csignal>
+#include <chrono>
 
 #include "util/CommandOptionParser.h"
 #include "Aeron.h"
