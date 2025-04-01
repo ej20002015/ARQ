@@ -56,6 +56,12 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/.build" >> "$GITHUB_OUTPUT"
 
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        java-version: '21.0.6'
+        distribution: 'oracle'
+
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
