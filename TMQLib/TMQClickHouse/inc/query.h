@@ -27,7 +27,7 @@ public:
     CHQuery() = delete;
 
     template<c_QuerySchema Schema>
-    static QueryResult<Schema> select( const std::string_view query );
+    [[nodiscard]] static QueryResult<Schema> select( const std::string_view query );
 
     template<c_QuerySchema Schema>
     static void insert( const std::string_view tableName,

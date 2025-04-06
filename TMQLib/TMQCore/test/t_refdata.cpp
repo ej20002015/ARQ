@@ -52,14 +52,14 @@ TEST_F( RefDataTest, InsertAndFetchTest )
     std::vector<User> users = { user };
     EXPECT_CALL( *m_mockSource, insert( "Users", testing::_ ) ).Times( 1 );
     RefDBInserter ins( m_mockSource );
-    ins.insert<User>( std::move( users ), m_lrdCache );
+    ins.insert<User>( users, m_lrdCache );
+
+    std::vector<RefDataSource::FetchData> fetchData;
+    fetchData.emplace_back( user._lastUpdatedTs, "Evan", serialise( user ) );
 
     // Now fetch the data after insert
-    User userCopy = user;
     EXPECT_CALL( *m_mockSource, fetchLatest( "Users" ) )
-        .WillOnce( testing::Return( std::vector<RefDataSource::FetchData>{
-            { user._lastUpdatedTs, "Evan", serialise( std::move( userCopy ) ) }
-    } ) );
+        .WillOnce( testing::Return( std::move( fetchData ) ) );
 
     m_lrdCache->reload();
     auto fetchedData = refData.get( "EvanJames" );
@@ -72,26 +72,34 @@ TEST_F( RefDataTest, StaleDataInsertTest )
     User user = createTestUser( "Evan", "James", std::chrono::system_clock::now() );
     User staleUser = createTestUser( "Evan", "James", std::chrono::system_clock::now() - std::chrono::hours( 1 ) );
 
-    // Mock fetchLatest to return the stale entity
+    std::vector<RefDataSource::FetchData> fetchData;
+    fetchData.emplace_back( user._lastUpdatedTs, "Evan", serialise( user ) );
+
+    // Mock fetchLatest to return the newer entity
     EXPECT_CALL( *m_mockSource, fetchLatest( "Users" ) )
-        .WillOnce( testing::Return( std::vector<RefDataSource::FetchData>{
-            { user._lastUpdatedTs, "Evan", serialise( std::move( user ) ) }
-    } ) );
+        .WillOnce( testing::Return( std::move( fetchData ) ) );
 
     // Create RefData instance and insert stale data
     RefDBInserter ins( m_mockSource, RefDBInserter::StaleCheck::FROM_LIVERD_FORCE_REFRESH );
-    EXPECT_FALSE( ins.insert<User>( std::move( staleUser ), m_lrdCache ) ); // Insert should fail due to stale data
+    EXPECT_FALSE( ins.insert<User>( staleUser, m_lrdCache ) ); // Insert should fail due to stale data
 }
 
 TEST_F( RefDataTest, CacheReloadTest )
 {
     User user = createTestUser( "Evan", "James", std::chrono::system_clock::now() );
-
+    
     // Mock fetchLatest to return the entity
     EXPECT_CALL( *m_mockSource, fetchLatest( "Users" ) )
-        .WillRepeatedly( testing::Return( std::vector<RefDataSource::FetchData>{
-            { user._lastUpdatedTs, "Evan", serialise( std::move( User( user ) ) ) }
-    } ) );
+        .WillRepeatedly( [user] ()
+        {
+            std::vector<RefDataSource::FetchData> fetchDataResult;
+            fetchDataResult.emplace_back( RefDataSource::FetchData{
+                user._lastUpdatedTs,
+                "Evan",
+                serialise( user )
+            } );
+            return fetchDataResult;
+    } );
 
     // Create RefData instance and load data
     m_lrdCache->reload();
@@ -148,7 +156,10 @@ TEST_F( RefDataTest, CacheReloadTest )
 //
 //TEST( RefDataTests, TempUserTest )
 //{
+//    auto start = std::chrono::system_clock::now();
 //    RefData<User> rd;
+//    auto end = std::chrono::system_clock::now();
+//    std::cout << "Time to load users: " << std::chrono::duration_cast<std::chrono::milliseconds>( end - start ) << std::endl;
 //    auto tmp = rd.get( "John1Doe" );
 //    std::cout << tmp->get()._lastUpdatedTs;
 //}

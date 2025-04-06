@@ -3,6 +3,7 @@
 #include <TMQClickHouse/connection.h>
 #include <TMQClickHouse/types.h>
 #include <TMQUtils/error.h>
+#include <TMQUtils/buffer.h>
 
 #include <clickhouse/client.h>
 
@@ -148,7 +149,7 @@ void CHQuery::execute( const std::string_view query )
 using StringSchema = QuerySchema<std::string>;
 template TMQClickHouse_API QueryResult<StringSchema> CHQuery::select<StringSchema>( const std::string_view query );
 
-using RDFetchSchema = QuerySchema<std::chrono::system_clock::time_point, std::string, std::string>;
+using RDFetchSchema = QuerySchema<std::chrono::system_clock::time_point, std::string, Buffer>;
 template TMQClickHouse_API QueryResult<RDFetchSchema> CHQuery::select<RDFetchSchema>( const std::string_view query );
 
 using RDInsertSchema = QuerySchema<std::string, std::string, bool, std::string>;

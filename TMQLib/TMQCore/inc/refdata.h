@@ -11,6 +11,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <functional>
+#include <algorithm>
 
 namespace TMQ
 {
@@ -56,13 +57,18 @@ public:
 	{
 		std::unique_lock<std::shared_mutex> lock( m_mutex );
 
-		std::vector<T> records = TypedRDSource<T>::fetchLatest( *m_rdSource );
 		m_data = std::make_shared<RDDataMap<T>>();
-		for( const auto record : records )
-			m_data->insert( std::make_pair( RDEntityTraits<T>::getID( record ), record ) );
+
+		std::vector<T> items = TypedRDSource<T>::fetchLatest( *m_rdSource );
+		m_data->reserve( items.size() );
+		for( auto&& item : std::move( items ) )
+		{
+			std::string key = RDEntityTraits<T>::getID( item );
+			m_data->emplace( std::move( key ), std::move( item ) );
+		}
 	}
 
-	std::weak_ptr<RDDataMap<T>> getData() const override
+	[[nodiscard]] std::weak_ptr<RDDataMap<T>> getData() const override
 	{ 
 		std::shared_lock<std::shared_mutex> lock( m_mutex );
 		return m_data;
@@ -76,7 +82,7 @@ template<c_RDEntity T>
 class LiveRDManager
 {
 public:
-	static std::shared_ptr<LiveRDCache<T>> get()
+	static [[nodiscard]] std::shared_ptr<LiveRDCache<T>> get()
 	{
 		static auto inst = std::make_shared<LiveRDCache<T>>();
 		return inst;
@@ -97,7 +103,7 @@ public:
 	static void registerUpdateCallback( std::function<void()> callback )
 	{
 		std::lock_guard<std::mutex> lock( s_callbackMutex );
-		s_callbacks.push_back( callback );
+		s_callbacks.push_back( std::move( callback ) );
 	}
 
 private:
@@ -117,9 +123,16 @@ public:
 		: BaseRDCache<T>( source )
 	{
 		std::vector<T> records = TypedRDSource<T>::fetchAsOf( *m_rdSource );
+
 		m_data = std::make_shared<RDDataMap<T>>();
-		for( const auto record : records )
-			m_data->insert( std::make_pair( RDEntityTraits<T>::getID( record ), record ) );
+
+		std::vector<T> items = TypedRDSource<T>::fetchLatest( *m_rdSource );
+		m_data->reserve( items.size() );
+		for( auto&& item : std::move( items ) )
+		{
+			std::string key = RDEntityTraits<T>::getID( item );
+			m_data->emplace( std::move( key ), std::move( item ) );
+		}
 	}
 
 	void reload() override {}
@@ -133,13 +146,13 @@ public:
 		: m_dataPtr( LiveRDManager<T>::get()->getData() )
 	{}
 
-	RefData( const std::chrono::system_clock::time_point ts )
-		: RefData( std::make_shared<HistoricRDCache<T>>( ts ) )
-	{}
-
 	RefData( const std::shared_ptr<BaseRDCache<T>>& rdCache )
 		: m_rdCache( rdCache )
 		, m_dataPtr( rdCache->getData() )
+	{}
+
+	RefData( const std::chrono::system_clock::time_point ts )
+		: RefData( std::make_shared<HistoricRDCache<T>>( ts ) )
 	{}
 
 	[[nodiscard]] std::optional<std::reference_wrapper<const T>> get( const std::string_view id )
@@ -192,7 +205,7 @@ public:
 	{}
 
 	template<c_RDEntity T>
-	bool insert( std::vector<T>&& data, const std::shared_ptr<BaseRDCache<T>>& rdCache = nullptr )
+	bool insert( const std::vector<T>& data, const std::shared_ptr<BaseRDCache<T>>& rdCache = nullptr )
 	{
 		if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH || m_staleCheck == StaleCheck::FROM_LIVERD )
 		{
@@ -201,23 +214,23 @@ public:
 			if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH )
 				rdCacheRef->reload();
 
+			RefData<T> rd( rdCacheRef );
 			for( const T& dataItem : data )
 			{
-				RefData<T> rd( rdCacheRef );
 				const auto cachedData = rd.get( RDEntityTraits<T>::getID( dataItem ) );
 				if( cachedData && cachedData->get()._lastUpdatedTs > dataItem._lastUpdatedTs )
 					return false;
 			}
 		}
 
-		TypedRDSource<T>::insert( *m_rdSource, std::move( data ) );
+		TypedRDSource<T>::insert( *m_rdSource, data );
 		return true;
 	}
 
 	template<c_RDEntity T>
-	bool insert( T&& data, const std::shared_ptr<BaseRDCache<T>> rdCache = nullptr )
+	bool insert( const T& data, const std::shared_ptr<BaseRDCache<T>> rdCache = nullptr )
 	{
-		return insert( std::vector<T>{ std::move( data ) }, rdCache );
+		return insert( std::vector<T>{ data }, rdCache );
 	}
 
 private:

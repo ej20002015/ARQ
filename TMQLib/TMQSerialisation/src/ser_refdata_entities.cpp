@@ -1,7 +1,7 @@
 #include <TMQSerialisation/ser_refdata_entities.h>
 
 #include <TMQUtils/error.h>
-#include "utilities.h"
+#include <TMQUtils/buffer.h>
 
 #include <flatbuffers/flatbuffers.h>
 
@@ -10,7 +10,7 @@
 namespace TMQ
 {
 
-std::string serialise( User&& user )
+Buffer serialise( const User& user )
 {
 	flatbuffers::FlatBufferBuilder builder;
 
@@ -25,14 +25,15 @@ std::string serialise( User&& user )
 	builder.Finish( fbUser );
 	const uint8_t* const buffer = builder.GetBufferPointer();
 	const size_t size = builder.GetSize();
-
-    return std::string( reinterpret_cast<const char*>( buffer ), size );
+	/*size_t _1, _2;
+	builder.ReleaseRaw( _1, _2 );*/
+	return Buffer( buffer, size ); // TODO: Try converting buffer to a std::unique_ptr so we can steal memory
 }
 
 template<>
-User deserialise( const std::string_view buffer )
+User deserialise( const BufferView buffer )
 {
-	const uint8_t* const bufPtr = reinterpret_cast<const uint8_t*>( buffer.data() );
+	const uint8_t* const bufPtr = reinterpret_cast<const uint8_t*>( buffer.data );
 	const fbs::User* const fbUserDeserialised = fbs::GetUser( bufPtr );
 
 	User user = {
@@ -48,6 +49,6 @@ User deserialise( const std::string_view buffer )
 	return user;
 }
 
-template TMQSerialisation User deserialise( const std::string_view buffer );
+template TMQSerialisation User deserialise( const BufferView buffer );
 
 }

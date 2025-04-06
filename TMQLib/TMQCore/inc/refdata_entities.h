@@ -17,8 +17,8 @@ template<c_RDEntity T>
 class RDEntityTraits
 {
 public:
-	static consteval const char* const table()    { static_assert( false ); return nullptr; }
-	static std::string getID( const T& rdEntity ) { static_assert( false ); return "";      }
+	static consteval const char* const table()                  { static_assert( false ); return nullptr; }
+	static [[nodiscard]] std::string getID( const T& rdEntity ) { static_assert( false ); return "";      }
 };
 
 /*
@@ -39,8 +39,8 @@ template<>
 class RDEntityTraits<User>
 {
 public:
-	static consteval const char* const table()   { return "Users"; }
-	static std::string getID( const User& user ) { return user.firstname + user.surname; }
+	static consteval const char* const table()                 { return "Users"; }
+	static [[nodiscard]] std::string getID( const User& user ) { return user.firstname + user.surname; }
 };
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <clickhouse/client.h>
+#include <TMQUtils/buffer.h>
 
 #include <chrono>
 
@@ -10,11 +11,16 @@ namespace TMQ
 // SELECT query type functions
 
 template<typename T>
-T extractColVal( std::shared_ptr<clickhouse::Column> column, size_t row )
+T extractColVal( const std::shared_ptr<clickhouse::Column>& column, size_t row )
 {
     if constexpr( std::is_same_v<T, std::string> )
     {
         return std::string( column->As<clickhouse::ColumnString>()->At( row ) );
+    }
+    else if constexpr( std::is_same_v<T, Buffer> )
+    {
+        const auto sv = column->As<clickhouse::ColumnString>()->At( row );
+        return Buffer( reinterpret_cast<const uint8_t*>( sv.data() ), sv.size() + 1 );
     }
     else if constexpr( std::is_same_v<T, uint64_t> )
     {

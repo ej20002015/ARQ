@@ -14,7 +14,7 @@ std::shared_ptr<RefDataSource> getGlobalRefDataSource()
 
 std::vector<RefDataSource::FetchData> TSDBRefDataSource::fetchLatest( const std::string_view table )
 {
-	using Schema = QuerySchema<std::chrono::system_clock::time_point, std::string, std::string>;
+	using Schema = QuerySchema<std::chrono::system_clock::time_point, std::string, Buffer>;
 
 	static constexpr auto SELECT_STMT = R"(
 		SELECT toUnixTimestamp64Nano(LastUpdatedTs), LastUpdatedBy, Blob

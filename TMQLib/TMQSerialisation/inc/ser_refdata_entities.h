@@ -1,6 +1,7 @@
 #pragma once
 #include <TMQSerialisation/dll.h>
 
+#include <TMQUtils/buffer.h>
 #include <TMQCore/refdata_entities.h>
 
 namespace TMQ
@@ -8,12 +9,12 @@ namespace TMQ
 
 // To be specialised for each RDEntity
 template<c_RDEntity T>
-T deserialise( const std::string_view buffer );
+[[nodiscard]] T deserialise( const BufferView buffer );
 
 /*
 * --------- User ---------
 */
 
-TMQSerialisation std::string serialise( User&& user );
+TMQSerialisation [[nodiscard]] Buffer serialise( const User& user );
 
 }

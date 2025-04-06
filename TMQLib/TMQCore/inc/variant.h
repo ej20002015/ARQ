@@ -91,19 +91,9 @@ public:
 		{
 			m_val = std::string( std::forward<T>( val ) ); // Convert to std::string
 		}
-		// Special case for std::chrono::system_clock::time_point
-		else if constexpr( std::is_same_v<std::decay_t<T>, std::chrono::system_clock::time_point> )
-		{
-			m_val = std::forward<T>( val ); // No conversion needed, directly store the time_point
-		}
-		// Special case for TMQException
-		else if constexpr( std::is_same_v<std::decay_t<T>, TMQException> )
-		{
-			m_val = std::forward<T>( val ); // No conversion needed, directly store the exception
-		}
 		else if constexpr( c_SupportedVariantType<std::decay_t<T>> )
 		{
-			m_val = std::forward<T>( val ); // Forward the value directly
+			m_val = std::forward<T>( val );
 		}
 		else
 		{
@@ -136,31 +126,23 @@ public:
 	[[nodiscard]] std::optional<std::reference_wrapper<const T>> tryAs() const
 	{
 		if( std::holds_alternative<T>( m_val ) )
-		{
 			return std::cref( std::get<T>( m_val ) ); // Use std::cref to create a const reference wrapper
-		}
 		else
-		{
 			return std::nullopt;
-		}
 	}
 
 	template<c_SupportedVariantType T>
 	[[nodiscard]] std::optional<std::reference_wrapper<T>> tryAs()
 	{
 		if( std::holds_alternative<T>( m_val ) )
-		{
 			return std::ref( std::get<T>( m_val ) ); // Use std::ref to create a mutable reference wrapper
-		}
 		else
-		{
 			return std::nullopt;
-		}
 	}
 
 	// Helper function to check the type
 	template<c_SupportedVariantType T>
-	bool is() const
+	[[nodiscard]] bool is() const
 	{
 		return std::holds_alternative<T>( m_val );
 	}

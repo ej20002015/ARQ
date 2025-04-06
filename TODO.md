@@ -1,5 +1,3 @@
-- Clean up RefData and other APIs a little
-- Fix Linux build
 - Integration testing for TMQClickHouse?
 - Add logger
 - Add stack trace library

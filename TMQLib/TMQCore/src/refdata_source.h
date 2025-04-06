@@ -18,7 +18,7 @@ public:
 	{
 		std::chrono::system_clock::time_point lastUpdatedTs;
 		std::string lastUpdatedBy;
-		std::string blob;
+		Buffer blob;
 	};
 
 	struct InsertData
@@ -32,8 +32,8 @@ public:
 public:
 	virtual ~RefDataSource() = default;
 
-	TMQCore_API virtual std::vector<FetchData> fetchLatest( const std::string_view table ) = 0;
-	TMQCore_API virtual std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) = 0;
+	TMQCore_API virtual [[nodiscard]] std::vector<FetchData> fetchLatest( const std::string_view table ) = 0;
+	TMQCore_API virtual [[nodiscard]] std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) = 0;
 	TMQCore_API virtual void insert( const std::string_view table, const std::vector<InsertData>& insData ) = 0;
 };
 
@@ -44,33 +44,34 @@ template <c_RDEntity T>
 class TypedRDSource
 {
 public:
-	static std::vector<T> fetchLatest( RefDataSource& source )
+	static [[nodiscard]] std::vector<T> fetchLatest( RefDataSource& source )
 	{
 		const auto fetchRes = source.fetchLatest( RDEntityTraits<T>::table() );
 		return TypedRDSource<T>::parseFetchRes( fetchRes );
 	}
 
-	static std::vector<T> fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
+	static [[nodiscard]] std::vector<T> fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
 	{
 		const auto fetchRes = source.fetchAsOf( RDEntityTraits<T>::table(), ts );
 		return TypedRDSource<T>::parseFetchRes( fetchRes );
 	}
 
-	static void insert( RefDataSource& source, std::vector<T>&& data )
+	static void insert( RefDataSource& source, const std::vector<T>& data )
 	{
 		static constexpr auto table = RDEntityTraits<T>::table();
 		
 		std::vector<RefDataSource::InsertData> insData;
 
-		for( T& d : data )
+		for( const T& d : data )
 		{
-			d._lastUpdatedBy = "Evan"; // TODO: Change to username
+			const Buffer buf = TMQ::serialise( d );
+			std::string bufStr( reinterpret_cast<const char*>( buf.data.get() ), buf.size ); // TODO: don't copy
 
 			insData.emplace_back( RefDataSource::InsertData {
 				RDEntityTraits<T>::getID( d ),
-				d._lastUpdatedBy,
+				"Evan", // TODO: Change to username
 				d._active,
-				TypedRDSource<T>::serialise( std::move( d ) )
+				bufStr
 			} );
 		}
 
@@ -78,7 +79,7 @@ public:
 	}
 
 private:
-	static std::vector<T> parseFetchRes( const std::vector<RefDataSource::FetchData>& fetchRes )
+	static std::vector<T> [[nodiscard]] parseFetchRes( const std::vector<RefDataSource::FetchData>& fetchRes )
 	{
 		std::vector<T> result;
 		result.reserve( fetchRes.size() );
@@ -92,18 +93,13 @@ private:
 
 		return result;
 	}
-
-	static std::string serialise( T&& data )
-	{
-		return TMQ::serialise( std::move( data ) );
-	}
 };
 
 class TSDBRefDataSource : public RefDataSource
 {
 public:
-	TMQCore_API std::vector<FetchData> fetchLatest( const std::string_view table ) override;
-	TMQCore_API std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) override;
+	TMQCore_API [[nodiscard]] std::vector<FetchData> fetchLatest( const std::string_view table ) override;
+	TMQCore_API [[nodiscard]] std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) override;
 
 	TMQCore_API void insert( const std::string_view table, const std::vector<InsertData>& insData ) override;
 };

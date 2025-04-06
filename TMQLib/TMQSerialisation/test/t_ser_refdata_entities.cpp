@@ -16,17 +16,17 @@ TMQ::User createTestUser()
 TEST( SerRefdataEntitiesTest, SerialiseUser )
 {
     TMQ::User user = createTestUser();
-    std::string serializedData = TMQ::serialise( std::move( user ) );
+    TMQ::Buffer serializedData = TMQ::serialise( user );
 
     // Check that the serialized data is not empty
-    EXPECT_FALSE( serializedData.empty() );
+    EXPECT_TRUE( serializedData.size );
 }
 
 // Test deserialise function
 TEST( SerRefdataEntitiesTest, DeserialiseUser )
 {
     TMQ::User user = createTestUser();
-    std::string serializedData = TMQ::serialise( std::move( user ) );
+    TMQ::Buffer serializedData = TMQ::serialise( user );
     TMQ::User deserializedUser = TMQ::deserialise<TMQ::User>( serializedData );
 
     // Check that the deserialized data matches the original data
