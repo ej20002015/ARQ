@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <TMQUtils/error.h>
 
+using ::testing::HasSubstr;
 using namespace TMQ;
 
 // Test basic exception message
@@ -16,7 +18,7 @@ TEST( TMQExceptionTest, SourceLocationTest )
     TMQException ex( "Location test" );
     auto loc = ex.where();
     EXPECT_STREQ( loc.file_name(), __FILE__ );
-    EXPECT_STREQ( loc.function_name(), "void __cdecl TMQExceptionTest_SourceLocationTest_Test::TestBody(void)" );
+    EXPECT_THAT( loc.function_name(), HasSubstr( "MQExceptionTest_SourceLocationTest_Test" ) );
 }
 
 // Test const correctness of what()

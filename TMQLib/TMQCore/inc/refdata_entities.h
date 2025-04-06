@@ -17,8 +17,8 @@ template<c_RDEntity T>
 class RDEntityTraits
 {
 public:
-	static consteval const char* const table()    { static_assert( false ); }
-	static std::string getID( const T& rdEntity ) { static_assert( false ); }
+	static consteval const char* const table()    { static_assert( false ); return nullptr; }
+	static std::string getID( const T& rdEntity ) { static_assert( false ); return "";      }
 };
 
 /*
