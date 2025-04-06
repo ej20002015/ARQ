@@ -315,6 +315,7 @@ set(FLATBUFFERS_LINK_LIB "flatbuffers")
 add_subdirectory(TMQLib/TMQCore)
 add_subdirectory(TMQLib/TMQUtils)
 add_subdirectory(TMQLib/TMQMarket)
+message(STATUS "b_TMQMarket path: $<TARGET_FILE:b_TMQMarket>") #Temp
 add_subdirectory(TMQLib/TMQSolace)
 add_subdirectory(TMQLib/TMQMessaging)
 add_subdirectory(TMQLib/TMQClickHouse)
