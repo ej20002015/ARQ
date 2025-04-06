@@ -24,9 +24,9 @@ public:
 	struct InsertData
 	{
 		std::string ID;
-		std::string lastUpdatedBy;
+		std::string_view lastUpdatedBy;
 		bool active;
-		std::string blob;
+		Buffer blob;
 	};
 
 public:
@@ -64,14 +64,11 @@ public:
 
 		for( const T& d : data )
 		{
-			const Buffer buf = TMQ::serialise( d );
-			std::string bufStr( reinterpret_cast<const char*>( buf.data.get() ), buf.size ); // TODO: don't copy
-
 			insData.emplace_back( RefDataSource::InsertData {
 				RDEntityTraits<T>::getID( d ),
 				"Evan", // TODO: Change to username
 				d._active,
-				bufStr
+				TMQ::serialise( d )
 			} );
 		}
 

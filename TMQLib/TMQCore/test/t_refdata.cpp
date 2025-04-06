@@ -116,7 +116,7 @@ TEST_F( RefDataTest, CacheReloadTest )
 //TMQ::User createTestUser()
 //{
 //    TMQ::User user;
-//    user.firstname = "Sally";
+//    user.firstname = "Jeff";
 //    user.surname = "Jones";
 //    user.desk = "A1";
 //    user.age = 30;
@@ -160,6 +160,6 @@ TEST_F( RefDataTest, CacheReloadTest )
 //    RefData<User> rd;
 //    auto end = std::chrono::system_clock::now();
 //    std::cout << "Time to load users: " << std::chrono::duration_cast<std::chrono::milliseconds>( end - start ) << std::endl;
-//    auto tmp = rd.get( "John1Doe" );
+//    auto tmp = rd.get( "JeffJones" );
 //    std::cout << tmp->get()._lastUpdatedTs;
 //}

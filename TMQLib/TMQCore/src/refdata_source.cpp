@@ -47,7 +47,7 @@ std::vector<RefDataSource::FetchData> TSDBRefDataSource::fetchAsOf( const std::s
 
 void TSDBRefDataSource::insert( const std::string_view table, const std::vector<InsertData>& insData )
 {
-	using Schema = QuerySchema<std::string, std::string, bool, std::string>;
+	using Schema = QuerySchema<std::string_view, std::string_view, bool, BufferView>;
 	static constexpr std::array<std::string_view, 4> COL_NAMES = { "ID", "LastUpdatedBy", "Active", "Blob" };
 
 	// TODO: Do we need to just make InsertData itself a tuple for performance?

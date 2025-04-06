@@ -61,6 +61,24 @@ struct CHColType<std::string>
 };
 
 template<>
+struct CHColType<std::string_view>
+{
+    using Type = clickhouse::ColumnString;
+};
+
+template<>
+struct CHColType<BufferView>
+{
+    using Type = clickhouse::ColumnString;
+};
+
+template<>
+struct CHColType<Buffer>
+{
+    using Type = clickhouse::ColumnString;
+};
+
+template<>
 struct CHColType<uint64_t>
 {
     using Type = clickhouse::ColumnUInt64;
@@ -90,8 +108,19 @@ constexpr T convToCHType( const T& value ) {
     return value;
 }
 
-inline uint64_t convToCHType( const std::chrono::system_clock::time_point& tp ) {
+inline uint64_t convToCHType( const std::chrono::system_clock::time_point& tp )
+{
     return std::chrono::duration_cast<std::chrono::nanoseconds>( tp.time_since_epoch() ).count();
+}
+
+inline std::string_view convToCHType( const BufferView& bv )
+{
+    return std::string_view( reinterpret_cast<const char*>( bv.data ), bv.size );
+}
+
+inline std::string_view convToCHType( const Buffer& bv )
+{
+    return std::string_view( reinterpret_cast<const char*>( bv.data.get() ), bv.size );
 }
 
 }

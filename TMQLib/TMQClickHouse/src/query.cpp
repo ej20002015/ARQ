@@ -152,7 +152,7 @@ template TMQClickHouse_API QueryResult<StringSchema> CHQuery::select<StringSchem
 using RDFetchSchema = QuerySchema<std::chrono::system_clock::time_point, std::string, Buffer>;
 template TMQClickHouse_API QueryResult<RDFetchSchema> CHQuery::select<RDFetchSchema>( const std::string_view query );
 
-using RDInsertSchema = QuerySchema<std::string, std::string, bool, std::string>;
+using RDInsertSchema = QuerySchema<std::string_view, std::string_view, bool, BufferView>;
 template TMQClickHouse_API void CHQuery::insert<RDInsertSchema>( const std::string_view tableName, const std::vector<typename RDInsertSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDInsertSchema::TupleType>>& colNames );
 
 }
