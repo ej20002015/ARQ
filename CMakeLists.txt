@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.23)
 
+message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
+
 # Project name
 project(TMQLib)
 
