@@ -82,7 +82,7 @@ template<c_RDEntity T>
 class LiveRDManager
 {
 public:
-	static [[nodiscard]] std::shared_ptr<LiveRDCache<T>> get()
+	[[nodiscard]] static std::shared_ptr<LiveRDCache<T>> get()
 	{
 		static auto inst = std::make_shared<LiveRDCache<T>>();
 		return inst;

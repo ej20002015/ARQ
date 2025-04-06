@@ -32,8 +32,9 @@ public:
 public:
 	virtual ~RefDataSource() = default;
 
-	TMQCore_API virtual [[nodiscard]] std::vector<FetchData> fetchLatest( const std::string_view table ) = 0;
-	TMQCore_API virtual [[nodiscard]] std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) = 0;
+	[[nodiscard]] TMQCore_API virtual std::vector<FetchData> fetchLatest( const std::string_view table ) = 0;
+	[[nodiscard]] TMQCore_API virtual std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) = 0;
+
 	TMQCore_API virtual void insert( const std::string_view table, const std::vector<InsertData>& insData ) = 0;
 };
 
@@ -44,13 +45,13 @@ template <c_RDEntity T>
 class TypedRDSource
 {
 public:
-	static [[nodiscard]] std::vector<T> fetchLatest( RefDataSource& source )
+	[[nodiscard]] static std::vector<T> fetchLatest( RefDataSource& source )
 	{
 		const auto fetchRes = source.fetchLatest( RDEntityTraits<T>::table() );
 		return TypedRDSource<T>::parseFetchRes( fetchRes );
 	}
 
-	static [[nodiscard]] std::vector<T> fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
+	[[nodiscard]] static std::vector<T> fetchAsOf( RefDataSource& source, const std::chrono::system_clock::time_point ts )
 	{
 		const auto fetchRes = source.fetchAsOf( RDEntityTraits<T>::table(), ts );
 		return TypedRDSource<T>::parseFetchRes( fetchRes );
@@ -95,8 +96,8 @@ private:
 class TSDBRefDataSource : public RefDataSource
 {
 public:
-	TMQCore_API [[nodiscard]] std::vector<FetchData> fetchLatest( const std::string_view table ) override;
-	TMQCore_API [[nodiscard]] std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) override;
+	[[nodiscard]] TMQCore_API std::vector<FetchData> fetchLatest( const std::string_view table ) override;
+	[[nodiscard]] TMQCore_API std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) override;
 
 	TMQCore_API void insert( const std::string_view table, const std::vector<InsertData>& insData ) override;
 };
