@@ -308,10 +308,24 @@ set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
 # Flatbuffers setup
 
 set(CMAKE_FOLDER "vendor/flatbuffers")
+set(FLATBUFFERS_BUILD_SHAREDLIB ON CACHE BOOL "Build flatbuffers as shared library")
+set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "Don't build static flatbuffers library")
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Export all symbols on Windows (dllexport not setup in flatbuffers library)
 add_subdirectory(vendor/flatbuffers ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+unset(FLATBUFFERS_BUILD_SHAREDLIB)
 unset(CMAKE_FOLDER)
 set(FLATBUFFERS_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/flatbuffers/include")
-set(FLATBUFFERS_LINK_LIB "flatbuffers")
+set(FLATBUFFERS_LINK_LIB "flatbuffers_shared")
+
+# spdlog setup
+set(CMAKE_FOLDER "vendor/spdlog")
+set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as shared library")
+set(SPDLOG_BUILD_PIC ON CACHE BOOL "Use PIC when building spdlog as shared library")
+set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog")
+add_subdirectory(vendor/spdlog)
+set(SPDLOG_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/spdlog/include")
+set(SPDLOG_LINK_LIB "spdlog")
+unset(CMAKE_FOLDER)
 
 # Add TMQLib subdirectories
 add_subdirectory(TMQLib/TMQCore)

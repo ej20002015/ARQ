@@ -1,8 +1,8 @@
 - Integration testing for TMQClickHouse?
-- Add logger
 - Add stack trace library
 - Create DSH equivalent class and use in TMQClickHouse
   - What should library dependencies look like in this case?
+- Add event logging of some description
 - Create FXSpot trade class and valuation class?
 - Get it to a place where there is PV code
 - Create required mkt data structs

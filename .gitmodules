@@ -7,3 +7,6 @@
 [submodule "vendor/flatbuffers"]
 	path = vendor/flatbuffers
 	url = git@github.com:google/flatbuffers.git
+[submodule "vendor/spdlog"]
+	path = vendor/spdlog
+	url = git@github.com:gabime/spdlog.git

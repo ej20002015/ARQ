@@ -2,6 +2,7 @@
 
 #include <TMQUtils/hashers.h>
 #include <TMQCore/refdata_entities.h>
+#include <TMQCore/logger.h>
 
 #include "refdata_source.h"
 
@@ -59,6 +60,7 @@ public:
 
 		m_data = std::make_shared<RDDataMap<T>>();
 
+		Log().info( "Reloading LiveRDCache<{}>", RDEntityTraits<T>::name() );
 		std::vector<T> items = TypedRDSource<T>::fetchLatest( *m_rdSource );
 		m_data->reserve( items.size() );
 		for( auto&& item : std::move( items ) )
@@ -90,6 +92,7 @@ public:
 
 	static void onReload()
 	{
+		Log().info( "Reloading live {} refdata", RDEntityTraits<T>::name() );
 		// TODO: Will be triggered via solace subscription
 		get().reload();
 
@@ -122,11 +125,9 @@ public:
 	HistoricRDCache( const std::chrono::system_clock::time_point ts, const std::shared_ptr<RefDataSource>& source = nullptr )
 		: BaseRDCache<T>( source )
 	{
-		std::vector<T> records = TypedRDSource<T>::fetchAsOf( *m_rdSource );
-
 		m_data = std::make_shared<RDDataMap<T>>();
 
-		std::vector<T> items = TypedRDSource<T>::fetchLatest( *m_rdSource );
+		std::vector<T> items = TypedRDSource<T>::fetchAsOf( *m_rdSource );
 		m_data->reserve( items.size() );
 		for( auto&& item : std::move( items ) )
 		{
