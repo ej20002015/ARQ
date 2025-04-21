@@ -9,6 +9,7 @@
 	#include <processthreadsapi.h>
 #else
 	#include <unistd.h>
+	#include <sys/types.h>
 	#include <pthread.h>
 #endif
 
@@ -131,9 +132,9 @@ void setThreadName( const std::string_view name )
 
 	#else
 
-	int result = pthread_setname_np( pthread_self(), truncated_name.c_str() );
+	int result = pthread_setname_np( pthread_self(), name.data() );
 	if( result != 0  )
-		throw TMQException( std::format( "Could not set thread name: pthread_setname_np failed: {0}", strerror( result ) ) );
+		throw TMQException( std::format( "Could not set thread name: pthread_setname_np failed: {0}", result ) );
 
 	#endif
 
@@ -145,7 +146,7 @@ int32_t iThreadID()
 	#ifdef _WIN32
 	return static_cast<int32_t>( GetCurrentThreadId() );
 	#else
-	return static_cast<int32_t>( pthread_self() );
+	return static_cast<int32_t>( gettid() );
 	#endif
 }
 

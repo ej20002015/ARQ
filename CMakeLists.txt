@@ -12,6 +12,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Allow for folders in the IDE
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+# Linux with default to prepending with prefix "lib" - don't want that
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -294,7 +297,7 @@ set_target_properties(copy_aeron_dll PROPERTIES FOLDER "custom_targets")
 
 set(CMAKE_FOLDER "vendor/clickhouse-cpp")
 if(UNIX)
-    set(BUILD_SHARED_LIBS ON CACHE BOOL "On linux build clickhouse as a shared lib")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "On linux build clickhouse as a shared lib" FORCE)
 endif()
 add_subdirectory(vendor/clickhouse-cpp)
 unset(CMAKE_FOLDER)
@@ -308,8 +311,8 @@ set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
 # Flatbuffers setup
 
 set(CMAKE_FOLDER "vendor/flatbuffers")
-set(FLATBUFFERS_BUILD_SHAREDLIB ON CACHE BOOL "Build flatbuffers as shared library")
-set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "Don't build static flatbuffers library")
+set(FLATBUFFERS_BUILD_SHAREDLIB ON CACHE BOOL "Build flatbuffers as shared library" FORCE)
+set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "Don't build static flatbuffers library" FORCE)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Export all symbols on Windows (dllexport not setup in flatbuffers library)
 add_subdirectory(vendor/flatbuffers ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 unset(FLATBUFFERS_BUILD_SHAREDLIB)
@@ -319,9 +322,9 @@ set(FLATBUFFERS_LINK_LIB "flatbuffers_shared")
 
 # spdlog setup
 set(CMAKE_FOLDER "vendor/spdlog")
-set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as shared library")
-set(SPDLOG_BUILD_PIC ON CACHE BOOL "Use PIC when building spdlog as shared library")
-set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog")
+set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as shared library" FORCE)
+set(SPDLOG_BUILD_PIC ON CACHE BOOL "Use PIC when building spdlog as shared library" FORCE)
+set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog" FORCE)
 add_subdirectory(vendor/spdlog)
 set(SPDLOG_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/spdlog/include")
 set(SPDLOG_LINK_LIB "spdlog")
@@ -329,7 +332,7 @@ unset(CMAKE_FOLDER)
 
 # nlohmann json setup
 set(CMAKE_FOLDER "vendor/nlohmann_json")
-set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_BuildTests OFF CACHE INTERNAL "" FORCE)
 add_subdirectory(vendor/nlohmann_json)
 set(JSON_LINK_LIB "nlohmann_json::nlohmann_json")
 unset(CMAKE_FOLDER)

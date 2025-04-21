@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <cstddef>
 
 #ifdef _WIN32
 	#define TMQ_BREAK() __debugbreak()

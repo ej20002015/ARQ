@@ -98,6 +98,7 @@ protected:
     JSON getFirstLogJson( const std::string& context_msg = "" )
     {
         Log::flush();
+        std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
         auto messages = m_testSink->get_messages();
         if( messages.empty() )
         {
@@ -111,6 +112,7 @@ protected:
     std::vector<JSON> getAllLogJson( const std::string& context_msg = "" )
     {
         Log::flush();
+        std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
         auto messages = m_testSink->get_messages();
         std::vector<JSON> jsonObjects;
         if( messages.empty() )

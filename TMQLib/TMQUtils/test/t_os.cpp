@@ -4,6 +4,9 @@
 
 #include <TMQUtils/error.h>
 
+#include <thread>
+#include <iostream>
+
 using ::testing::HasSubstr;
 using namespace TMQ;
 
@@ -28,7 +31,11 @@ TEST( OSUtilsTest, GetThreadID )
 TEST( OSUtilsTest, GetUnnamedThreadName )
 {
     std::string_view threadName = OS::threadName();
-    ASSERT_EQ( threadName, "unnamed_thread" );
+    #ifdef _WIN32
+        ASSERT_STREQ( threadName.data(), "unnamed_thread" );
+    #else
+        ASSERT_STREQ( threadName.data(), "t_TMQUtils" ); // Linux defaults thread name to process name (to the kernel thread and process are the same thing)
+    #endif
 }
 
 TEST( OSUtilsTest, SetAndGetThreadName )
