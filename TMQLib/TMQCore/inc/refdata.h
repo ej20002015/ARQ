@@ -1,6 +1,7 @@
 #pragma once
 
 #include <TMQUtils/hashers.h>
+#include <TMQUtils/time.h>
 #include <TMQCore/refdata_entities.h>
 #include <TMQCore/logger.h>
 
@@ -56,11 +57,11 @@ public:
 
 	void reload() override
 	{
+		Log( Module::REFDATA ).debug( "Reloading LiveRDCache<{}>", RDEntityTraits<T>::name() );
+		
 		std::unique_lock<std::shared_mutex> lock( m_mutex );
 
 		m_data = std::make_shared<RDDataMap<T>>();
-
-		Log().info( "Reloading LiveRDCache<{}>", RDEntityTraits<T>::name() );
 		std::vector<T> items = TypedRDSource<T>::fetchLatest( *m_rdSource );
 		m_data->reserve( items.size() );
 		for( auto&& item : std::move( items ) )
@@ -92,8 +93,10 @@ public:
 
 	static void onReload()
 	{
-		Log().info( "Reloading live {} refdata", RDEntityTraits<T>::name() );
 		// TODO: Will be triggered via solace subscription
+
+		Log( Module::REFDATA ).info( "Reloading live {} refdata", RDEntityTraits<T>::name() );
+
 		get().reload();
 
 		{
@@ -125,6 +128,8 @@ public:
 	HistoricRDCache( const std::chrono::system_clock::time_point ts, const std::shared_ptr<RefDataSource>& source = nullptr )
 		: BaseRDCache<T>( source )
 	{
+		Log( Module::REFDATA ).debug( "Loading HistoricRDCache<{0}> for ts [{1}]", RDEntityTraits<T>::name(), Time::tpToISO8601Str( ts ) );
+
 		m_data = std::make_shared<RDDataMap<T>>();
 
 		std::vector<T> items = TypedRDSource<T>::fetchAsOf( *m_rdSource );
@@ -208,6 +213,8 @@ public:
 	template<c_RDEntity T>
 	bool insert( const std::vector<T>& data, const std::shared_ptr<BaseRDCache<T>>& rdCache = nullptr )
 	{
+		Log( Module::REFDATA ).info( "Inserting refdata: {0} {1}s", data.size(), RDEntityTraits<T>::name() );
+
 		if( m_staleCheck == StaleCheck::FROM_LIVERD_FORCE_REFRESH || m_staleCheck == StaleCheck::FROM_LIVERD )
 		{
 			const std::shared_ptr<BaseRDCache<T>> rdCacheRef = rdCache ? rdCache : LiveRDManager<T>::get();
@@ -220,7 +227,11 @@ public:
 			{
 				const auto cachedData = rd.get( RDEntityTraits<T>::getID( dataItem ) );
 				if( cachedData && cachedData->get()._lastUpdatedTs > dataItem._lastUpdatedTs )
+				{
+					Log( Module::REFDATA ).warn( "Not inserting refdata due to stale record for {0}.{1} - ts of record to insert is {2}; ts of record in cache is {3}", 
+												 RDEntityTraits<T>::name(), RDEntityTraits<T>::getID( dataItem ), dataItem._lastUpdatedTs, cachedData->get()._lastUpdatedTs );
 					return false;
+				}
 			}
 		}
 

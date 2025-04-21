@@ -157,7 +157,7 @@ function(TMQ_define_dynalib TARGET)
 
     target_compile_definitions(${TARGET} PRIVATE "${TARGET}_EXPORTS")
 
-    set_target_properties(${TARGET} PROPERTIES FOLDER "dlls")
+    set_target_properties(${TARGET} PROPERTIES FOLDER "shared_libs")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
     source_group("inc" FILES ${INCLUDES})
 endfunction()
@@ -325,6 +325,13 @@ set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog")
 add_subdirectory(vendor/spdlog)
 set(SPDLOG_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/spdlog/include")
 set(SPDLOG_LINK_LIB "spdlog")
+unset(CMAKE_FOLDER)
+
+# nlohmann json setup
+set(CMAKE_FOLDER "vendor/nlohmann_json")
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+add_subdirectory(vendor/nlohmann_json)
+set(JSON_LINK_LIB "nlohmann_json::nlohmann_json")
 unset(CMAKE_FOLDER)
 
 # Add TMQLib subdirectories

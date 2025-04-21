@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <algorithm>
 #include <utility>
 
 namespace TMQ

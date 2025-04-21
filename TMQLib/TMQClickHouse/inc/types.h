@@ -1,7 +1,9 @@
 #pragma once
 
-#include <clickhouse/client.h>
 #include <TMQUtils/buffer.h>
+#include <TMQUtils/time.h>
+
+#include <clickhouse/client.h>
 
 #include <chrono>
 
@@ -28,9 +30,7 @@ T extractColVal( const std::shared_ptr<clickhouse::Column>& column, size_t row )
     }
     else if constexpr( std::is_same_v<T, std::chrono::system_clock::time_point> )
     {
-        return std::chrono::system_clock::time_point(
-            std::chrono::duration_cast<std::chrono::system_clock::duration>( std::chrono::nanoseconds( column->As<clickhouse::ColumnInt64>()->At( row ) ) )
-        );
+        return Time::longToTp<std::chrono::nanoseconds>( column->As<clickhouse::ColumnInt64>()->At( row ) );
     }
     else if constexpr( std::is_same_v<T, int32_t> )
     {

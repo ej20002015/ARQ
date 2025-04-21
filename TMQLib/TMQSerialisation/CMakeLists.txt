@@ -1,6 +1,6 @@
 TMQ_define_dynalib(TMQSerialisation)
 target_include_directories(TMQSerialisation PUBLIC ${FLATBUFFERS_INC_PATHS})
-append_link_libraries(TMQSerialisation ${FLATBUFFERS_LINK_LIB})
+append_link_libraries(TMQSerialisation TMQUtils ${FLATBUFFERS_LINK_LIB})
 
 TMQ_define_dynalib_tests(TMQSerialisation)
 

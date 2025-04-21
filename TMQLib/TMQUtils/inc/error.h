@@ -55,4 +55,9 @@ inline std::ostream& operator << ( std::ostream& os, const std::source_location&
 //    return os;
 //}
 
+inline std::string fmtInternalErrStr( const std::string_view errStr )
+{
+    return std::format( "!!! {0} !!!", errStr );
+}
+
 } // namespace TMQ

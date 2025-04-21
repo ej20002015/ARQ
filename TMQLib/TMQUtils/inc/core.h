@@ -1,9 +1,18 @@
 #pragma once
-#include <TMQCore/dll.h>
 
 #include <type_traits>
 
-TMQCore_API int multiply( const int x, const int y );
+#ifdef _WIN32
+	#define TMQ_BREAK() __debugbreak()
+#else
+	#define TMQ_BREAK()
+#endif
+
+#ifdef NDEBUG
+	#define TMQ_ASSERT( x )
+#else
+	#define TMQ_ASSERT( x ) { if( !( x ) ) { TMQ_BREAK(); } }
+#endif
 
 namespace TMQ
 {
@@ -17,6 +26,16 @@ enum class DoThrow
 struct Empty
 {
 };
+
+enum class Module
+{
+	REFDATA,
+	CORE,
+
+	_SIZE
+};
+
+static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "REFDATA", "CORE" };
 
 // Commonly used concepts
 

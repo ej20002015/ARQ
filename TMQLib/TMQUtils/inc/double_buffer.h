@@ -1,6 +1,5 @@
 #pragma once
-
-#include "dll.h"
+#include <TMQUtils/dll.h>
 
 #include <array>
 #include <atomic>

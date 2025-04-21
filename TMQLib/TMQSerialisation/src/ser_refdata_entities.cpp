@@ -1,6 +1,5 @@
 #include <TMQSerialisation/ser_refdata_entities.h>
 
-#include <TMQUtils/error.h>
 #include <TMQUtils/buffer.h>
 
 #include <flatbuffers/flatbuffers.h>
