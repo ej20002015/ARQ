@@ -34,7 +34,7 @@ public:
                         const std::vector<typename Schema::TupleType>& data,
                         const std::array<std::string_view, std::tuple_size_v<typename Schema::TupleType>>& colNames );
 
-    TMQClickHouse_API static void execute( const std::string_view query );
+    static void execute( const std::string_view query );
 };
 
 }

@@ -33,7 +33,7 @@ public:
 
 protected:
 	BaseRDCache( const std::shared_ptr<RefDataSource>& source = nullptr )
-		: m_rdSource( source ? source : getGlobalRefDataSource() )
+		: m_rdSource( source ? source : GlobalRefDataSource::get() )
 	{}
 
 protected:
@@ -203,7 +203,7 @@ public:
 
 public:
 	RefDBInserter( const std::shared_ptr<RefDataSource>& source = nullptr, const StaleCheck staleCheck = StaleCheck::NONE )
-		: m_rdSource( source ? source : getGlobalRefDataSource() )
+		: m_rdSource( source ? source : GlobalRefDataSource::get() )
 		, m_staleCheck( staleCheck )
 	{}
 	RefDBInserter( const StaleCheck staleCheck )

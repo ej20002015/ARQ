@@ -1,12 +1,15 @@
 #pragma once
-#include <TMQCore/dll.h> // Used in the header only refdata.h file so need to dllexport functions
+#include <TMQCore/dll.h>
 
 #include <TMQCore/refdata_entities.h>
 #include <TMQSerialisation/serialisation.h>
 
 #include <vector>
+#include <array>
 #include <string>
 #include <chrono>
+#include <shared_mutex>
+#include <functional>
 
 namespace TMQ
 {
@@ -38,8 +41,42 @@ public:
 	TMQCore_API virtual void insert( const std::string_view table, const std::vector<InsertData>& insData ) = 0;
 };
 
-// TODO: Have some way of setting this
-TMQCore_API std::shared_ptr<RefDataSource> getGlobalRefDataSource();
+using RefDataSourceCreateFunc = std::add_pointer<RefDataSource*()>::type;
+
+class RefDataSourceRepo
+{
+public:
+	RefDataSourceRepo() = delete;
+
+	enum Type
+	{
+		ClickHouse,
+
+		_SIZE
+	};
+
+public:
+	[[nodiscard]] TMQCore_API static std::shared_ptr<RefDataSource> create( const Type type );
+
+private:
+	static inline std::array<std::shared_ptr<RefDataSource>, Type::_SIZE> s_sources;
+	static inline std::shared_mutex s_mut;
+};
+
+class GlobalRefDataSource
+{
+public:
+	GlobalRefDataSource() = delete;
+
+	using CreatorFunc = std::function<std::shared_ptr<RefDataSource>()>;
+
+	[[nodiscard]] TMQCore_API static std::shared_ptr<RefDataSource> get();
+	TMQCore_API static void setFunc( const CreatorFunc& creatorFunc );
+
+private:
+	static inline CreatorFunc s_globalSourceCreator;
+	static inline std::shared_mutex s_mut;
+};
 
 template <c_RDEntity T>
 class TypedRDSource
@@ -91,15 +128,6 @@ private:
 
 		return result;
 	}
-};
-
-class TSDBRefDataSource : public RefDataSource
-{
-public:
-	[[nodiscard]] TMQCore_API std::vector<FetchData> fetchLatest( const std::string_view table ) override;
-	[[nodiscard]] TMQCore_API std::vector<FetchData> fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts ) override;
-
-	TMQCore_API void insert( const std::string_view table, const std::vector<InsertData>& insData ) override;
 };
 
 }

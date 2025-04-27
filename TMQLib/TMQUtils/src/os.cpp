@@ -13,7 +13,6 @@
 	#include <pthread.h>
 #endif
 
-#include <iostream>
 #include <filesystem>
 #include <atomic>
 
@@ -154,6 +153,146 @@ int32_t threadID()
 {
 	static const thread_local int32_t threadID = iThreadID();
 	return threadID;
+}
+
+OS::DynaLib::DynaLib( const std::string_view name )
+{
+	load( name );
+}
+
+DynaLib::~DynaLib()
+{
+	unload();
+}
+
+void DynaLib::load( const std::string_view name )
+{
+	if( isLoaded() )
+		return;
+
+	setName( name );
+	resetError();
+
+	#ifdef _WIN32
+
+	HINSTANCE hInst = LoadLibrary( m_name.c_str() );
+	if( !hInst )
+		throw TMQException( std::format( "Could not load dynalib {0}: {1}", m_name, getLastError() ) );
+
+	m_nativeHandle = reinterpret_cast<void*>( hInst );
+
+	#else
+
+	void* dl = dlopen( m_name.c_str(), RTLD_LAZY );
+	if( !dl )
+		throw TMQException( std::format( "Could not load dynalib {0}: {1}", m_name, getLastError() ) );
+
+	m_nativeHandle = handle;
+
+	#endif
+}
+
+void DynaLib::unload()
+{
+	if( !isLoaded() )
+		return;
+
+	resetError();
+
+	#ifdef _WIN32
+
+	BOOL freeSuccess = FreeLibrary( reinterpret_cast<HMODULE>( m_nativeHandle ) );
+	if( !freeSuccess )
+		throw TMQException( std::format( "Could not unload dynalib {0}: {1}", m_name, getLastError() ) );
+
+	#else
+
+	int32_t errCode = dlclose( m_nativeHandle );
+	if( errCode )
+		throw TMQException( std::format( "Could not unload dynalib {0}: {1}", m_name, getLastError() ) );
+
+	#endif
+
+	m_nativeHandle = nullptr;
+	m_name.clear();
+}
+
+void DynaLib::setName( const std::string_view name )
+{
+	#ifdef _WIN32
+	m_name = std::format( "{0}.dll", name );
+	#else
+	m_name = std::format( "{0}.so", name );
+	#endif
+}
+
+void DynaLib::resetError() const
+{
+	#ifdef _WIN32
+	SetLastError( 0 );
+	#else
+	dlerror();
+	#endif
+}
+
+std::string DynaLib::getLastError() const
+{
+	std::string errMsg;
+
+	#ifdef _WIN32
+
+	DWORD errorCode = GetLastError();
+	if( errorCode != 0 )
+	{
+		LPSTR messageBuffer = nullptr;
+		// Ask Win32 to allocate the buffer and format the message.
+		size_t size = FormatMessageA(
+			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL, errorCode, MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ), (LPSTR)&messageBuffer, 0, NULL );
+
+		errMsg = std::string( messageBuffer, size );
+
+		LocalFree( messageBuffer );
+
+		// Remove trailing newline characters often included by FormatMessage
+		while( !errMsg.empty() && ( errMsg.back() == '\n' || errMsg.back() == '\r' ) )
+			errMsg.pop_back();
+	}
+
+	#else
+
+	const char* errCStr = dlerror();
+	if( errCStr )
+		errStr = errCStr;
+
+	#endif
+
+	return errMsg;
+}
+
+void* DynaLib::iGetFunc( const std::string_view funcName ) const
+{
+	if( !isLoaded() )
+		throw TMQException( std::format( "Could not get {0} function from dynalib as it hasn't been loaded", funcName ) );
+
+	resetError();
+	void* funcPtr = nullptr;
+
+	#ifdef _WIN32
+
+	FARPROC procAddr = GetProcAddress( reinterpret_cast<HMODULE>( m_nativeHandle ), funcName.data() );
+	funcPtr = static_cast<void*>( procAddr );
+
+	#else
+
+	funcPtr = dlsym( m_nativeHandle, funcName.data() );
+
+	#endif
+
+	if( !funcPtr )
+		throw TMQException( std::format( "Could not get {0} function from dynalib {1}: {2}", funcName, m_name, getLastError() ) );
+
+	return funcPtr;
 }
 
 }

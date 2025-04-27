@@ -43,7 +43,7 @@ struct LoggerConfig
 	bool disableFileLogger    = false;
 
 	LogLevel consoleLoggerLevel = LogLevel::INFO;
-	LogLevel fileLoggerLevel    = LogLevel::INFO;
+	LogLevel fileLoggerLevel    = LogLevel::DEBUG;
 
 	LogLevel flushLevel         = LogLevel::ERROR;
 
@@ -78,7 +78,7 @@ public:
 		logInternal( level, loc, module, contextArgs, std::move( msg ), exception );
 	}
 
-	bool shouldLog( const LogLevel level );
+	[[nodiscard]] bool shouldLog( const LogLevel level );
 
 	void setLevel( const LogLevel level );
 
@@ -104,7 +104,7 @@ public:
 	TMQCore_API static void init( const LoggerConfig& cfg = LoggerConfig() );
 	TMQCore_API static void fini();
 
-	TMQCore_API static bool shouldLog( const LogLevel level );
+	[[nodiscard]] TMQCore_API static bool shouldLog( const LogLevel level );
 
 	TMQCore_API static void setLevel( const LogLevel level );
 
@@ -256,8 +256,8 @@ public:
 				std::map<std::string, std::optional<JSON>> m_prevState;
 			};
 
-			TMQCore_API static ReadLock  read();
-			TMQCore_API static WriteLock write();
+			[[nodiscard]] TMQCore_API static ReadLock  read();
+			[[nodiscard]] TMQCore_API static WriteLock write();
 		};
 
 		class Thread
@@ -277,8 +277,8 @@ public:
 				std::map<std::string, std::optional<JSON>> m_prevState;
 			};
 
-			TMQCore_API static ReadLock  read();
-			TMQCore_API static WriteLock write();
+			[[nodiscard]] TMQCore_API static ReadLock  read();
+			[[nodiscard]] TMQCore_API static WriteLock write();
 		};
 
 	private:

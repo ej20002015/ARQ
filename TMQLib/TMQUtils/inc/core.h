@@ -32,15 +32,19 @@ enum class Module
 {
 	REFDATA,
 	CORE,
+	CLICKHOUSE,
 
 	_SIZE
 };
 
-static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "REFDATA", "CORE" };
+static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "REFDATA", "CORE", "CLICKHOUSE" };
 
 // Commonly used concepts
 
 template<typename T>
 concept c_CStrLiteral = std::is_same_v<std::decay_t<T>, const char*> || std::is_same_v<std::decay_t<T>, const char[]>;
+
+template <typename T>
+concept c_FuncPtr = std::is_pointer_v<T> && std::is_function_v<std::remove_pointer_t<T>>;
 
 }

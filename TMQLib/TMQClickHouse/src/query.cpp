@@ -1,9 +1,12 @@
-#include <TMQClickHouse/query.h>
+#include "query.h"
 
-#include <TMQClickHouse/connection.h>
-#include <TMQClickHouse/types.h>
 #include <TMQUtils/error.h>
 #include <TMQUtils/buffer.h>
+#include <TMQUtils/instr.h>
+#include <TMQCore/logger.h>
+
+#include "types.h"
+#include "connection.h"
 
 #include <clickhouse/client.h>
 
@@ -31,6 +34,8 @@ QueryResult<Schema> CHQuery::select( const std::string_view query )
 
     QueryResult<Schema> result;
 
+    Instr::Timer tm;
+
     try
     {
         conn.client().Select( std::string( query ), [&] ( const clickhouse::Block& block )
@@ -50,6 +55,8 @@ QueryResult<Schema> CHQuery::select( const std::string_view query )
     {
         throw TMQException( std::format( "Error executing SELECT query: {0}", e.what() ) );
     }
+
+    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse select query in {}", tm.duration() );
 
     return result;
 }
@@ -106,6 +113,8 @@ void CHQuery::insert( const std::string_view tableName,
 {
     CHConn conn;
 
+    Instr::Timer tm;
+
     try
     {
         using Tuple = typename Schema::TupleType;
@@ -126,12 +135,16 @@ void CHQuery::insert( const std::string_view tableName,
     {
         throw TMQException( std::format( "Error executing INSERT query: {0}", e.what() ) );
     }
+
+    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse insert query in {}", tm.duration() );
 }
 
 
 void CHQuery::execute( const std::string_view query )
 {
     CHConn conn;
+
+    Instr::Timer tm;
 
     try
     {
@@ -141,18 +154,20 @@ void CHQuery::execute( const std::string_view query )
     {
         throw TMQException( std::format( "Error executing query: {0}", e.what() ) );
     }
+
+    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse query in {}", tm.duration() );
 }
 
 // Explicit template instantiations for all possible QuerySchemas go here
 
 
 using StringSchema = QuerySchema<std::string>;
-template TMQClickHouse_API QueryResult<StringSchema> CHQuery::select<StringSchema>( const std::string_view query );
+template QueryResult<StringSchema> CHQuery::select<StringSchema>( const std::string_view query );
 
 using RDFetchSchema = QuerySchema<std::chrono::system_clock::time_point, std::string, Buffer>;
-template TMQClickHouse_API QueryResult<RDFetchSchema> CHQuery::select<RDFetchSchema>( const std::string_view query );
+template QueryResult<RDFetchSchema> CHQuery::select<RDFetchSchema>( const std::string_view query );
 
 using RDInsertSchema = QuerySchema<std::string_view, std::string_view, bool, BufferView>;
-template TMQClickHouse_API void CHQuery::insert<RDInsertSchema>( const std::string_view tableName, const std::vector<typename RDInsertSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDInsertSchema::TupleType>>& colNames );
+template void CHQuery::insert<RDInsertSchema>( const std::string_view tableName, const std::vector<typename RDInsertSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDInsertSchema::TupleType>>& colNames );
 
 }

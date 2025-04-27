@@ -1,61 +1,64 @@
-#include "refdata_source.h"
+#include <TMQCore/refdata_source.h>
 
-#include <TMQClickHouse/query.h>
+#include <TMQCore/dynalib_cache.h>
+#include <TMQCore/logger.h>
 
 namespace TMQ
 {
 
-// TODO: Have some way of setting this
-std::shared_ptr<RefDataSource> getGlobalRefDataSource()
+std::shared_ptr<RefDataSource> TMQ::RefDataSourceRepo::create( const Type type )
 {
-	static auto globalSource = std::make_shared<TSDBRefDataSource>();
-	return globalSource;
-}
-
-std::vector<RefDataSource::FetchData> TSDBRefDataSource::fetchLatest( const std::string_view table )
-{
-	using Schema = QuerySchema<std::chrono::system_clock::time_point, std::string, Buffer>;
-
-	static constexpr auto SELECT_STMT = R"(
-		SELECT toUnixTimestamp64Nano(LastUpdatedTs), LastUpdatedBy, Blob
-		FROM RefData.{0}
-		WHERE Active = 1
-		QUALIFY LastUpdatedTs = MAX(LastUpdatedTs) OVER (PARTITION BY ID)
-		ORDER BY ID ASC;
-	)";
-
-	auto res = CHQuery::select<Schema>( std::format( SELECT_STMT, table ) );
-
-	std::vector<RefDataSource::FetchData> buffers( res.size() );
-	for( size_t i = 0; i < res.size(); ++i )
 	{
-		buffers[i] = {
-			std::get<0>( res[i] ),
-			std::move( std::get<1>( res[i] ) ),
-			std::move( std::get<2>( res[i] ) )
-		};
+		std::shared_lock<std::shared_mutex> sl( s_mut );
+		if( s_sources[type] )
+			return s_sources[type];
 	}
 
-	return buffers;
+	{
+		std::unique_lock<std::shared_mutex> ul( s_mut );
+		// Need to check again as source may have been added between unlocking and re-locking
+		if( s_sources[type] )
+			return s_sources[type];
+
+		std::string dynaLibName;
+		switch( type )
+		{
+			case Type::ClickHouse: dynaLibName = "TMQClickhouse"; break;
+			default:
+				TMQ_ASSERT( false );
+		}
+
+		Log( Module::REFDATA ).info( "Loading dynalib {} to get RefDataSource", dynaLibName );
+		const OS::DynaLib& lib = DynaLibCache::inst().get( "TMQClickHouse" );
+
+		const auto createFunc = lib.getFunc<RefDataSourceCreateFunc>( "createRefDataSource" );
+		RefDataSource* source = createFunc();
+		s_sources[type] = std::shared_ptr<RefDataSource>( source );
+		return s_sources[type];
+	}
 }
 
-std::vector<RefDataSource::FetchData> TSDBRefDataSource::fetchAsOf( const std::string_view table, const std::chrono::system_clock::time_point ts )
+std::shared_ptr<RefDataSource> GlobalRefDataSource::get()
 {
-	// TODO
-	return std::vector<RefDataSource::FetchData>();
+	std::shared_lock<std::shared_mutex> sl( s_mut );
+	if( s_globalSourceCreator )
+		return s_globalSourceCreator();
+	else
+		throw TMQException( "Cannot return GlobalRefDataSource - creator function hasn't been set yet" );
 }
 
-void TSDBRefDataSource::insert( const std::string_view table, const std::vector<InsertData>& insData )
+void GlobalRefDataSource::setFunc( const CreatorFunc& creatorFunc )
 {
-	using Schema = QuerySchema<std::string_view, std::string_view, bool, BufferView>;
-	static constexpr std::array<std::string_view, 4> COL_NAMES = { "ID", "LastUpdatedBy", "Active", "Blob" };
-
-	// TODO: Do we need to just make InsertData itself a tuple for performance?
-	std::vector<Schema::TupleType> data;
-	for( const auto& dataItem : insData )
-		data.emplace_back( dataItem.ID, dataItem.lastUpdatedBy, dataItem.active, dataItem.blob );
-
-	CHQuery::insert<Schema>( std::format( "RefData.{0}", table ), data, COL_NAMES );
+	std::unique_lock<std::shared_mutex> ul( s_mut );
+	s_globalSourceCreator = creatorFunc;
 }
+
+static struct SetGlobalRDSourceCreatorFunc
+{
+	SetGlobalRDSourceCreatorFunc()
+	{
+		GlobalRefDataSource::setFunc( [] () { return RefDataSourceRepo::create( RefDataSourceRepo::ClickHouse ); } );
+	}
+} s;
 
 }

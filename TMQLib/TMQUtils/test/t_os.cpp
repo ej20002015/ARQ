@@ -6,6 +6,7 @@
 
 #include <thread>
 #include <iostream>
+#include <type_traits>
 
 using ::testing::HasSubstr;
 using namespace TMQ;
@@ -34,7 +35,7 @@ TEST( OSUtilsTest, GetUnnamedThreadName )
     #ifdef _WIN32
         ASSERT_STREQ( threadName.data(), "unnamed_thread" );
     #else
-        ASSERT_STREQ( threadName.data(), "t_TMQUtils" ); // Linux defaults thread name to process name (to the kernel thread and process are the same thing)
+        ASSERT_STREQ( threadName.data(), "t_TMQUtils" ); // Linux defaults thread name to process name
     #endif
 }
 
@@ -64,8 +65,29 @@ TEST( OSUtilsTest, SetTooLongThreadName )
         }
         catch( const TMQException& e )
         {
-            // and this tests that it has the correct message
             EXPECT_THAT( e.what(), HasSubstr ("exceeds maximum" ) );
+            throw;
+        }
+    }, TMQException );
+}
+
+TEST( OSUtilsTest, DynaLibNotLoadedOnConstruction )
+{
+    OS::DynaLib d;
+    ASSERT_FALSE( d.isLoaded() );
+}
+
+TEST( OSUtilsTest, DynaLibLoadNonExistent )
+{
+    OS::DynaLib d;
+    EXPECT_THROW( {
+        try
+        {
+            d.load( "NotADynaLib" );
+        }
+        catch( const TMQException& e )
+        {
+            EXPECT_THAT( e.what(), HasSubstr( "Could not load dynalib" ) );
             throw;
         }
     }, TMQException );

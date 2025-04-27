@@ -1,5 +1,4 @@
 #include <TMQCore/logger.h>
-
 #include <gtest/gtest.h>
 
 #include <TMQUtils/json.h>

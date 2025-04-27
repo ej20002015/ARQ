@@ -113,6 +113,13 @@ TEST_F( RefDataTest, CacheReloadTest )
     EXPECT_TRUE( reloadedData.has_value() ); // Data should still be available after reload
 }
 
+TEST_F( RefDataTest, GlobalRefDataSourceSet )
+{
+    GlobalRefDataSource::CreatorFunc func = [this] () { return m_mockSource; };
+    GlobalRefDataSource::setFunc( func );
+    EXPECT_EQ( GlobalRefDataSource::get(), m_mockSource );
+}
+
 //TMQ::User createTestUser()
 //{
 //    TMQ::User user;
@@ -153,7 +160,6 @@ TEST_F( RefDataTest, CacheReloadTest )
 //    bool valid = ins.insert<TMQ::User>( createTestUser() );
 //    std::cout << valid << std::endl;
 //}
-//
 //TEST( RefDataTests, TempUserTest )
 //{
 //    auto start = std::chrono::system_clock::now();

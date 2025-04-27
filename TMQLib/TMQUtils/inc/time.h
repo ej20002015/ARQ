@@ -15,18 +15,18 @@ TMQUtils_API std::string tpToISO8601Str( const std::chrono::system_clock::time_p
 TMQUtils_API std::string getTmNowAsISO8601Str();
 
 template<typename Dur>
-concept ChronoDuration = requires {
+concept c_Duration = requires {
 	typename Dur::rep;
 	typename Dur::period;
 };
 
-template<ChronoDuration Duration>
+template<c_Duration Duration>
 inline uint64_t tpToLong( const std::chrono::system_clock::time_point tp )
 {
 	return std::chrono::duration_cast<Duration>( tp.time_since_epoch() ).count();
 }
 
-template<ChronoDuration Duration>
+template<c_Duration Duration>
 inline std::chrono::system_clock::time_point longToTp( const uint64_t lng )
 {
 	return std::chrono::system_clock::time_point(
