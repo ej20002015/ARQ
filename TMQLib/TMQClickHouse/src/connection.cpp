@@ -2,6 +2,7 @@
 
 #include <TMQUtils/error.h>
 #include <TMQCore/logger.h>
+#include <TMQCore/data_source_config.h>
 
 namespace TMQ
 {
@@ -19,7 +20,14 @@ std::unique_ptr<clickhouse::Client> CHConnPool::getConn()
 	try
 	{
 		Log( Module::CLICKHOUSE ).info( "Creating new ClickHouse connection" );
-		auto newConn = std::make_unique<clickhouse::Client>( clickhouse::ClientOptions().SetHost( "localhost" ) ); // TODO: Can't always be using localhost - get from datasources ref table? If so will need to bootstrap main server
+
+		const DataSourceConfig config = DataSourceConfigManager::inst().get( "ClickHouseDB" );
+		clickhouse::ClientOptions opt = {
+			.host = config.hostname,
+			.port = config.port
+		};
+
+		auto newConn = std::make_unique<clickhouse::Client>( opt );
 		return newConn;
 	}
 	catch( const std::exception& e )

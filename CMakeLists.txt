@@ -337,6 +337,10 @@ add_subdirectory(vendor/nlohmann_json)
 set(JSON_LINK_LIB "nlohmann_json::nlohmann_json")
 unset(CMAKE_FOLDER)
 
+# toml++ setup
+add_subdirectory(vendor/tomlplusplus)
+set(TOMLPP_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/tomlplusplus/include")
+
 # Add TMQLib subdirectories
 add_subdirectory(TMQLib/TMQCore)
 add_subdirectory(TMQLib/TMQUtils)

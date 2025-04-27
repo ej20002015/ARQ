@@ -115,9 +115,11 @@ TEST_F( RefDataTest, CacheReloadTest )
 
 TEST_F( RefDataTest, GlobalRefDataSourceSet )
 {
+    const auto oldGlobal = GlobalRefDataSource::get();
     GlobalRefDataSource::CreatorFunc func = [this] () { return m_mockSource; };
     GlobalRefDataSource::setFunc( func );
     EXPECT_EQ( GlobalRefDataSource::get(), m_mockSource );
+    GlobalRefDataSource::setFunc( [oldGlobal] () { return oldGlobal; } );
 }
 
 //TMQ::User createTestUser()

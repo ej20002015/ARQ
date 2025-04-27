@@ -13,3 +13,6 @@
 [submodule "vendor/nlohmann_json"]
 	path = vendor/nlohmann_json
 	url = git@github.com:nlohmann/json.git
+[submodule "vendor/tomlplusplus"]
+	path = vendor/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git

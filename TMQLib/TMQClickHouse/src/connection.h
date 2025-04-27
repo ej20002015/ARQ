@@ -1,5 +1,4 @@
 #pragma once
-#include <TMQClickHouse/dll.h>
 
 #include <clickhouse/client.h>
 
