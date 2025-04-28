@@ -5,5 +5,5 @@ using namespace TMQ;
 
 TEST( DynaLibCacheTests, LoadTMQClickhouse )
 {
-    EXPECT_NO_THROW( DynaLibCache::inst().get( "TMQClickhouse" ) );
+    EXPECT_NO_THROW( auto t = DynaLibCache::inst().get( "TMQClickhouse" ) );
 }

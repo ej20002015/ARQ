@@ -170,4 +170,15 @@ template QueryResult<RDFetchSchema> CHQuery::select<RDFetchSchema>( const std::s
 using RDInsertSchema = QuerySchema<std::string_view, std::string_view, bool, BufferView>;
 template void CHQuery::insert<RDInsertSchema>( const std::string_view tableName, const std::vector<typename RDInsertSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename RDInsertSchema::TupleType>>& colNames );
 
+using MDFetchSchema = QuerySchema<
+    std::string,
+    std::string,
+    std::chrono::system_clock::time_point,
+    Buffer,
+    std::string,
+    std::chrono::system_clock::time_point,
+    std::string,
+    bool>;
+template QueryResult<MDFetchSchema> CHQuery::select<MDFetchSchema>( const std::string_view query );
+
 }

@@ -23,9 +23,9 @@ std::vector<RefDataSource::FetchData> CHRefDataSource::fetchLatest( const std::s
 	for( size_t i = 0; i < res.size(); ++i )
 	{
 		buffers[i] = {
-			std::get<0>( res[i] ),
-			std::move( std::get<1>( res[i] ) ),
-			std::move( std::get<2>( res[i] ) )
+			.lastUpdatedTs =            std::get<0>( res[i] ),
+			.lastUpdatedBy = std::move( std::get<1>( res[i] ) ),
+			.blob          = std::move( std::get<2>( res[i] ) )
 		};
 	}
 

@@ -1,111 +1,91 @@
 #pragma once
 #include <TMQMarket/dll.h>
 
-#include <TMQMarket/types.h>
+#include <TMQMarket/mktdata_entities.h>
 #include <TMQUtils/hashers.h>
 
 #include <unordered_map>
-#include <mutex>
-#include <functional>
-#include <set>
+#include <shared_mutex>
+#include <chrono>
 
 namespace TMQ
 {
 
-template<MktType::c_MktType T>
+namespace Mkt
+{
+
+template<c_MDEntity T>
 class MarketStore
 {
 public:
 	MarketStore() = default;
 
-	[[nodiscard]] std::optional<std::reference_wrapper<const T>> get( const std::string_view id ) const
+	[[nodiscard]] std::optional<std::reference_wrapper<const T>> get( const std::string_view iid ) const
 	{
-		std::lock_guard<std::mutex> lock( m_mutex );
+		std::shared_lock<std::shared_mutex> sl( m_mut );
 
-		const auto it = m_objects.find( id );
+		const auto it = m_objects.find( iid );
 		if( it == m_objects.end() )
 			return std::nullopt;
 
 		return std::cref( it->second );
 	}
 
-	void set( const std::string& id, const T& obj )
+	void set( const std::string& iid, const T& obj )
 	{
-		std::lock_guard<std::mutex> lock( m_mutex );
+		std::unique_lock<std::shared_mutex> ul( m_mut );
 
-		m_objects[id] = obj;
+		m_objects[iid] = obj;
 	}
 
 private:
 	std::unordered_map<std::string, T, TransparentStringHash, std::equal_to<>> m_objects;
-	mutable std::mutex m_mutex;
+	mutable std::shared_mutex m_mut;
 };
 
 class Market
 {
 public:
-	class Listener
-	{
-	public:
-		virtual void onMktUpdate( const MktType::Type type, const std::string_view id ) = 0;
-	};
-
-public:
 	Market() = default;
 
-	/*
-	* MktType getters and setters
-	*/
-
-	[[nodiscard]] std::optional<std::reference_wrapper<const MktType::FXPair>> getFxPair( const std::string_view id ) const
+	template<c_MDEntity T>
+	[[nodiscard]] std::optional<std::reference_wrapper<const T>> get( const std::string_view iid ) const
 	{
-		return m_fxPairs.get( id );
+		if      constexpr( std::is_same_v<T, FXRate> ) return m_fxRates.get( iid );
+		else if constexpr( std::is_same_v<T, EQ> )     return m_equities.get( iid );
+		else
+		{
+			static_assert( false, "Market::get<T> not implemented for this MD Entity" );
+		}
 	}
 
-	void setFxPair( const std::string& id, const MktType::FXPair& fxPair )
+	template<c_MDEntity T>
+	void set( const T& newObj )
 	{
-		m_fxPairs.set( id, fxPair );
-		notifyListeners( MktType::FX_PAIR, id );
-	}
-
-	[[nodiscard]] std::optional<std::reference_wrapper<const MktType::Equity>> getEquity( const std::string_view id ) const
-	{
-		return m_equities.get( id );
-	}
-
-	void setEquity( const std::string& id, const MktType::Equity& equity )
-	{
-		m_equities.set( id, equity );
-		notifyListeners( MktType::EQUITY, id );
-	}
-
-	/* 
-	* Mkt listener
-	*/
-	
-	void registerListener( Listener* const listener )
-	{
-		std::lock_guard<std::mutex> lock( m_listenerMutex );
-		m_listeners.insert( listener );
+		if      constexpr( std::is_same_v<T, FXRate> ) return m_fxRates.set( newObj.instrumentID, newObj );
+		else if constexpr( std::is_same_v<T, EQ> )     return m_equities.set( newObj.instrumentID, newObj );
+		else
+		{
+			static_assert( false, "Market::set<T> not implemented for this MD Entity" );
+		}
 	}
 
 private:
-	void notifyListeners( const MktType::Type type, const std::string_view id ) const
-	{
-		std::lock_guard<std::mutex> lock( m_listenerMutex );
-
-		for( Listener* const listener : m_listeners )
-			listener->onMktUpdate( type, id );
-	}
-
-private:
-	MarketStore<MktType::FXPair> m_fxPairs;
-	MarketStore<MktType::Equity> m_equities;
-
-	mutable std::mutex m_listenerMutex;
-	std::set<Listener*> m_listeners;
+	MarketStore<FXRate> m_fxRates;
+	MarketStore<EQ>     m_equities;
 };
 
-TMQMarket_API std::string MktDummyFunction();
+struct Context
+{
+	std::string tag;
+	std::optional<std::chrono::year_month_day> date;
+
+	//inline static Context LIVE = Context{ "LIVE", std::nullopt };
+};
+
+TMQMarket_API Market load( Context mktCtx ); // TODO
+TMQMarket_API void save( const Market& mkt );
+
+}
 
 }

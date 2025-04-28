@@ -56,7 +56,7 @@ public:
 	};
 
 public:
-	[[nodiscard]] TMQCore_API static std::shared_ptr<RefDataSource> create( const Type type );
+	[[nodiscard]] TMQCore_API static std::shared_ptr<RefDataSource> get( const Type type );
 
 private:
 	static inline std::array<std::shared_ptr<RefDataSource>, Type::_SIZE> s_sources;
