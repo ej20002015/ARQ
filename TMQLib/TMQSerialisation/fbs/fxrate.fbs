@@ -1,0 +1,13 @@
+namespace fbs;
+
+table FXRate {
+    instrument_id:string;
+    source:string;
+    asof_ts:ulong;
+
+    rate:double;
+    bid:double;
+    ask:double;
+}
+
+root_type FXRate;

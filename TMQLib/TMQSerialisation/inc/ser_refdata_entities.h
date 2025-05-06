@@ -15,6 +15,6 @@ template<c_RDEntity T>
 * --------- User ---------
 */
 
-[[nodiscard]] TMQSerialisation Buffer serialise( const User& user );
+[[nodiscard]] TMQSerialisation_API Buffer serialise( const User& user );
 
 }

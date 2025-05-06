@@ -10,7 +10,7 @@ std::vector<RefDataSource::FetchData> CHRefDataSource::fetchLatest( const std::s
 	using Schema = QuerySchema<std::chrono::system_clock::time_point, std::string, Buffer>;
 
 	static constexpr auto SELECT_STMT = R"(
-		SELECT toUnixTimestamp64Nano(LastUpdatedTs), LastUpdatedBy, Blob
+		SELECT LastUpdatedTs, LastUpdatedBy, Blob
 		FROM RefData.{0}
 		WHERE Active = 1
 		QUALIFY LastUpdatedTs = MAX(LastUpdatedTs) OVER (PARTITION BY ID)
@@ -45,8 +45,8 @@ void CHRefDataSource::insert( const std::string_view table, const std::vector<In
 
 	// TODO: Do we need to just make InsertData itself a tuple for performance?
 	std::vector<Schema::TupleType> data;
-	for( const auto& dataItem : insData )
-		data.emplace_back( dataItem.ID, dataItem.lastUpdatedBy, dataItem.active, dataItem.blob );
+	for( const auto& d : insData )
+		data.emplace_back( d.ID, d.lastUpdatedBy, d.active, d.blob );
 
 	CHQuery::insert<Schema>( std::format( "RefData.{0}", table ), data, COL_NAMES );
 }

@@ -20,13 +20,13 @@ concept c_Duration = requires {
 	typename Dur::period;
 };
 
-template<c_Duration Duration>
+template<c_Duration Duration = std::chrono::nanoseconds>
 inline uint64_t tpToLong( const std::chrono::system_clock::time_point tp )
 {
 	return std::chrono::duration_cast<Duration>( tp.time_since_epoch() ).count();
 }
 
-template<c_Duration Duration>
+template<c_Duration Duration = std::chrono::nanoseconds>
 inline std::chrono::system_clock::time_point longToTp( const uint64_t lng )
 {
 	return std::chrono::system_clock::time_point(

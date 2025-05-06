@@ -30,7 +30,7 @@ T extractColVal( const std::shared_ptr<clickhouse::Column>& column, size_t row )
     }
     else if constexpr( std::is_same_v<T, std::chrono::system_clock::time_point> )
     {
-        return Time::longToTp<std::chrono::nanoseconds>( column->As<clickhouse::ColumnInt64>()->At( row ) );
+        return Time::longToTp( static_cast<uint64_t>( column->As<clickhouse::ColumnDateTime64>()->At( row ) ) );
     }
     else if constexpr( std::is_same_v<T, int32_t> )
     {
@@ -87,7 +87,7 @@ struct CHColType<uint64_t>
 template<>
 struct CHColType<std::chrono::system_clock::time_point>
 {
-    using Type = clickhouse::ColumnUInt64;
+    using Type = clickhouse::ColumnDateTime64;
 };
 
 template<>
@@ -102,6 +102,18 @@ struct CHColType<bool>
     using Type = clickhouse::ColumnUInt8;
 };
 
+template<typename T>
+clickhouse::ColumnRef createCol()
+{
+    if constexpr( std::is_same_v<T, std::chrono::system_clock::time_point> )
+    {
+        return std::make_shared<clickhouse::ColumnDateTime64>( 9 );
+    }
+    else
+    {
+        return std::make_shared<typename CHColType<T>::Type>();
+    }
+}
 
 template<typename T>
 constexpr T convToCHType( const T& value ) {
@@ -110,7 +122,7 @@ constexpr T convToCHType( const T& value ) {
 
 inline uint64_t convToCHType( const std::chrono::system_clock::time_point& tp )
 {
-    return std::chrono::duration_cast<std::chrono::nanoseconds>( tp.time_since_epoch() ).count();
+    return Time::tpToLong( tp );
 }
 
 inline std::string_view convToCHType( const BufferView& bv )

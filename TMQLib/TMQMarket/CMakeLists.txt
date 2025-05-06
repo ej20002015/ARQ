@@ -1,8 +1,8 @@
 TMQ_define_dynalib(TMQMarket)
-append_link_libraries(TMQMarket TMQUtils)
+target_link_libraries(TMQMarket TMQCore)
 
 TMQ_define_dynalib_tests(TMQMarket)
-append_link_libraries(TMQMarket TMQUtils)
+target_link_libraries(TMQMarket TMQCore)
 
 TMQ_define_dynalib_bench(TMQMarket)
-append_link_libraries(TMQMarket TMQUtils)
+target_link_libraries(TMQMarket TMQCore)

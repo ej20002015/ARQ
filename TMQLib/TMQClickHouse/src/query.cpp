@@ -65,7 +65,7 @@ template<typename Tuple, size_t... Indices>
 void prepareColsImpl( std::array<clickhouse::ColumnRef, std::tuple_size_v<Tuple>>& colsArr, std::index_sequence<Indices...> )
 {
     ( 
-        ( colsArr[Indices] = std::make_shared<typename CHColType<std::tuple_element_t<Indices, Tuple>>::Type>() ),
+        ( colsArr[Indices] = createCol<std::tuple_element_t<Indices, Tuple>>() ),
         ...
     );
 }
@@ -158,8 +158,9 @@ void CHQuery::execute( const std::string_view query )
     Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse query in {}", tm.duration() );
 }
 
-// Explicit template instantiations for all possible QuerySchemas go here
-
+/*
+* Explicit template instantiations for all possible QuerySchemas go here
+*/
 
 using StringSchema = QuerySchema<std::string>;
 template QueryResult<StringSchema> CHQuery::select<StringSchema>( const std::string_view query );
@@ -180,5 +181,16 @@ using MDFetchSchema = QuerySchema<
     std::string,
     bool>;
 template QueryResult<MDFetchSchema> CHQuery::select<MDFetchSchema>( const std::string_view query );
+
+using MDInsertSchema = QuerySchema<
+    std::string,
+    std::string,
+    std::chrono::system_clock::time_point,
+    BufferView,
+    std::string,
+    std::string,
+    bool,
+    std::string_view>;
+template void CHQuery::insert<MDInsertSchema>( const std::string_view tableName, const std::vector<typename MDInsertSchema::TupleType>& data, const std::array<std::string_view, std::tuple_size_v<typename MDInsertSchema::TupleType>>& colNames );
 
 }

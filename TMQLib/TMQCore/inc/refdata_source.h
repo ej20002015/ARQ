@@ -99,14 +99,15 @@ public:
 		static constexpr auto table = RDEntityTraits<T>::table();
 		
 		std::vector<RefDataSource::InsertData> insData;
+		insData.reserve( data.size() );
 
 		for( const T& d : data )
 		{
-			insData.emplace_back( RefDataSource::InsertData {
-				RDEntityTraits<T>::getID( d ),
-				"Evan", // TODO: Change to username
-				d._active,
-				TMQ::serialise( d )
+			insData.emplace_back( RefDataSource::InsertData{
+				.ID            = RDEntityTraits<T>::getID( d ),
+				.lastUpdatedBy = "Evan", // TODO: Change to username
+				.active        = d._active,
+				.blob          = TMQ::serialise( d )
 			} );
 		}
 

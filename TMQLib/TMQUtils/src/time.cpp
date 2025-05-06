@@ -8,6 +8,7 @@ namespace TMQ
 
 namespace Time
 {
+
 TMQUtils_API std::string tpToISO8601Str( const std::chrono::system_clock::time_point tp )
 {
 	using namespace std::chrono;
@@ -20,6 +21,7 @@ TMQUtils_API std::string tpToISO8601Str( const std::chrono::system_clock::time_p
 	oss << '.' << std::setw( 6 ) << std::setfill( '0' ) << micros.count() << 'Z';
 	return oss.str();
 }
+
 std::string getTmNowAsISO8601Str()
 {
 	using namespace std::chrono;

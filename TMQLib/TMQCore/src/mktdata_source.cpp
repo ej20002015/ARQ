@@ -41,10 +41,10 @@ std::shared_ptr<MktDataSource> TMQ::MktDataSourceRepo::get( const Type type )
 std::shared_ptr<MktDataSource> GlobalMktDataSource::get()
 {
 	std::shared_lock<std::shared_mutex> sl( s_mut );
-	if( s_globalSourceCreator )
-		return s_globalSourceCreator();
-	else
-		throw TMQException( "Cannot return GlobalMktDataSource - creator function hasn't been set yet" );
+	if( !s_globalSourceCreator )
+		s_globalSourceCreator = [] () { return MktDataSourceRepo::get( MktDataSourceRepo::ClickHouse ); };
+	
+	return s_globalSourceCreator();
 }
 
 void GlobalMktDataSource::setFunc( const CreatorFunc& creatorFunc )
@@ -52,13 +52,5 @@ void GlobalMktDataSource::setFunc( const CreatorFunc& creatorFunc )
 	std::unique_lock<std::shared_mutex> ul( s_mut );
 	s_globalSourceCreator = creatorFunc;
 }
-
-static struct SetGlobalRDSourceCreatorFunc
-{
-	SetGlobalRDSourceCreatorFunc()
-	{
-		GlobalMktDataSource::setFunc( [] () { return MktDataSourceRepo::get( MktDataSourceRepo::ClickHouse ); } );
-	}
-} s;
 
 }

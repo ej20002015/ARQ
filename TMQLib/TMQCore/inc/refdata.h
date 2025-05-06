@@ -174,7 +174,7 @@ public:
 		if( it == data->end() )
 			return std::nullopt;
 
-		return std::cref( it->second );
+		return std::cref( it->second ); // What if referenced object is removed after this point?
 	}
 
 private:

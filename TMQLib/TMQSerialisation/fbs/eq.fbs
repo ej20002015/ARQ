@@ -1,0 +1,15 @@
+namespace fbs;
+
+table EQ {
+    instrument_id:string;
+    source:string;
+    asof_ts:ulong;
+
+    price:double;
+    open:double;
+    close:double;
+    high:double;
+    low:double;
+}
+
+root_type EQ;

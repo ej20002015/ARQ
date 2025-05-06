@@ -7,7 +7,7 @@ namespace TMQ
 
 struct RDEntity : public DataEntity
 {
-	bool _active = false;
+	bool _active = true;
 };
 
 template<typename T>

@@ -7,10 +7,10 @@ namespace TMQ
 
 struct MDEntity : public DataEntity
 {
+	bool _active = true;
 	std::string instrumentID;
 	std::string source;
 	std::chrono::system_clock::time_point asofTs;
-	bool _active = false;
 };
 
 template<typename T>
@@ -20,7 +20,7 @@ template<c_MDEntity T>
 class MDEntityTraits
 {
 public:
-	static consteval std::string_view const type()  { static_assert( false ); return ""; }
+	static consteval std::string_view const type() { static_assert( false ); return ""; }
 };
 
 /*

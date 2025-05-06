@@ -22,12 +22,12 @@ std::vector<MktDataSource::FetchData> CHMktDataSource::fetchLatest( const std::s
 			CAST(Type AS String) AS Type,
 			InstrumentID,
 			-- Get values from the row with the maximum AsofTs, using LastUpdatedTs as a tie-breaker
-			toUnixTimestamp64Nano(argMax(AsofTs,        (AsofTs, LastUpdatedTs))) AS max_AsofTs,
-			                      argMax(Blob,          (AsofTs, LastUpdatedTs))  AS max_Blob,
-			                      argMax(Source,        (AsofTs, LastUpdatedTs))  AS max_Source,
-			toUnixTimestamp64Nano(argMax(LastUpdatedTs, (AsofTs, LastUpdatedTs))) AS max_LastUpdatedTs,
-			                      argMax(LastUpdatedBy, (AsofTs, LastUpdatedTs))  AS max_LastUpdatedBy,
-			                      argMax(Active,        (AsofTs, LastUpdatedTs))  AS max_Active
+			argMax(AsofTs,        (AsofTs, LastUpdatedTs)) AS max_AsofTs,
+			argMax(Blob,          (AsofTs, LastUpdatedTs)) AS max_Blob,
+			argMax(Source,        (AsofTs, LastUpdatedTs)) AS max_Source,
+			argMax(LastUpdatedTs, (AsofTs, LastUpdatedTs)) AS max_LastUpdatedTs,
+			argMax(LastUpdatedBy, (AsofTs, LastUpdatedTs)) AS max_LastUpdatedBy,
+			argMax(Active,        (AsofTs, LastUpdatedTs)) AS max_Active
 		FROM MktData.MktObjs
 		WHERE
 			Context = '{}'
@@ -58,6 +58,36 @@ std::vector<MktDataSource::FetchData> CHMktDataSource::fetchLatest( const std::s
 	}
 
 	return fetchedData;
+}
+
+void CHMktDataSource::insert( const std::string_view context, const std::vector<InsertData>& insData )
+{
+	using Schema = QuerySchema<
+		std::string,
+		std::string,
+		std::chrono::system_clock::time_point,
+		BufferView,
+		std::string,
+		std::string,
+		bool,
+		std::string_view>;
+
+	static constexpr std::array<std::string_view, 8> COL_NAMES = { 
+		"Type",
+		"InstrumentID",
+		"AsofTs",
+		"Blob",
+		"Source",
+		"LastUpdatedBy",
+		"Active",
+		"Context"
+	};
+
+	std::vector<Schema::TupleType> data;
+	for( const auto& d : insData )
+		data.emplace_back( Schema::TupleType{ d.type, d.instrumentID, d.asofTs, d.blob, d.source, d.lastUpdatedBy, d.active, context } );
+
+	CHQuery::insert<Schema>( "MktData.MktObjs", data, COL_NAMES );
 }
 
 extern "C" MktDataSource* createMktDataSource()

@@ -26,18 +26,22 @@ public:
 		std::string lastUpdatedBy;
 	};
 
-	/*struct InsertData
+	struct InsertData
 	{
-		std::string ID;
-		std::string_view lastUpdatedBy;
-		bool active;
+		std::string type;
+		std::string instrumentID;
+		std::chrono::system_clock::time_point asofTs;
 		Buffer blob;
-	};*/
+		std::string source;
+		std::string lastUpdatedBy;
+		bool active;
+	};
 
 public:
 	virtual ~MktDataSource() = default;
 
 	[[nodiscard]] TMQCore_API virtual std::vector<FetchData> fetchLatest( const std::string_view context ) = 0;
+	TMQCore_API virtual void insert( const std::string_view context, const std::vector<InsertData>& insData ) = 0;
 };
 
 using MktDataSourceCreateFunc = std::add_pointer<MktDataSource* ( )>::type;

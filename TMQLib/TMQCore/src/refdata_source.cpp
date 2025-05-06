@@ -41,10 +41,10 @@ std::shared_ptr<RefDataSource> TMQ::RefDataSourceRepo::get( const Type type )
 std::shared_ptr<RefDataSource> GlobalRefDataSource::get()
 {
 	std::shared_lock<std::shared_mutex> sl( s_mut );
-	if( s_globalSourceCreator )
-		return s_globalSourceCreator();
-	else
-		throw TMQException( "Cannot return GlobalRefDataSource - creator function hasn't been set yet" );
+	if( !s_globalSourceCreator )
+		s_globalSourceCreator = [] () { return RefDataSourceRepo::get( RefDataSourceRepo::ClickHouse ); };
+
+	return s_globalSourceCreator();	
 }
 
 void GlobalRefDataSource::setFunc( const CreatorFunc& creatorFunc )
@@ -52,13 +52,5 @@ void GlobalRefDataSource::setFunc( const CreatorFunc& creatorFunc )
 	std::unique_lock<std::shared_mutex> ul( s_mut );
 	s_globalSourceCreator = creatorFunc;
 }
-
-static struct SetGlobalRDSourceCreatorFunc
-{
-	SetGlobalRDSourceCreatorFunc()
-	{
-		GlobalRefDataSource::setFunc( [] () { return RefDataSourceRepo::get( RefDataSourceRepo::ClickHouse ); } );
-	}
-} s;
 
 }

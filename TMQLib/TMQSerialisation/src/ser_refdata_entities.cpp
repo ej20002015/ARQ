@@ -9,6 +9,10 @@
 namespace TMQ
 {
 
+/*
+* --------- User ---------
+*/
+
 Buffer serialise( const User& user )
 {
 	flatbuffers::FlatBufferBuilder builder;
@@ -48,6 +52,6 @@ User deserialise( const BufferView buffer )
 	return user;
 }
 
-template TMQSerialisation User deserialise( const BufferView buffer );
+template TMQSerialisation_API User deserialise( const BufferView buffer );
 
 }
