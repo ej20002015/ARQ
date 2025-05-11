@@ -35,11 +35,12 @@ enum class Module
 	REFDATA,
 	CORE,
 	CLICKHOUSE,
+	MKT,
 
 	_SIZE
 };
 
-static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "REFDATA", "CORE", "CLICKHOUSE" };
+static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "REFDATA", "CORE", "CLICKHOUSE", "MKT" };
 
 // Commonly used concepts
 

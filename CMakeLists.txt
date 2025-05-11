@@ -165,6 +165,56 @@ function(TMQ_define_dynalib TARGET)
     source_group("inc" FILES ${INCLUDES})
 endfunction()
 
+function(TMQ_define_dynalib_swig TARGET LANGUAGE)
+    find_package(SWIG REQUIRED)
+    include(UseSWIG)
+    if(${LANGUAGE} STREQUAL "python")
+        find_package(Python3 COMPONENTS Interpreter Development REQUIRED)
+        set(Python3_LIBRARY_DEBUG "${Python3_LIBRARY_RELEASE}")
+        set(LANG_SPECIFIC_SWIG_OPTIONS "-threads")
+    elseif(${LANGUAGE} STREQUAL "csharp")
+        set(LANG_SPECIFIC_SWIG_OPTIONS "")
+    else()
+        message(FATAL_ERROR "Unsupported SWIG language: ${LANGUAGE}")
+    endif()
+
+    set(SWIG_INTERFACE_DIR "${CMAKE_SOURCE_DIR}/TMQLib/${TARGET}/swig/${LANGUAGE}")
+    file(GLOB SWIG_INTERFACE_FILES "${SWIG_INTERFACE_DIR}/*.i")
+    if(NOT SWIG_INTERFACE_FILES)
+        message("No SWIG interface files found in ${SWIG_INTERFACE_DIR}")
+    endif()
+    foreach(SWIG_FILE ${SWIG_INTERFACE_FILES})
+        get_filename_component(SWIG_MODULE_NAME ${SWIG_FILE} NAME_WE)
+        set(CMAKE_SWIG_FLAGS -c++ ${LANG_SPECIFIC_SWIG_OPTIONS})
+        set_source_files_properties(${SWIG_FILE} PROPERTIES CPLUSPLUS ON)
+        set_property(SOURCE ${SWIG_FILE} PROPERTY SWIG_OUTPUT_EXTENSION ".cxx")
+        set(SWIG_MODULE_TARGET ${SWIG_MODULE_NAME}_${LANGUAGE})
+        swig_add_library(${SWIG_MODULE_TARGET}
+            TYPE MODULE
+            LANGUAGE ${LANGUAGE}
+            SOURCES ${SWIG_FILE}
+            OUTPUT_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/$<CONFIG>"
+            OUTFILE_DIR "${CMAKE_CURRENT_BINARY_DIR}/${LANGUAGE}/$<CONFIG>"
+        )
+        set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES FOLDER "swig/${TARGET}/${LANGUAGE}")
+        target_include_directories(${SWIG_MODULE_TARGET} PRIVATE ${MASTER_INC_DIR})
+
+        if(${LANGUAGE} STREQUAL "python")
+            swig_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ${TARGET} Python3::Python)
+            set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+
+            # Workaround: Undefine _DEBUG for the SWIG Python extension to avoid python38_d.lib link errors
+            if (MSVC)
+                target_compile_definitions(${SWIG_MODULE_TARGET} PRIVATE SWIG_PYTHON_INTERPRETER_NO_DEBUG)
+            endif()
+        elseif(${LANGUAGE} STREQUAL "csharp")
+            swig_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ${TARGET})
+            set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+            # Add any C#-specific post-build steps if needed
+        endif()
+    endforeach()
+endfunction()
+
 function(TMQ_define_dynalib_tests DYNALIB_NAME)
     file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/TMQLib/${DYNALIB_NAME}/test/*.cpp")
     file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/TMQLib/${DYNALIB_NAME}/test/*.h")

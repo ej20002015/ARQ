@@ -4,7 +4,6 @@
 using namespace TMQ;
 using namespace std::chrono_literals;
 
-// Helper function to create an FXRate object
 FXRate createTestFXRate()
 {
     FXRate rate;
