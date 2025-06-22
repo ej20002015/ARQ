@@ -2,6 +2,7 @@
 #include <TMQMarket/dll.h>
 
 #include <TMQUtils/hashers.h>
+#include <TMQUtils/time.h>
 #include <TMQCore/mktdata_source.h>
 #include <TMQMarket/mktdata_entities.h>
 
@@ -18,11 +19,17 @@ namespace Mkt
 struct Context
 {
 	std::string tag;
-	std::optional<std::chrono::year_month_day> date;
+	Time::Date date;
 
-	TMQMarket_API static Context LIVE;
+	Context() = default;
+	Context( const std::string_view tag, const Time::Date date = Time::Date() )
+		: tag( tag )
+		, date( date )
+	{}
 
 	std::string str() const;
+
+	TMQMarket_API static const Context LIVE;
 };
 
 template<c_MDEntity T>

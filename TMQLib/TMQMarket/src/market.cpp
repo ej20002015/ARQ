@@ -10,11 +10,11 @@ namespace TMQ
 namespace Mkt
 {
 
-Context Context::LIVE = { "LIVE", std::nullopt };
+const Context Context::LIVE = { "LIVE", Time::Date() };
 
 std::string Context::str() const
 {
-    return tag + ( date.has_value() ? std::format( "|{:%Y%m%d}", date.value() ) : "" );
+    return tag + ( date.isSet() ? std::format( "|{:%Y%m%d}", date ) : "" );
 }
 
 size_t MarketSnapshot::size() const noexcept
