@@ -17,9 +17,11 @@ struct Buffer
 
 	// Construct zero-initialised buffer of a given size
 	explicit Buffer( const size_t size )
-		: data( std::make_unique<uint8_t[]>(size))
-		, size( size )
-	{}
+		: size( size )
+	{
+		if( size )
+			data = std::make_unique<uint8_t[]>( size );
+	}
 
 	// Construct buffer by copying the given data
 	explicit Buffer( const uint8_t* dataToCopy, const size_t size )
@@ -37,8 +39,26 @@ struct Buffer
 
 	~Buffer() = default;
 
-	Buffer( const Buffer& ) = delete;
-	Buffer& operator=( const Buffer& ) = delete;
+	Buffer( const Buffer& other )
+		: Buffer( size )
+	{
+		if( other.data )
+			std::copy_n( other.data.get(), size, data.get() );
+	}
+
+	Buffer& operator=( const Buffer& other )
+	{
+		if( this != &other )
+		{
+			size = other.size;
+
+			data.release();
+			if( other.data )
+				std::copy_n( other.data.get(), size, data.get() );
+		}
+
+		return *this;
+	}
 
 	Buffer( Buffer&& other ) noexcept
 		: data( std::move( other.data ) )

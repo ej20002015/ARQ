@@ -18,6 +18,7 @@ namespace TMQ
 class TMQException
 {
 public:
+    TMQException() = default;
     TMQException( const std::string_view str, const std::source_location& loc = std::source_location::current()/*, std::stacktrace trace = std::stacktrace::current()*/ )
         : m_errStr( str )
         , m_location( loc )
@@ -28,6 +29,8 @@ public:
     const std::string& what() const noexcept { return m_errStr; }
 
     const std::source_location& where() const { return m_location; }
+
+    std::string str() const;
 
     /*const std::stacktrace& stack() const { return backtrace; }*/
 private:
