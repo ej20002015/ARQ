@@ -4,7 +4,8 @@
       "commandName": "Project",
       "environmentVariables": {
         "PATH": "C:\\Development\\Projects\\TMQ\\.build\\bin\\Debug;%PATH%"
-      }
+      },
+      "nativeDebugging": true
     }
   }
 }

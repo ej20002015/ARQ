@@ -8,9 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\.build\bin\Debug\market_test.cs" Link="market_test.cs" />
-    <Compile Include="..\..\.build\bin\Debug\market_testPINVOKE.cs" Link="market_testPINVOKE.cs" />
-    <Compile Include="..\..\.build\bin\Debug\SWIGTYPE_p_int32_t.cs" Link="SWIGTYPE_p_int32_t.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQLibPINVOKE.cs" Link="src\TMQLib\TMQLibPINVOKE.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Mkt\Context.cs" Link="src\TMQLib\TMQMarket\Context.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Date.cs" Link="src\TMQLib\TMQUtils\Date.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Day.cs" Link="src\TMQLib\TMQUtils\Day.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Month.cs" Link="src\TMQLib\TMQUtils\Month.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\TimeZone.cs" Link="src\TMQLib\TMQUtils\TimeZone.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Weekday.cs" Link="src\TMQLib\TMQUtils\Weekday.cs" />
+    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Year.cs" Link="src\TMQLib\TMQUtils\Year.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="src\TMQLib\TMQMarket\" />
+    <Folder Include="src\TMQLib\TMQUtils\" />
   </ItemGroup>
   
 </Project>
