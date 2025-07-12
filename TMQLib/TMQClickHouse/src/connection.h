@@ -47,11 +47,8 @@ public:
 			CHConnPool::inst().retConn( std::move( m_client ) );
 	}
 
-private:
 	      clickhouse::Client& client()       { return *m_client; }
 	const clickhouse::Client& client() const { return *m_client; }
-
-	friend class CHQuery;
 
 private:
 	std::unique_ptr<clickhouse::Client> m_client;

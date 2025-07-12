@@ -6,6 +6,7 @@
 #include <chrono>
 
 using namespace TMQ::Mkt;
+using namespace TMQ::Time;
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
@@ -118,7 +119,7 @@ TEST_F( MarketManagerTests, CreateMarketWithSameHandleThrows )
 {
     const std::string handle = "SameHandleMarketThrows";
     const Context ctx1 = Context::LIVE;
-    const Context ctx2 = { "EOD", year_month_day( 2023y, January, 15d ) };
+    const Context ctx2 = { "EOD", Date( Year( 2023 ), Month::Jan, Day( 15 ) ) };
 
 
     EXPECT_CALL( *m_mockSource, fetchLatest( testing::StrEq("LIVE") ) )

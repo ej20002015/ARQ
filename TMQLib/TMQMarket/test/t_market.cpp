@@ -29,16 +29,15 @@ protected:
 TEST( ContextTests, LiveContext )
 {
     EXPECT_EQ( Mkt::Context::LIVE.tag, "LIVE" );
-    EXPECT_FALSE( Mkt::Context::LIVE.date.has_value() );
+    EXPECT_FALSE( Mkt::Context::LIVE.date.isValid() );
     EXPECT_EQ( Mkt::Context::LIVE.str(), "LIVE" );
 }
 
 TEST( ContextTest, DatedContext )
 {
-    Mkt::Context eodContext = { "EOD", year_month_day( 2025y, April, 28d ) };
+    Mkt::Context eodContext = { "EOD", Time::Date( Time::Year( 2025 ), Time::Month::Apr, Time::Day( 28 ) ) };
     EXPECT_EQ( eodContext.tag, "EOD" );
-    ASSERT_TRUE( eodContext.date.has_value() );
-    EXPECT_EQ( eodContext.date.value(), year_month_day( 2025y, April, 28d ) );
+    ASSERT_TRUE( eodContext.date.isValid() );
     EXPECT_EQ( eodContext.str(), "EOD|20250428" );
 }
 
@@ -213,7 +212,7 @@ public:
 
 public:
     std::shared_ptr<MockMktDataSource> m_mockSource;
-    Mkt::Context m_testCtx = { "TEST_EOD", year_month_day( 2025y, April, 28d ) };
+    Mkt::Context m_testCtx = { "TEST_EOD", Time::Date( Time::Year( 2025 ), Time::Month::Apr, Time::Day( 28 ) ) };
 };
 
 TEST_F( MarketLoadSaveTests, LoadEmptyMarket )

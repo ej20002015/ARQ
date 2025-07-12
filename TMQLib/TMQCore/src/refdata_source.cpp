@@ -29,7 +29,7 @@ std::shared_ptr<RefDataSource> TMQ::RefDataSourceRepo::get( const Type type )
 		}
 
 		Log( Module::REFDATA ).info( "Loading dynalib {} to get RefDataSource", dynaLibName );
-		const OS::DynaLib& lib = DynaLibCache::inst().get( "TMQClickHouse" );
+		const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
 		const auto createFunc = lib.getFunc<RefDataSourceCreateFunc>( "createRefDataSource" );
 		RefDataSource* source = createFunc();
