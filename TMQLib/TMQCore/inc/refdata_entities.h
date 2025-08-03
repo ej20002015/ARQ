@@ -3,6 +3,8 @@
 
 #pragma once
 
+#include <TMQUtils/core.h>
+
 #include <string>
 #include <chrono>
 #include <cstdint>
@@ -18,9 +20,9 @@ namespace RDEntities
 {
 
 /*
-********************************************
-* Base Class and Traits for Reference Data *
-********************************************
+****************************************************
+* Common functionality for Reference Data Entities *
+****************************************************
 */
 
 // Base struct for all reference data entities
@@ -34,6 +36,23 @@ struct RDEntity
 template<typename T>
 concept c_RDEntity = std::is_base_of_v<RDEntity, T>;
 
+enum class Type
+{
+    CCY,
+    USER,
+};
+
+inline std::string_view typeToStr( const Type type)
+{
+    switch( type )
+    {
+        case Type::CCY: return "CCY";
+        case Type::USER: return "USER";
+        default:
+            TMQ_ASSERT( false ); return "Unknown";
+    }
+}
+
 // Traits class to get compile-time metadata about an entity
 template<c_RDEntity T>
 class Traits
@@ -42,17 +61,24 @@ public:
     static consteval std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
     static consteval std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
     static consteval std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static consteval Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
     static consteval std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
 };
 
 struct MemberInfo
 {
-    const std::string_view name;           // Name of the C++ member variable
-    const std::string_view comment;        // Documentation string
-    const std::string_view type;           // The language agnostic type as a string
-    const std::string_view cppType;        // The C++ type as a string
-    const std::string_view clickhouseType; // The ClickHouse type as a string
-    const std::string_view flatbufferType; // The FlatBuffers type as a string
+    /// Name of the C++ member variable
+    const std::string_view name;
+    /// Documentation string
+    const std::string_view comment;
+    /// The language agnostic type as a string
+    const std::string_view type;
+    /// The C++ type as a string
+    const std::string_view cppType;
+    /// The ClickHouse type as a string
+    const std::string_view clickhouseType;
+    /// The FlatBuffers type as a string
+    const std::string_view flatbufferType;
 };
 
 /*
@@ -82,6 +108,7 @@ class Traits<Currency>
 public:
     static consteval std::string_view const name()      { return "Currency"; }
     static consteval std::string_view const type()      { return "CCY"; }
+    static consteval Type             const typeEnum()  { return Type::CCY; }
     static consteval std::string_view const tableName() { return "Currencies"; }
     static consteval std::string_view const key()       { return "ccyID"; }
 
@@ -157,6 +184,7 @@ class Traits<User>
 public:
     static consteval std::string_view const name()      { return "User"; }
     static consteval std::string_view const type()      { return "USER"; }
+    static consteval Type             const typeEnum()  { return Type::USER; }
     static consteval std::string_view const tableName() { return "Users"; }
     static consteval std::string_view const key()       { return "userID"; }
 

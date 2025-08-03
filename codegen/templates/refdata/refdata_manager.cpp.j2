@@ -69,7 +69,7 @@ void RefDataManager::insert{{ entity.name_plural }}( const std::vector<RDEntitie
 {
     Log( Module::REFDATA ).info( "RefDataManager: Inserting {} data, count: {}", RDEntities::Traits<RDEntities::{{ entity.name }}>::name(), data.size() );
 
-    if( staleCheck == USING_CACHE || staleCheck == USING_DB )
+    if( staleCheck == USING_CACHE || staleCheck == USING_DB ) // TODO: Should be checking this as part of the DB transaction
     {
 		if( !has{{ entity.name_plural }}() )
 			loadInitially{{ entity.name_plural }}();

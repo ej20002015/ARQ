@@ -5,31 +5,31 @@
 -- Schema for Currency
 CREATE TABLE IF NOT EXISTS RefData.Currencies
 (
-    `ccyID` String COMMENT 'The 3-letter ISO 4217 currency code (e.g., USD).',
-    `name` String COMMENT 'The full currency name (e.g., US Dollar).',
-    `decimalPlaces` UInt8 COMMENT 'Number of decimal places for standard formatting.',
-    `settlementDays` UInt8 COMMENT 'Standard number of days for spot settlement (commonly 2).',
-    `IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
-    `LastUpdatedBy` String COMMENT 'User or system that last updated this record'
+    `CcyID` String COMMENT 'The 3-letter ISO 4217 currency code (e.g., USD).',
+    `Name` String COMMENT 'The full currency name (e.g., US Dollar).',
+    `DecimalPlaces` UInt8 COMMENT 'Number of decimal places for standard formatting.',
+    `SettlementDays` UInt8 COMMENT 'Standard number of days for spot settlement (commonly 2).',
+    `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
+    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree
-ORDER BY (ccyID, LastUpdatedTs)
+ORDER BY (CcyID, _LastUpdatedTs)
 COMMENT 'Represents an ISO 4217 currency and its conventions.';
 
 
 -- Schema for User
 CREATE TABLE IF NOT EXISTS RefData.Users
 (
-    `userID` String COMMENT 'The unique system user ID.',
-    `fullName` String COMMENT 'The user&#39;s full name for display purposes.',
-    `email` String COMMENT 'The user&#39;s contact email address.',
-    `tradingDesk` LowCardinality(String) COMMENT 'The primary trading desk the user belongs to.',
-    `IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
-    `LastUpdatedBy` String COMMENT 'User or system that last updated this record'
+    `UserID` String COMMENT 'The unique system user ID.',
+    `FullName` String COMMENT 'The user&#39;s full name for display purposes.',
+    `Email` String COMMENT 'The user&#39;s contact email address.',
+    `TradingDesk` LowCardinality(String) COMMENT 'The primary trading desk the user belongs to.',
+    `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
+    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree
-ORDER BY (userID, LastUpdatedTs)
+ORDER BY (UserID, _LastUpdatedTs)
 COMMENT 'Represents an individual user of the system.';
 

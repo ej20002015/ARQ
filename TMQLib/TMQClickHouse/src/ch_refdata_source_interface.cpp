@@ -28,12 +28,12 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
     static constexpr auto SELECT_STMT = R"(
 		SELECT
             ccyID,
-            argMax(name, LastUpdatedTs) AS max_name,
-            argMax(decimalPlaces, LastUpdatedTs) AS max_decimalPlaces,
-            argMax(settlementDays, LastUpdatedTs) AS max_settlementDays,
-            argMax(IsActive, LastUpdatedTs) AS max_IsActive,
-            max(LastUpdatedTs) AS max_LastUpdatedTs,
-            argMax(LastUpdatedBy, LastUpdatedTs) AS max_LastUpdatedBy
+            argMax(Name, _LastUpdatedTs) AS max_Name,
+            argMax(DecimalPlaces, _LastUpdatedTs) AS max_DecimalPlaces,
+            argMax(SettlementDays, _LastUpdatedTs) AS max_SettlementDays,
+            argMax(_IsActive, _LastUpdatedTs) AS max_IsActive,
+            max(_LastUpdatedTs) AS max_LastUpdatedTs,
+            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
 		FROM RefData.Currencies
         GROUP BY ccyID
 		HAVING max_IsActive = 1;
@@ -71,15 +71,16 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
     }
     catch( const std::exception& e )
     {
-        throw TMQException( std::format( "Error executing SELECT query: {0}", e.what() ) );
+        throw TMQException( std::format( "Error executing ClickHouse SELECT query: {}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse select query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse select query in {}", tm.duration() );
 
     return results;
 }
 
-// TODO: Need to generate insertCurrencies and fetchAsOfCurrencies in a similar manner
+// TODO: Need to implement fetchAsOfCurrencies in a similar manner
+// TODO: Need to create some audit load capability
 
 [[nodiscard]] std::vector<RDEntities::Currency> CHRefDataSource::fetchAsOfCurrencies( std::chrono::system_clock::time_point asof )
 {
@@ -113,21 +114,21 @@ void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>&
         }
 
         clickhouse::Block block;
-        block.AppendColumn( "ccyID", col_ccyID );
-        block.AppendColumn( "name", col_name );
-        block.AppendColumn( "decimalPlaces", col_decimalPlaces );
-        block.AppendColumn( "settlementDays", col_settlementDays );
-        block.AppendColumn( "IsActive", col_isActive );
-        block.AppendColumn( "LastUpdatedBy", col_lastUpdatedBy );
+        block.AppendColumn( "CcyID", col_ccyID );
+        block.AppendColumn( "Name", col_name );
+        block.AppendColumn( "DecimalPlaces", col_decimalPlaces );
+        block.AppendColumn( "SettlementDays", col_settlementDays );
+        block.AppendColumn( "_IsActive", col_isActive );
+        block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
 
         conn.client().Insert( "RefData.Currencies", block );
     }
     catch( const std::exception& e )
     {
-        throw TMQException( std::format( "Error executing INSERT query: {0}", e.what() ) );
+        throw TMQException( std::format( "Error executing ClickHouse INSERT query: {0}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse insert query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse insert query in {}", tm.duration() );
 }
 
 // --- Implementation for User ---
@@ -143,12 +144,12 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
     static constexpr auto SELECT_STMT = R"(
 		SELECT
             userID,
-            argMax(fullName, LastUpdatedTs) AS max_fullName,
-            argMax(email, LastUpdatedTs) AS max_email,
-            argMax(tradingDesk, LastUpdatedTs) AS max_tradingDesk,
-            argMax(IsActive, LastUpdatedTs) AS max_IsActive,
-            max(LastUpdatedTs) AS max_LastUpdatedTs,
-            argMax(LastUpdatedBy, LastUpdatedTs) AS max_LastUpdatedBy
+            argMax(FullName, _LastUpdatedTs) AS max_FullName,
+            argMax(Email, _LastUpdatedTs) AS max_Email,
+            argMax(TradingDesk, _LastUpdatedTs) AS max_TradingDesk,
+            argMax(_IsActive, _LastUpdatedTs) AS max_IsActive,
+            max(_LastUpdatedTs) AS max_LastUpdatedTs,
+            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
 		FROM RefData.Users
         GROUP BY userID
 		HAVING max_IsActive = 1;
@@ -186,15 +187,16 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
     }
     catch( const std::exception& e )
     {
-        throw TMQException( std::format( "Error executing SELECT query: {0}", e.what() ) );
+        throw TMQException( std::format( "Error executing ClickHouse SELECT query: {}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse select query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse select query in {}", tm.duration() );
 
     return results;
 }
 
-// TODO: Need to generate insertUsers and fetchAsOfUsers in a similar manner
+// TODO: Need to implement fetchAsOfUsers in a similar manner
+// TODO: Need to create some audit load capability
 
 [[nodiscard]] std::vector<RDEntities::User> CHRefDataSource::fetchAsOfUsers( std::chrono::system_clock::time_point asof )
 {
@@ -228,21 +230,21 @@ void CHRefDataSource::insertUsers( const std::vector<RDEntities::User>& data )
         }
 
         clickhouse::Block block;
-        block.AppendColumn( "userID", col_userID );
-        block.AppendColumn( "fullName", col_fullName );
-        block.AppendColumn( "email", col_email );
-        block.AppendColumn( "tradingDesk", col_tradingDesk );
-        block.AppendColumn( "IsActive", col_isActive );
-        block.AppendColumn( "LastUpdatedBy", col_lastUpdatedBy );
+        block.AppendColumn( "UserID", col_userID );
+        block.AppendColumn( "FullName", col_fullName );
+        block.AppendColumn( "Email", col_email );
+        block.AppendColumn( "TradingDesk", col_tradingDesk );
+        block.AppendColumn( "_IsActive", col_isActive );
+        block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
 
         conn.client().Insert( "RefData.Users", block );
     }
     catch( const std::exception& e )
     {
-        throw TMQException( std::format( "Error executing INSERT query: {0}", e.what() ) );
+        throw TMQException( std::format( "Error executing ClickHouse INSERT query: {0}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse insert query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse insert query in {}", tm.duration() );
 }
 
 

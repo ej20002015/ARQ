@@ -4,7 +4,6 @@
 #include <TMQCore/refdata_entities.h>
 #include <TMQCore/refdata_source_interface.h>
 
-#include <vector>
 #include <array>
 #include <string>
 #include <chrono>

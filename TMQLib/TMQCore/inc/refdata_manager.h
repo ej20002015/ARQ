@@ -18,7 +18,7 @@ namespace TMQ
 
 class RefDataManager;
 
-template<typename KeyType, RDEntities::c_RDEntity T>
+template<typename KeyType, RDEntities::c_RDEntity T> // TODO: Just take in RDEntities class
 class RefDataCache
 {
 public:

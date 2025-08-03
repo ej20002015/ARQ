@@ -1,0 +1,61 @@
+# ##############################################################################
+# ## Market Data Entity Definition Template
+# ##############################################################################
+# ##
+# ## Use the template below to add a new market data data entity to the system.
+# ## Each '[[entities]]' block defines a new type that will be code-generated.
+# ##
+# [[entities]]
+# # The C++ struct name (e.g., "FXRate"). PascalCase is conventional.
+# name = "<StructName>"
+#
+# # The plural form of the name.
+# name_plural = "<StructNamePlural>"
+#
+# # A short, unique uppercase string for identifying this type (e.g., "FXR").
+# type_string = "<TypeString>"
+#
+# # The corresponding table name in the database (e.g., "FXRates").
+# table_name = "<TableName>"
+#
+# # A descriptive comment for the entity itself.
+# comment = "<A description of the whole entity>"
+#
+# # List of members for this entity.
+# members = [
+#   # 'type' must be an alias defined in types.toml (e.g., "string", "double").
+#   # 'clickhouse_modifier' is optional for database-specific tweaks.
+#   { name = "<member1_name>", type = "<type_alias>", clickhouse_modifier = "LowCardinality" },
+#   { name = "<member2_name>", type = "<type_alias>" },
+#   # Add an optional comment for each member (e.g., for column comments).
+#   { name = "<member3_name>", type = "<type_alias>", comment = "<A description of this member>" },
+# ]
+# ##
+# ##############################################################################
+
+[[entities]]
+name = "FXRate"
+name_plural = "FXRates"
+type_string = "FXR"
+table_name = "FXRates"
+comment = "Represents a foreign exchange spot rate."
+members = [
+    { name = "mid", type = "double", comment = "The mid-market rate." },
+    { name = "bid", type = "double", comment = "The price at which a market maker is willing to buy." },
+    { name = "ask", type = "double", comment = "The price at which a market maker is willing to sell." },
+]
+
+[[entities]]
+name = "EQPrice"
+name_plural = "EQPrices"
+type_string = "EQP"
+table_name = "EQPrices"
+comment = "Represents pricing information for an equity."
+members = [
+    { name = "last",   type = "double", comment = "The price of the last executed trade." },
+    { name = "bid",    type = "double", comment = "The highest price a buyer is willing to pay." },
+    { name = "ask",    type = "double", comment = "The lowest price a seller is willing to accept." },
+    { name = "open",   type = "double", comment = "The opening price for the current trading session." },
+    { name = "close",  type = "double", comment = "The closing price from the previous trading session." },
+    { name = "volume", type = "int64",  comment = "The cumulative volume for the current trading session." },
+]

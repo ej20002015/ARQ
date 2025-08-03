@@ -1,48 +1,14 @@
 #pragma once
 #include <TMQCore/dll.h>
 
-#include <TMQUtils/buffer.h>
+#include <TMQCore/mktdata_source_interface.h>
 
 #include <array>
-#include <string>
-#include <chrono>
 #include <shared_mutex>
 #include <functional>
 
 namespace TMQ
 {
-
-class MktDataSource
-{
-public:
-	struct FetchData
-	{
-		std::string type;
-		std::string instrumentID;
-		std::chrono::system_clock::time_point asofTs;
-		Buffer blob;
-		std::string source;
-		std::chrono::system_clock::time_point lastUpdatedTs;
-		std::string lastUpdatedBy;
-	};
-
-	struct InsertData
-	{
-		std::string type;
-		std::string instrumentID;
-		std::chrono::system_clock::time_point asofTs;
-		Buffer blob;
-		std::string source;
-		std::string lastUpdatedBy;
-		bool active;
-	};
-
-public:
-	virtual ~MktDataSource() = default;
-
-	[[nodiscard]] TMQCore_API virtual std::vector<FetchData> fetchLatest( const std::string_view context ) = 0;
-	TMQCore_API virtual void insert( const std::string_view context, const std::vector<InsertData>& insData ) = 0;
-};
 
 using MktDataSourceCreateFunc = std::add_pointer<MktDataSource* ( )>::type;
 

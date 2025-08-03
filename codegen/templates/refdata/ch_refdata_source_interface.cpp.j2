@@ -35,12 +35,12 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
             {{ entity.key }},
             {% for member in entity.members %}
             {% if member.name != entity.key %}
-            argMax({{ member.name }}, LastUpdatedTs) AS max_{{ member.name }},
+            argMax({{ member.name | capitalise_first }}, _LastUpdatedTs) AS max_{{ member.name | capitalise_first }},
             {% endif %}
             {% endfor %}
-            argMax(IsActive, LastUpdatedTs) AS max_IsActive,
-            max(LastUpdatedTs) AS max_LastUpdatedTs,
-            argMax(LastUpdatedBy, LastUpdatedTs) AS max_LastUpdatedBy
+            argMax(_IsActive, _LastUpdatedTs) AS max_IsActive,
+            max(_LastUpdatedTs) AS max_LastUpdatedTs,
+            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
 		FROM RefData.{{ entity.table_name }}
         GROUP BY {{ entity.key }}
 		HAVING max_IsActive = 1;
@@ -80,15 +80,16 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
     }
     catch( const std::exception& e )
     {
-        throw TMQException( std::format( "Error executing SELECT query: {0}", e.what() ) );
+        throw TMQException( std::format( "Error executing ClickHouse SELECT query: {}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse select query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse select query in {}", tm.duration() );
 
     return results;
 }
 
-// TODO: Need to generate insert{{ entity.name_plural }} and fetchAsOf{{ entity.name_plural }} in a similar manner
+// TODO: Need to implement fetchAsOf{{ entity.name_plural }} in a similar manner
+// TODO: Need to create some audit load capability
 
 [[nodiscard]] std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchAsOf{{ entity.name_plural }}( std::chrono::system_clock::time_point asof )
 {
@@ -107,7 +108,7 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
         {% if types[member.type].clickhouse == "DateTime64(9)" %}
         auto col_{{ member.name }} = std::make_shared<clickhouse::ColumnDateTime64>( 9 );
         {% else %}
-        auto col_{{ member.name }} = std::make_shared<clickhouse::Column{{ types[member.type].clickhouse}}>();
+        auto col_{{ member.name }} = std::make_shared<clickhouse::Column{{ types[member.type].clickhouse }}>();
         {% endif %}
         {% endfor %}
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
@@ -129,19 +130,19 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
 
         clickhouse::Block block;
         {% for member in entity.members %}
-        block.AppendColumn( "{{ member.name }}", col_{{ member.name }} );
+        block.AppendColumn( "{{ member.name | capitalise_first }}", col_{{ member.name }} );
         {% endfor %}
-        block.AppendColumn( "IsActive", col_isActive );
-        block.AppendColumn( "LastUpdatedBy", col_lastUpdatedBy );
+        block.AppendColumn( "_IsActive", col_isActive );
+        block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
 
         conn.client().Insert( "RefData.{{ entity.table_name }}", block );
     }
     catch( const std::exception& e )
     {
-        throw TMQException( std::format( "Error executing INSERT query: {0}", e.what() ) );
+        throw TMQException( std::format( "Error executing ClickHouse INSERT query: {0}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran Clickhouse insert query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse insert query in {}", tm.duration() );
 }
 
 {% endfor %}
