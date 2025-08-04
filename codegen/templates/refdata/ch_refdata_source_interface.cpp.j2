@@ -24,7 +24,7 @@ namespace TMQ
 
 std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity.name_plural }}()
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     std::vector<RDEntities::{{ entity.name }}> results;
 
@@ -98,7 +98,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
 
 void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data )
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     Instr::Timer tm;
 

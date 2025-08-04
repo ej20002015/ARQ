@@ -38,7 +38,7 @@ TEST( ManagedMarketTempTests, misc )
 	// Define the range: 1.21 to 1.22
 	std::uniform_real_distribution<double> dist( 1.21, 1.22 );
 
-	Mkt::ManagedMarket mm( "clickhouse", Mkt::Name::LIVE );
+	Mkt::ManagedMarket mm( "ClickHouseDB", Mkt::Name::LIVE );
 	std::shared_ptr<Mkt::Subscriber> subscriber = std::make_shared<TestSubscriber>();
 	subscriber->setOnMktObjUpdateFunc( onMktObjUpdate );
 	subscriber->setOnFXRateUpdateFunc( onFXRateUpdate );

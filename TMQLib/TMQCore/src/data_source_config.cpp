@@ -11,15 +11,32 @@
 namespace TMQ
 {
 
-const DataSourceConfig& DataSourceConfigManager::get( const std::string_view handle )
+DataSourceType::Enum DataSourceType::fromStr( const std::string_view str )
+{
+	for( size_t i = 0; i < TYPE_STRINGS.size(); ++i )
+	{
+		if( TYPE_STRINGS[i] == str )
+			return static_cast<Enum>( i );
+	}
+
+	throw TMQException( std::format( "Cannot map given str [{}] to a DataSourceType::Enum", str ) );
+}
+
+std::string_view DataSourceType::toStr( const DataSourceType::Enum type )
+{
+	return TYPE_STRINGS[static_cast<size_t>( type )];
+}
+
+
+const DataSourceConfig& DataSourceConfigManager::get( const std::string_view dsh )
 {
 	std::call_once( m_loadFlag, [this] () { iLoad(); } );
 
-	const auto it = m_configMap.find( handle );
+	const auto it = m_configMap.find( dsh );
 	if( it != m_configMap.end() )
 		return it->second;
 	else
-		throw TMQException( std::format( "Cannot find DataSourceConfig for handle {}", handle ) );
+		throw TMQException( std::format( "Cannot find DataSourceConfig for dsh {}", dsh ) );
 }
 
 void DataSourceConfigManager::load( const std::optional<std::string_view> tomlCfg )
@@ -103,21 +120,23 @@ void DataSourceConfigManager::parseConfig( const std::string_view tomlCfg )
 
 	for( const auto [key, val] : *dataSourcesTbl )
 	{
-		std::string handle = std::string( key.str() );
+		std::string dsh = std::string( key.str() );
 		toml::table* sourceTable = val.as_table();
 
 		if( !sourceTable )
 		{
-			Log( Module::CORE ).error( "Entry '{}' in [data_sources] is not a table. Skipping.", handle );
+			Log( Module::CORE ).error( "Entry '{}' in [data_sources] is not a table. Skipping.", dsh );
 			continue;
 		}
 
 		try
 		{
 			DataSourceConfig cfg;
-			cfg.handle = handle;
+			cfg.dsh = dsh;
 
 			// Required fields
+
+			cfg.type = DataSourceType::fromStr( getRequiredTomlValue<std::string>( *sourceTable, "type" ) );
 
 			cfg.hostname = getRequiredTomlValue<std::string>( *sourceTable, "hostname" );
 
@@ -134,22 +153,22 @@ void DataSourceConfigManager::parseConfig( const std::string_view tomlCfg )
 
 			// Insert into map
 
-			auto [it, inserted] = m_configMap.emplace( handle, std::move( cfg ) );
+			auto [it, inserted] = m_configMap.emplace( dsh, std::move( cfg ) );
 			if( !inserted )
 			{
-				Log( Module::CORE ).warn( "Duplicate data source handle [{}] found in config. Overwriting.", handle );
+				Log( Module::CORE ).warn( "Duplicate data source handle [{}] found in config. Overwriting.", dsh );
 				it->second = std::move( cfg );
 			}
 
-			Log( Module::CORE ).debug( "Parsed config for data source [{}]", handle );
+			Log( Module::CORE ).debug( "Parsed config for data source [{}]", dsh );
 		}
 		catch( const TMQException& specificError )
 		{
-			Log( Module::CORE ).error( "Failed to parse data source [{}]: {}. Skipping.", handle, specificError.what() );
+			Log( Module::CORE ).error( "Failed to parse data source [{}]: {}. Skipping.", dsh, specificError.what() );
 		}
 		catch( const std::exception& ex )
 		{
-			Log( Module::CORE ).error( "Unexpected error parsing data source [{}]: {}. Skipping.", handle, ex.what() );
+			Log( Module::CORE ).error( "Unexpected error parsing data source [{}]: {}. Skipping.", dsh, ex.what() );
 		}
 	}
 }

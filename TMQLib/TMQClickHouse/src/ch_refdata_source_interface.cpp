@@ -19,7 +19,7 @@ namespace TMQ
 
 std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     std::vector<RDEntities::Currency> results;
 
@@ -89,7 +89,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
 
 void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>& data )
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     Instr::Timer tm;
 
@@ -135,7 +135,7 @@ void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>&
 
 std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     std::vector<RDEntities::User> results;
 
@@ -205,7 +205,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
 
 void CHRefDataSource::insertUsers( const std::vector<RDEntities::User>& data )
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     Instr::Timer tm;
 

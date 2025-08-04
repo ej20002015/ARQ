@@ -22,9 +22,12 @@ namespace TMQ
 
 class RefDataManager;
 
-template<typename KeyType, RDEntities::c_RDEntity T>
+template<RDEntities::c_RDEntity T>
 class RefDataCache
 {
+public:
+    using KeyType = typename RDEntities::Traits<T>::KeyType;
+
 public:
     explicit RefDataCache( const std::map<KeyType, T>&& map )
         : m_map( std::move( map ) )
@@ -66,7 +69,7 @@ public:
 
     [[nodiscard]] TMQCore_API bool has{{ entity.name_plural }}() const;
 
-    [[nodiscard]] TMQCore_API std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}>> {{ entity.name_plural }}() const;
+    [[nodiscard]] TMQCore_API std::shared_ptr<RefDataCache<RDEntities::{{ entity.name }}>> {{ entity.name_plural }}() const;
 
     TMQCore_API void reload{{ entity.name_plural }}();
 
@@ -85,7 +88,7 @@ private:
     mutable std::shared_mutex m_mut;
 
     {% for entity in entities %}
-    std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}>> m_{{ entity.name_plural }};
+    std::shared_ptr<RefDataCache<RDEntities::{{ entity.name }}>> m_{{ entity.name_plural }};
     {% endfor %}
 };
 

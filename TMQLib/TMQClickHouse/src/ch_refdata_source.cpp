@@ -5,9 +5,9 @@
 namespace TMQ
 {
 
-extern "C" RefDataSource* createRefDataSource()
+extern "C" RefDataSource* createRefDataSource( const std::string_view dsh )
 {
-	return new CHRefDataSource;
+	return new CHRefDataSource( dsh );
 }
 
 }

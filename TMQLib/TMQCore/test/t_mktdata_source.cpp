@@ -4,12 +4,13 @@
 #include <TMQUtils/time.h>
 
 #include <TMQMarket/managed_market.h>
+#include <TMQCore/refdata_manager.h>
 
 using namespace TMQ;
 
 TEST( MktDataSourceTesting, testSelect )
 {
-	auto mktDataSource = MktDataSourceRepo::get( MktDataSourceRepo::ClickHouse );
+	auto mktDataSource = MktDataSourceFactory::create( "ClickHouseDB" );
 
 	const auto rates = mktDataSource->fetchFXRates( "LIVE" );
 	for( const MDEntities::FXRate rate : rates )
@@ -30,6 +31,9 @@ TEST( MktDataSourceTesting, testSelect )
 	//newRate.mid = 1.25;
 
 	//mktDataSource->insertFXRates( { newRate }, "LIVE" );
+
+	RefDataManager rdm;
+	auto all = rdm.Users();
 
 
 	int y = 0;

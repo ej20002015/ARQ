@@ -17,6 +17,9 @@ namespace TMQ
 class CHRefDataSource : public RefDataSource
 {
 public:
+    CHRefDataSource( const std::string_view dsh )
+        : m_dsh( dsh )
+    {}
 	virtual ~CHRefDataSource() = default;
 
     {% for entity in entities %}
@@ -26,6 +29,8 @@ public:
     TMQClickHouse_API void insert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data ) override;
 
     {% endfor %}
+private:
+    std::string m_dsh;
 };
 
 }

@@ -18,9 +18,12 @@ namespace TMQ
 
 class RefDataManager;
 
-template<typename KeyType, RDEntities::c_RDEntity T> // TODO: Just take in RDEntities class
+template<RDEntities::c_RDEntity T>
 class RefDataCache
 {
+public:
+    using KeyType = typename RDEntities::Traits<T>::KeyType;
+
 public:
     explicit RefDataCache( const std::map<KeyType, T>&& map )
         : m_map( std::move( map ) )
@@ -61,7 +64,7 @@ public:
 
     [[nodiscard]] TMQCore_API bool hasCurrencies() const;
 
-    [[nodiscard]] TMQCore_API std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency>> Currencies() const;
+    [[nodiscard]] TMQCore_API std::shared_ptr<RefDataCache<RDEntities::Currency>> Currencies() const;
 
     TMQCore_API void reloadCurrencies();
 
@@ -72,7 +75,7 @@ public:
 
     [[nodiscard]] TMQCore_API bool hasUsers() const;
 
-    [[nodiscard]] TMQCore_API std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User>> Users() const;
+    [[nodiscard]] TMQCore_API std::shared_ptr<RefDataCache<RDEntities::User>> Users() const;
 
     TMQCore_API void reloadUsers();
 
@@ -90,8 +93,8 @@ private:
     std::shared_ptr<RefDataSource> m_rdSource;
     mutable std::shared_mutex m_mut;
 
-    std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency>> m_Currencies;
-    std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User>> m_Users;
+    std::shared_ptr<RefDataCache<RDEntities::Currency>> m_Currencies;
+    std::shared_ptr<RefDataCache<RDEntities::User>> m_Users;
 };
 
 }

@@ -6,6 +6,6 @@
 namespace TMQ
 {
 
-extern "C" TMQClickHouse_API RefDataSource* createRefDataSource();
+extern "C" TMQClickHouse_API RefDataSource* createRefDataSource( const std::string_view dsh );
 
 }

@@ -21,9 +21,9 @@ namespace TMQ
 {% for entity in entities %}
 // --- Implementation for {{ entity.name }} ---
 
-static std::vector<MDEntities::{{ entity.name }}> internalFetch{{ entity.name_plural }}( const std::string_view mktName, const std::optional<std::string_view> ID = std::nullopt )
+static std::vector<MDEntities::{{ entity.name }}> internalFetch{{ entity.name_plural }}( const std::string_view dsh, const std::string_view mktName, const std::optional<std::string_view> ID = std::nullopt )
 {
-    CHConn conn;
+    CHConn conn( dsh );
 
     std::vector<MDEntities::{{ entity.name }}> results;
 
@@ -100,12 +100,12 @@ static std::vector<MDEntities::{{ entity.name }}> internalFetch{{ entity.name_pl
 
 std::vector<MDEntities::{{ entity.name }}> CHMktDataSource::fetch{{ entity.name_plural }}( const std::string_view mktName )
 {
-    return internalFetch{{ entity.name_plural }}( mktName );
+    return internalFetch{{ entity.name_plural }}( m_dsh, mktName );
 }
 
 std::optional<MDEntities::{{ entity.name }}> CHMktDataSource::fetch{{ entity.name }}( const std::string_view mktName, const std::string_view ID )
 {
-    auto result = internalFetch{{ entity.name_plural }}( mktName, ID );
+    auto result = internalFetch{{ entity.name_plural }}( m_dsh, mktName, ID );
     return result.empty() ? std::nullopt : std::make_optional( std::move( result.front() ) );
 }
 
@@ -114,7 +114,7 @@ std::optional<MDEntities::{{ entity.name }}> CHMktDataSource::fetch{{ entity.nam
 
 void CHMktDataSource::insert{{ entity.name_plural }}( const std::vector<MDEntities::{{ entity.name }}>& data, const std::string_view mktName )
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     Instr::Timer tm;
 

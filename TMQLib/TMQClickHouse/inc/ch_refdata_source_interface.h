@@ -13,6 +13,9 @@ namespace TMQ
 class CHRefDataSource : public RefDataSource
 {
 public:
+    CHRefDataSource( const std::string_view dsh )
+        : m_dsh( dsh )
+    {}
 	virtual ~CHRefDataSource() = default;
 
     // --- Methods for Currency (CCY) ---
@@ -25,6 +28,8 @@ public:
     [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::User> fetchAsOfUsers( std::chrono::system_clock::time_point asof ) override;
     TMQClickHouse_API void insertUsers( const std::vector<RDEntities::User>& data ) override;
 
+private:
+    std::string m_dsh;
 };
 
 }

@@ -83,7 +83,7 @@ void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, con
 
 void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 {
-	const auto mktSrc = MktDataSourceRepo::get( MktDataSourceRepo::ClickHouse ); // TODO: Temp whilst I work out the dsh flow
+	const auto mktSrc = MktDataSourceFactory::create( m_dsh );
 
 	for( const ConsolidatingTIDSet::Item item : toLoad.getAll() )
 	{

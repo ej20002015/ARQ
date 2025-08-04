@@ -16,9 +16,9 @@ namespace TMQ
 
 // --- Implementation for FXRate ---
 
-static std::vector<MDEntities::FXRate> internalFetchFXRates( const std::string_view mktName, const std::optional<std::string_view> ID = std::nullopt )
+static std::vector<MDEntities::FXRate> internalFetchFXRates( const std::string_view dsh, const std::string_view mktName, const std::optional<std::string_view> ID = std::nullopt )
 {
-    CHConn conn;
+    CHConn conn( dsh );
 
     std::vector<MDEntities::FXRate> results;
 
@@ -91,12 +91,12 @@ static std::vector<MDEntities::FXRate> internalFetchFXRates( const std::string_v
 
 std::vector<MDEntities::FXRate> CHMktDataSource::fetchFXRates( const std::string_view mktName )
 {
-    return internalFetchFXRates( mktName );
+    return internalFetchFXRates( m_dsh, mktName );
 }
 
 std::optional<MDEntities::FXRate> CHMktDataSource::fetchFXRate( const std::string_view mktName, const std::string_view ID )
 {
-    auto result = internalFetchFXRates( mktName, ID );
+    auto result = internalFetchFXRates( m_dsh, mktName, ID );
     return result.empty() ? std::nullopt : std::make_optional( std::move( result.front() ) );
 }
 
@@ -105,7 +105,7 @@ std::optional<MDEntities::FXRate> CHMktDataSource::fetchFXRate( const std::strin
 
 void CHMktDataSource::insertFXRates( const std::vector<MDEntities::FXRate>& data, const std::string_view mktName )
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     Instr::Timer tm;
 
@@ -158,9 +158,9 @@ void CHMktDataSource::insertFXRates( const std::vector<MDEntities::FXRate>& data
 
 // --- Implementation for EQPrice ---
 
-static std::vector<MDEntities::EQPrice> internalFetchEQPrices( const std::string_view mktName, const std::optional<std::string_view> ID = std::nullopt )
+static std::vector<MDEntities::EQPrice> internalFetchEQPrices( const std::string_view dsh, const std::string_view mktName, const std::optional<std::string_view> ID = std::nullopt )
 {
-    CHConn conn;
+    CHConn conn( dsh );
 
     std::vector<MDEntities::EQPrice> results;
 
@@ -242,12 +242,12 @@ static std::vector<MDEntities::EQPrice> internalFetchEQPrices( const std::string
 
 std::vector<MDEntities::EQPrice> CHMktDataSource::fetchEQPrices( const std::string_view mktName )
 {
-    return internalFetchEQPrices( mktName );
+    return internalFetchEQPrices( m_dsh, mktName );
 }
 
 std::optional<MDEntities::EQPrice> CHMktDataSource::fetchEQPrice( const std::string_view mktName, const std::string_view ID )
 {
-    auto result = internalFetchEQPrices( mktName, ID );
+    auto result = internalFetchEQPrices( m_dsh, mktName, ID );
     return result.empty() ? std::nullopt : std::make_optional( std::move( result.front() ) );
 }
 
@@ -256,7 +256,7 @@ std::optional<MDEntities::EQPrice> CHMktDataSource::fetchEQPrice( const std::str
 
 void CHMktDataSource::insertEQPrices( const std::vector<MDEntities::EQPrice>& data, const std::string_view mktName )
 {
-    CHConn conn;
+    CHConn conn( m_dsh );
 
     Instr::Timer tm;
 

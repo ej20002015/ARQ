@@ -10,6 +10,7 @@ TEST( DataSourceConfigManagerTest, LoadFromStringValid )
     const std::string tomlContent = R"(
         [data_sources]
         [data_sources.db_str]
+        type = "ClickHouse"
         hostname = "host_str.example.com"
         port = 5432
         username = "user_str"
@@ -17,6 +18,7 @@ TEST( DataSourceConfigManagerTest, LoadFromStringValid )
         password = "pw_str"
         
         [data_sources.source2]
+        type = "ClickHouse"
         hostname = "another@example.com"
         port = 200
     )";
@@ -26,7 +28,8 @@ TEST( DataSourceConfigManagerTest, LoadFromStringValid )
 
     ASSERT_NO_THROW( {
         const auto& cfg = mgr.get( "db_str" );
-        EXPECT_EQ( cfg.handle, "db_str" );
+        EXPECT_EQ( cfg.dsh, "db_str" );
+        EXPECT_EQ( cfg.type, DataSourceType::ClickHouse );
         EXPECT_EQ( cfg.hostname, "host_str.example.com" );
         EXPECT_EQ( cfg.port, 5432 );
         ASSERT_TRUE( cfg.username.has_value() );
@@ -39,7 +42,8 @@ TEST( DataSourceConfigManagerTest, LoadFromStringValid )
 
     ASSERT_NO_THROW( {
         const auto & cfg = mgr.get( "source2" );
-        EXPECT_EQ( cfg.handle, "source2" );
+        EXPECT_EQ( cfg.dsh, "source2" );
+        EXPECT_EQ( cfg.type, DataSourceType::ClickHouse );
         EXPECT_EQ( cfg.hostname, "another@example.com" );
         EXPECT_EQ( cfg.port, 200 );
         ASSERT_TRUE( !cfg.username.has_value() );
@@ -53,6 +57,7 @@ TEST( DataSourceConfigManagerTest, GetNonExistentHandle )
     const std::string tomlContent = R"(
         [data_sources]
         [data_sources.db_exists]
+        type = "ClickHouse"
         hostname = "host_abc"
         port = 1234
     )";
@@ -72,6 +77,7 @@ TEST( DataSourceConfigManagerTest, ParseErrorMissingRequired )
         port = 5432
 
         [data_sources.db_ok]
+        type = "ClickHouse"
         hostname = "host_c"
         port = 9999
     )";

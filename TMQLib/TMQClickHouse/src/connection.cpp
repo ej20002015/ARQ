@@ -7,21 +7,22 @@
 namespace TMQ
 {
 
-std::unique_ptr<clickhouse::Client> CHConnPool::getConn()
+std::unique_ptr<clickhouse::Client> CHConnPool::getConn( const std::string_view dsh )
 {
-	std::scoped_lock<std::mutex> lock( m_mutex );
-	if( !m_conns.empty() )
+	std::scoped_lock<std::mutex> lock( m_mut );
+	ConnQueue& connQueue = m_connQueues[dsh.data()];
+	if( !connQueue.empty() )
 	{
-		std::unique_ptr<clickhouse::Client> conn = std::move( m_conns.front() );
-		m_conns.pop_front();
+		std::unique_ptr<clickhouse::Client> conn = std::move( connQueue.front() );
+		connQueue.pop_front();
 		return conn;
 	}
 
 	try
 	{
-		Log( Module::CLICKHOUSE ).info( "Creating new ClickHouse connection" );
+		Log( Module::CLICKHOUSE ).info( "Creating new ClickHouse connection for dsh []", dsh );
 
-		const DataSourceConfig config = DataSourceConfigManager::inst().get( "ClickHouseDB" );
+		const DataSourceConfig config = DataSourceConfigManager::inst().get( dsh );
 		clickhouse::ClientOptions opt = {
 			.host = config.hostname,
 			.port = config.port
@@ -40,12 +41,12 @@ std::unique_ptr<clickhouse::Client> CHConnPool::getConn()
 	}
 }
 
-void CHConnPool::retConn( std::unique_ptr<clickhouse::Client> conn )
+void CHConnPool::retConn( const std::string_view dsh, std::unique_ptr<clickhouse::Client> conn )
 {
 	if( conn )
 	{
-		std::lock_guard<std::mutex> lock( m_mutex );
-		m_conns.push_back( std::move( conn ) );
+		std::lock_guard<std::mutex> lock( m_mut );
+		m_connQueues[dsh.data()].push_back(std::move(conn));
 	}
 }
 

@@ -13,26 +13,12 @@
 namespace TMQ
 {
 
-using RefDataSourceCreateFunc = std::add_pointer<RefDataSource*()>::type;
+using RefDataSourceCreateFunc = std::add_pointer<RefDataSource*( const std::string_view dsh )>::type;
 
-class RefDataSourceRepo
+class RefDataSourceFactory
 {
 public:
-	RefDataSourceRepo() = delete;
-
-	enum Type
-	{
-		ClickHouse,
-
-		_SIZE
-	};
-
-public:
-	[[nodiscard]] TMQCore_API static std::shared_ptr<RefDataSource> get( const Type type );
-
-private:
-	static inline std::array<std::shared_ptr<RefDataSource>, Type::_SIZE> s_sources;
-	static inline std::shared_mutex s_mut;
+	[[nodiscard]] static std::shared_ptr<RefDataSource> create( const std::string_view dsh );
 };
 
 class GlobalRefDataSource

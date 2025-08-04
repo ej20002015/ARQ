@@ -15,7 +15,7 @@ namespace TMQ
     return m_Currencies != nullptr;
 }
 
-[[nodiscard]] std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency>> RefDataManager::Currencies() const
+[[nodiscard]] std::shared_ptr<RefDataCache<RDEntities::Currency>> RefDataManager::Currencies() const
 {
     if( !hasCurrencies() )
         const_cast<RefDataManager*>( this )->loadInitiallyCurrencies();
@@ -33,7 +33,7 @@ void RefDataManager::reloadCurrencies()
         newData.emplace( obj.ccyID, std::move( obj ) );
 
     std::unique_lock<std::shared_mutex> ul( m_mut );
-    m_Currencies = std::make_shared<RefDataCache<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency>>( std::move( newData ) );
+    m_Currencies = std::make_shared<RefDataCache<RDEntities::Currency>>( std::move( newData ) );
 
     Log( Module::REFDATA ).debug( "RefDataManager: Reloaded {} data, count: {}", RDEntities::Traits<RDEntities::Currency>::name(), m_Currencies->m_map.size() );
 }
@@ -55,7 +55,7 @@ void RefDataManager::loadInitiallyCurrencies()
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.ccyID, std::move( obj ) );
 
-    m_Currencies = std::make_shared<RefDataCache<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency>>( std::move( newData ) );
+    m_Currencies = std::make_shared<RefDataCache<RDEntities::Currency>>( std::move( newData ) );
 
     Log( Module::REFDATA ).debug( "RefDataManager: Completed initial load of {} data, count: {}", RDEntities::Traits<RDEntities::Currency>::name(), m_Currencies->m_map.size() );
 }
@@ -64,7 +64,7 @@ void RefDataManager::insertCurrencies( const std::vector<RDEntities::Currency>& 
 {
     Log( Module::REFDATA ).info( "RefDataManager: Inserting {} data, count: {}", RDEntities::Traits<RDEntities::Currency>::name(), data.size() );
 
-    if( staleCheck == USING_CACHE || staleCheck == USING_DB )
+    if( staleCheck == USING_CACHE || staleCheck == USING_DB ) // TODO: Should be checking this as part of the DB transaction
     {
 		if( !hasCurrencies() )
 			loadInitiallyCurrencies();
@@ -105,7 +105,7 @@ void RefDataManager::insertCurrency( const RDEntities::Currency& data, const Sta
     return m_Users != nullptr;
 }
 
-[[nodiscard]] std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User>> RefDataManager::Users() const
+[[nodiscard]] std::shared_ptr<RefDataCache<RDEntities::User>> RefDataManager::Users() const
 {
     if( !hasUsers() )
         const_cast<RefDataManager*>( this )->loadInitiallyUsers();
@@ -123,7 +123,7 @@ void RefDataManager::reloadUsers()
         newData.emplace( obj.userID, std::move( obj ) );
 
     std::unique_lock<std::shared_mutex> ul( m_mut );
-    m_Users = std::make_shared<RefDataCache<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User>>( std::move( newData ) );
+    m_Users = std::make_shared<RefDataCache<RDEntities::User>>( std::move( newData ) );
 
     Log( Module::REFDATA ).debug( "RefDataManager: Reloaded {} data, count: {}", RDEntities::Traits<RDEntities::User>::name(), m_Users->m_map.size() );
 }
@@ -145,7 +145,7 @@ void RefDataManager::loadInitiallyUsers()
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.userID, std::move( obj ) );
 
-    m_Users = std::make_shared<RefDataCache<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User>>( std::move( newData ) );
+    m_Users = std::make_shared<RefDataCache<RDEntities::User>>( std::move( newData ) );
 
     Log( Module::REFDATA ).debug( "RefDataManager: Completed initial load of {} data, count: {}", RDEntities::Traits<RDEntities::User>::name(), m_Users->m_map.size() );
 }
@@ -154,7 +154,7 @@ void RefDataManager::insertUsers( const std::vector<RDEntities::User>& data, con
 {
     Log( Module::REFDATA ).info( "RefDataManager: Inserting {} data, count: {}", RDEntities::Traits<RDEntities::User>::name(), data.size() );
 
-    if( staleCheck == USING_CACHE || staleCheck == USING_DB )
+    if( staleCheck == USING_CACHE || staleCheck == USING_DB ) // TODO: Should be checking this as part of the DB transaction
     {
 		if( !hasUsers() )
 			loadInitiallyUsers();

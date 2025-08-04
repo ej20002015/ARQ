@@ -17,7 +17,9 @@ namespace TMQ
 class CHMktDataSource : public MktDataSource
 {
 public:
-	virtual ~CHMktDataSource() = default;
+	CHMktDataSource( const std::string_view dsh )
+        : m_dsh( dsh )
+    {}
 
     {% for entity in entities %}
     // --- Methods for {{ entity.name }} ({{ entity.type_string }}) ---
@@ -26,6 +28,8 @@ public:
     TMQClickHouse_API void insert{{ entity.name_plural }}( const std::vector<MDEntities::{{ entity.name }}>& data, const std::string_view mktName ) override;
 
     {% endfor %}
+private:
+    std::string m_dsh;
 };
 
 }

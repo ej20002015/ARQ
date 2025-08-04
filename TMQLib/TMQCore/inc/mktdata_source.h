@@ -10,26 +10,12 @@
 namespace TMQ
 {
 
-using MktDataSourceCreateFunc = std::add_pointer<MktDataSource* ( )>::type;
+using MktDataSourceCreateFunc = std::add_pointer<MktDataSource*( const std::string_view dsh )>::type;
 
-class MktDataSourceRepo
+class MktDataSourceFactory
 {
 public:
-	MktDataSourceRepo() = delete;
-
-	enum Type
-	{
-		ClickHouse,
-
-		_SIZE
-	};
-
-public:
-	[[nodiscard]] TMQCore_API static std::shared_ptr<MktDataSource> get( const Type type );
-
-private:
-	static inline std::array<std::shared_ptr<MktDataSource>, Type::_SIZE> s_sources;
-	static inline std::shared_mutex s_mut;
+	[[nodiscard]] static std::shared_ptr<MktDataSource> create( const std::string_view dsh );
 };
 
 class GlobalMktDataSource

@@ -13,7 +13,9 @@ namespace TMQ
 class CHMktDataSource : public MktDataSource
 {
 public:
-	virtual ~CHMktDataSource() = default;
+	CHMktDataSource( const std::string_view dsh )
+        : m_dsh( dsh )
+    {}
 
     // --- Methods for FXRate (FXR) ---
     [[nodiscard]] TMQClickHouse_API std::vector<MDEntities::FXRate> fetchFXRates( const std::string_view mktName ) override;
@@ -25,6 +27,8 @@ public:
     [[nodiscard]] TMQClickHouse_API std::optional<MDEntities::EQPrice> fetchEQPrice( const std::string_view mktName, const std::string_view ID ) override;
     TMQClickHouse_API void insertEQPrices( const std::vector<MDEntities::EQPrice>& data, const std::string_view mktName ) override;
 
+private:
+    std::string m_dsh;
 };
 
 }

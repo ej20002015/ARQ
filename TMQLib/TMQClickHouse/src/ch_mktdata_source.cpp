@@ -1,11 +1,13 @@
+#include <TMQClickHouse/ch_mktdata_source.h>
+
 #include <TMQClickHouse/ch_mktdata_source_interface.h>
 
 namespace TMQ
 {
 
-extern "C" MktDataSource* createMktDataSource()
+extern "C" MktDataSource* createMktDataSource( const std::string_view dsh )
 {
-	return new CHMktDataSource;
+	return new CHMktDataSource( dsh );
 }
 
 }

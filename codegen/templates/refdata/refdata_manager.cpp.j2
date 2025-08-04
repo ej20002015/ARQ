@@ -20,7 +20,7 @@ namespace TMQ
     return m_{{ entity.name_plural }} != nullptr;
 }
 
-[[nodiscard]] std::shared_ptr<RefDataCache<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}>> RefDataManager::{{ entity.name_plural }}() const
+[[nodiscard]] std::shared_ptr<RefDataCache<RDEntities::{{ entity.name }}>> RefDataManager::{{ entity.name_plural }}() const
 {
     if( !has{{ entity.name_plural }}() )
         const_cast<RefDataManager*>( this )->loadInitially{{ entity.name_plural }}();
@@ -38,7 +38,7 @@ void RefDataManager::reload{{ entity.name_plural }}()
         newData.emplace( obj.{{ entity.key}}, std::move( obj ) );
 
     std::unique_lock<std::shared_mutex> ul( m_mut );
-    m_{{ entity.name_plural }} = std::make_shared<RefDataCache<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}>>( std::move( newData ) );
+    m_{{ entity.name_plural }} = std::make_shared<RefDataCache<RDEntities::{{ entity.name }}>>( std::move( newData ) );
 
     Log( Module::REFDATA ).debug( "RefDataManager: Reloaded {} data, count: {}", RDEntities::Traits<RDEntities::{{ entity.name }}>::name(), m_{{ entity.name_plural }}->m_map.size() );
 }
@@ -60,7 +60,7 @@ void RefDataManager::loadInitially{{ entity.name_plural }}()
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.{{ entity.key}}, std::move( obj ) );
 
-    m_{{ entity.name_plural }} = std::make_shared<RefDataCache<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}>>( std::move( newData ) );
+    m_{{ entity.name_plural }} = std::make_shared<RefDataCache<RDEntities::{{ entity.name }}>>( std::move( newData ) );
 
     Log( Module::REFDATA ).debug( "RefDataManager: Completed initial load of {} data, count: {}", RDEntities::Traits<RDEntities::{{ entity.name }}>::name(), m_{{ entity.name_plural }}->m_map.size() );
 }
