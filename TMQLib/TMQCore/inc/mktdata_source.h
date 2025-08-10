@@ -1,69 +1,29 @@
 #pragma once
 #include <TMQCore/dll.h>
 
-#include <TMQUtils/buffer.h>
+#include <TMQUtils/hashers.h>
+#include <TMQCore/mktdata_source_interface.h>
 
 #include <array>
-#include <string>
-#include <chrono>
 #include <shared_mutex>
 #include <functional>
+#include <unordered_map>
 
 namespace TMQ
 {
 
-class MktDataSource
+using MktDataSourceCreateFunc = std::add_pointer<MktDataSource*( const std::string_view dsh )>::type;
+
+class MktDataSourceFactory
 {
 public:
-	struct FetchData
-	{
-		std::string type;
-		std::string instrumentID;
-		std::chrono::system_clock::time_point asofTs;
-		Buffer blob;
-		std::string source;
-		std::chrono::system_clock::time_point lastUpdatedTs;
-		std::string lastUpdatedBy;
-	};
+	[[nodiscard]] static std::shared_ptr<MktDataSource> create( const std::string_view dsh );
 
-	struct InsertData
-	{
-		std::string type;
-		std::string instrumentID;
-		std::chrono::system_clock::time_point asofTs;
-		Buffer blob;
-		std::string source;
-		std::string lastUpdatedBy;
-		bool active;
-	};
-
-public:
-	virtual ~MktDataSource() = default;
-
-	[[nodiscard]] TMQCore_API virtual std::vector<FetchData> fetchLatest( const std::string_view context ) = 0;
-	TMQCore_API virtual void insert( const std::string_view context, const std::vector<InsertData>& insData ) = 0;
-};
-
-using MktDataSourceCreateFunc = std::add_pointer<MktDataSource* ( )>::type;
-
-class MktDataSourceRepo
-{
-public:
-	MktDataSourceRepo() = delete;
-
-	enum Type
-	{
-		ClickHouse,
-
-		_SIZE
-	};
-
-public:
-	[[nodiscard]] TMQCore_API static std::shared_ptr<MktDataSource> get( const Type type );
+	TMQCore_API static void addCustomSource( const std::string_view dsh, const std::shared_ptr<MktDataSource>& source );
+	TMQCore_API static void delCustomSource( const std::string_view dsh );
 
 private:
-	static inline std::array<std::shared_ptr<MktDataSource>, Type::_SIZE> s_sources;
-	static inline std::shared_mutex s_mut;
+	static inline std::unordered_map<std::string, std::shared_ptr<MktDataSource>, TransparentStringHash, std::equal_to<>> s_customSources;
 };
 
 class GlobalMktDataSource

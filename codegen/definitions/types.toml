@@ -1,0 +1,37 @@
+# This file is the single source of truth for base type definitions
+# across different technology targets (C++, ClickHouse, etc.).
+
+[types.string]
+cpp = "std::string"
+clickhouse = "String"
+flatbuffer = "string"
+
+[types.double]
+cpp = "double"
+clickhouse = "Float64"
+flatbuffer = "double"
+
+[types.datetime]
+cpp = "std::chrono::system_clock::time_point"
+clickhouse = "DateTime64(9)"
+flatbuffer = "ulong" # Representing nanoseconds since epoch
+
+[types.bool]
+cpp = "bool"
+clickhouse = "UInt8" # ClickHouse often uses UInt8 for booleans
+flatbuffer = "bool"
+
+[types.uint8]
+cpp = "uint8_t"
+clickhouse = "UInt8"
+flatbuffer = "ubyte"
+
+[types.int32]
+cpp = "int32_t"
+clickhouse = "Int32"
+flatbuffer = "int"
+
+[types.int64]
+cpp = "std::int64_t"
+clickhouse = "Int64"
+flatbuffer = "long"

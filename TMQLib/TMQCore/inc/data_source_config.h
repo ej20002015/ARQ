@@ -3,16 +3,38 @@
 #include <TMQUtils/hashers.h>
 
 #include <string>
+#include <string_view>
 #include <optional>
 #include <unordered_map>
 #include <shared_mutex>
+#include <array>
 
 namespace TMQ
 {
 
+struct DataSourceType
+{
+public:
+
+	enum Enum
+	{
+		ClickHouse,
+
+		_SIZE
+	};
+
+	static Enum fromStr( const std::string_view str );
+	static std::string_view toStr( const Enum type );
+
+private:
+	static constexpr const std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE )> TYPE_STRINGS = { "ClickHouse" };
+};
+
 struct DataSourceConfig
 {
-	std::string handle;
+	std::string dsh;
+
+	DataSourceType::Enum type;
 
 	std::string hostname;
 	uint16_t port;
