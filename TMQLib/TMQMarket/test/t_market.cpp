@@ -33,7 +33,7 @@ TEST( MarketNameTests, LiveMkt )
     EXPECT_EQ( Mkt::Name::LIVE.str(), "LIVE" );
 }
 
-TEST( ContextTest, DatedMkt )
+TEST( MarketNameTests, DatedMkt )
 {
     Mkt::Name eodContext = { "EOD", Time::Date( Time::Year( 2025 ), Time::Month::Apr, Time::Day( 28 ) ) };
     EXPECT_EQ( eodContext.tag, "EOD" );
@@ -192,292 +192,312 @@ TEST_F( MarketTests, SnapIsIndependent )
     EXPECT_DOUBLE_EQ( snapEq2.value().last, 150.0 );
 }
 
-//class MockMktDataSource : public MktDataSource
-//{
-//public:
-//    MOCK_METHOD( std::vector<FetchData>, fetchLatest, ( const std::string_view context ), ( override ) );
-//    MOCK_METHOD( void, insert, ( const std::string_view context, const std::vector<InsertData>& insData ), ( override ) );
-//};
-//
-//class MarketLoadSaveTests : public ::testing::Test
-//{
-//public:
-//    MarketLoadSaveTests()
-//        : m_mockSource( std::make_shared<MockMktDataSource>() )
-//    {
-//    }
-//
-//public:
-//    std::shared_ptr<MockMktDataSource> m_mockSource;
-//    Mkt::Context m_testCtx = { "TEST_EOD", Time::Date( Time::Year( 2025 ), Time::Month::Apr, Time::Day( 28 ) ) };
-//};
-//
-//TEST_F( MarketLoadSaveTests, LoadEmptyMarket )
-//{
-//    EXPECT_CALL( *m_mockSource, fetchLatest( m_testCtx.str() ) )
-//        .WillOnce( Return( std::vector<MktDataSource::FetchData>{} ) );
-//
-//    std::shared_ptr<Mkt::Market> market = Mkt::load( m_testCtx, m_mockSource );
-//    ASSERT_NE( market, nullptr );
-//    auto snap = market->snap();
-//    EXPECT_EQ( snap.size(), 0 );
-//}
-//
-//TEST_F( MarketLoadSaveTests, LoadFXAndEQ )
-//{
-//    MDEntities::FXRate fx1Data;
-//    fx1Data.ID = "EURUSD";
-//    fx1Data.rate = 1.1;
-//    fx1Data.source = "S1";
-//    fx1Data.asofTs = system_clock::now();
-//    fx1Data._active = true;
-//
-//    MDEntities::EQPrice eq1Data;
-//    eq1Data.ID = "AAPL";
-//    eq1Data.price = 150.0;
-//    eq1Data.source = "S2";
-//    eq1Data.asofTs = system_clock::now();
-//    eq1Data._active = true;
-//
-//    std::vector<MktDataSource::FetchData> fetchData;
-//    fetchData.emplace_back( "FX", "EURUSD", fx1Data.asofTs, serialise( fx1Data ), "S1", system_clock::now(), "UserFetch" );
-//    fetchData.emplace_back( "EQ", "AAPL", eq1Data.asofTs, serialise( eq1Data ), "S2", system_clock::now(), "UserFetch" );
-//
-//    EXPECT_CALL( *m_mockSource, fetchLatest( m_testCtx.str() ) )
-//        .WillOnce( Return( std::move( fetchData ) ) );
-//
-//    std::shared_ptr<Mkt::Market> market = Mkt::load( m_testCtx, m_mockSource );
-//    ASSERT_NE( market, nullptr );
-//
-//    auto optFx = market->getFXRate( "EURUSD" );
-//    ASSERT_TRUE( optFx.has_value() );
-//    EXPECT_DOUBLE_EQ( optFx.value().rate, fx1Data.rate );
-//    EXPECT_EQ( optFx.value().source, "S1" );
-//    EXPECT_EQ( optFx.value().asofTs, fx1Data.asofTs );
-//    EXPECT_TRUE( optFx.value()._active );
-//    EXPECT_EQ( optFx.value()._lastUpdatedBy, "UserFetch" );
-//
-//    auto optEq = market->get<EQ>( "AAPL" );
-//    ASSERT_TRUE( optEq.has_value() );
-//    EXPECT_DOUBLE_EQ( optEq.value().price, eq1Data.price );
-//    EXPECT_EQ( optEq.value().source, "S2" );
-//    EXPECT_EQ( optEq.value().asofTs, eq1Data.asofTs );
-//    EXPECT_TRUE( optEq.value()._active );
-//    EXPECT_EQ( optEq.value()._lastUpdatedBy, "UserFetch" );
-//}
-//
-//TEST_F( MarketLoadSaveTests, LoadUnknownTypeThrows )
-//{
-//    std::vector<MktDataSource::FetchData> fetchData;
-//    fetchData.emplace_back( "UNKNOWN_TYPE", "ID1", system_clock::now(), Buffer(), "S1", system_clock::now(), "UserFetch" );
-//    
-//    EXPECT_CALL( *m_mockSource, fetchLatest( m_testCtx.str() ) )
-//        .WillOnce( Return( std::move( fetchData ) ) );
-//
-//    EXPECT_THROW( {
-//        try
-//        {
-//            Mkt::load( m_testCtx, m_mockSource );
-//        }
-//        catch( const TMQException& e )
-//        {
-//            EXPECT_THAT( e.what(), HasSubstr( "Don't know how to load MDEntities of type" ) );
-//            throw;
-//        }
-//    }, TMQException );
-//}
-//
-//TEST_F( MarketLoadSaveTests, LoadUsesGlobalDataSource )
-//{
-//    const auto oldGlobal = GlobalMktDataSource::get();
-//    GlobalMktDataSource::CreatorFunc func = [this] () { return m_mockSource; };
-//    GlobalMktDataSource::setFunc( func );
-//    EXPECT_EQ( GlobalMktDataSource::get(), m_mockSource );
-//
-//    EXPECT_CALL( *m_mockSource, fetchLatest( m_testCtx.str() ) )
-//        .WillOnce( Return( std::vector<MktDataSource::FetchData>{} ) );
-//
-//    std::shared_ptr<Mkt::Market> market = Mkt::load( m_testCtx );
-//    ASSERT_NE( market, nullptr );
-//    EXPECT_EQ( market->snap().size(), 0 );
-//
-//    GlobalMktDataSource::setFunc( [oldGlobal] () { return oldGlobal; } );
-//}
-//
-//TEST_F( MarketLoadSaveTests, SaveEmptyMarket )
-//{
-//    auto market = std::make_shared<Mkt::Market>();
-//
-//    EXPECT_CALL( *m_mockSource, insert( m_testCtx.str(), testing::IsEmpty() ) ) // Expect empty vector
-//        .Times( 1 );
-//
-//    Mkt::save( market, m_testCtx, m_mockSource );
-//}
-//
-//TEST_F( MarketLoadSaveTests, SaveMarketWithFXAndEQ )
-//{
-//    auto market = std::make_shared<Mkt::Market>();
-//
-//    FXRate fx1;
-//    fx1.ID = "EURUSD";
-//    fx1.mid = 1.2;
-//    fx1.source = "S_FX";
-//    fx1.asofTs = system_clock::now();
-//    fx1._active = true;
-//
-//    MDEntities::EQPrice eq1;
-//    eq1.ID = "MSFT";
-//    eq1.last = 250.5;
-//    eq1.source = "S_EQ";
-//    eq1.asofTs = system_clock::now();
-//    eq1._active = true;
-//
-//    market->set( fx1 );
-//    market->set( eq1 );
-//
-//    // Capture the argument to inspect it
-//    std::vector<MktDataSource::InsertData> captured_insData;
-//    EXPECT_CALL( *m_mockSource, insert( m_testCtx.str(), testing::_ ) )
-//        .WillOnce( [&] ( const std::string_view, const std::vector<MktDataSource::InsertData>& insData )
-//    {
-//        std::vector<MktDataSource::InsertData> insDataCopy;
-//        for( const auto& d : insData )
-//            insDataCopy.emplace_back( d.type, d.ID, d.asofTs, Buffer( d.blob.data.get(), d.blob.size), d.source, d.lastUpdatedBy, d.active);
-//
-//        captured_insData = std::move( insDataCopy );
-//    } );
-//
-//    Mkt::save( market, m_testCtx, m_mockSource );
-//
-//    ASSERT_EQ( captured_insData.size(), 2 );
-//
-//    bool fxFound = false;
-//    bool eqFound = false;
-//
-//    for( const auto& item : captured_insData )
-//    {
-//        if( item.ID == "EURUSD" )
-//        {
-//            fxFound = true;
-//            EXPECT_EQ( item.type, MDEntityTraits<FXRate>::type() );
-//            EXPECT_EQ( item.source, "S_FX" );
-//            EXPECT_EQ( item.asofTs, fx1.asofTs );
-//            EXPECT_TRUE( item.active );
-//            EXPECT_EQ( item.lastUpdatedBy, "Evan" );
-//            FXRate deserialisedFX = deserialise<FXRate>( item.blob );
-//            EXPECT_DOUBLE_EQ( deserialisedFX.rate, fx1.mid );
-//        }
-//        else if( item.ID == "MSFT" )
-//        {
-//            eqFound = true;
-//            EXPECT_EQ( item.type, MDEntityTraits<EQ>::type() );
-//            EXPECT_EQ( item.source, "S_EQ" );
-//            EXPECT_EQ( item.asofTs, eq1.asofTs );
-//            EXPECT_TRUE( item.active );
-//            EXPECT_EQ( item.lastUpdatedBy, "Evan" );
-//            EQ deserialisedEQ = deserialise<EQ>( item.blob );
-//            EXPECT_DOUBLE_EQ( deserialisedEQ.price, eq1.last );
-//        }
-//    }
-//    EXPECT_TRUE( fxFound );
-//    EXPECT_TRUE( eqFound );
-//}
-//
-//TEST_F( MarketLoadSaveTests, SaveSnapshotDirectly )
-//{
-//    auto tempMarket = std::make_shared<Mkt::Market>();
-//    FXRate fx1;
-//    fx1.ID = "USDJPY";
-//    fx1.mid = 110.5;
-//    fx1.source = "SNAP_S";
-//    fx1.asofTs = system_clock::now();
-//    fx1._active = true;
-//    tempMarket->set( fx1 );
-//    Mkt::MarketSnapshot snapshot = tempMarket->snap();
-//
-//    std::vector<MktDataSource::InsertData> captured_insData;
-//    EXPECT_CALL( *m_mockSource, insert( m_testCtx.str(), testing::_ ) )
-//        .WillOnce( [&] ( const std::string_view, const std::vector<MktDataSource::InsertData>& insData )
-//    {
-//        std::vector<MktDataSource::InsertData> insDataCopy;
-//        for( const auto& d : insData )
-//            insDataCopy.emplace_back( d.type, d.ID, d.asofTs, Buffer( d.blob.data.get(), d.blob.size ), d.source, d.lastUpdatedBy, d.active );
-//
-//        captured_insData = std::move( insDataCopy );
-//    } );
-//
-//    Mkt::save( snapshot, m_testCtx, m_mockSource );
-//
-//    ASSERT_EQ( captured_insData.size(), 1 );
-//    const auto& item = captured_insData[0];
-//    EXPECT_EQ( item.ID, "USDJPY" );
-//    EXPECT_EQ( item.type, MDEntityTraits<FXRate>::type() );
-//    EXPECT_EQ( item.source, "SNAP_S" );
-//    EXPECT_EQ( item.asofTs, fx1.asofTs );
-//    EXPECT_TRUE( item.active );
-//    EXPECT_EQ( item.lastUpdatedBy, "Evan" );
-//    FXRate deserialisedFX = deserialise<FXRate>( item.blob );
-//    EXPECT_DOUBLE_EQ( deserialisedFX.rate, fx1.mid );
-//}
-//
-//TEST_F( MarketLoadSaveTests, SaveUsesGlobalDataSource )
-//{
-//    const auto oldGlobal = GlobalMktDataSource::get();
-//    GlobalMktDataSource::CreatorFunc func = [this] () { return m_mockSource; };
-//    GlobalMktDataSource::setFunc( func );
-//    EXPECT_EQ( GlobalMktDataSource::get(), m_mockSource );
-//
-//    EXPECT_CALL( *m_mockSource, insert( m_testCtx.str(), testing::IsEmpty() ) )
-//        .Times( 1 );
-//
-//    Mkt::save( std::make_shared<Mkt::Market>(), m_testCtx );
-//
-//    GlobalMktDataSource::setFunc( [oldGlobal] () { return oldGlobal; } );
-//}
+class ConsolidatingTIDSetTests : public ::testing::Test
+{
+protected:
+    Mkt::ConsolidatingTIDSet m_set;
+};
 
-//TEST( MarketTests, TestLoading )
-//{
-//	Mkt::Context evanTest = { "EVAN_TEST", year_month_day{ 2025y, May, 5d } };
-//
-//	auto mkt = Mkt::load( evanTest );
-//	int y = 0;
-//}
-//
-//TEST( MarketTests, TestSaving )
-//{
-//	Mkt::Context evanTest = { "EVAN_TEST", year_month_day{ 2025y, May, 5d } };
-//	auto mkt = std::make_shared<Mkt::Market>();
-//
-//	FXRate fx;
-//	fx.ID = "GBPUSD";
-//	fx.rate = 1.2;
-//	fx.bid = 1.19;
-//	fx.ask = 1.21;
-//	fx.source = "TP";
-//	fx.asofTs = system_clock::now();
-//	mkt->set( fx );
-//
-//	constexpr year_month_day ymd{ 2025y, May, 5d };
-//	constexpr std::chrono::sys_days date_point = std::chrono::sys_days( ymd );
-//	constexpr system_clock::time_point specific_time = date_point + hours( 13 ) + minutes( 0 ) + seconds( 0 );
-//
-//	EQ eq;
-//	eq.ID = "TSLA US";
-//	eq.price = 419.0;
-//	eq.open = 415.0;
-//	eq.close = 412.0;
-//	eq.high = 422.0;
-//	eq.low = 414.0;
-//	eq.source = "NASDAQ";
-//	eq.asofTs = specific_time;
-//	mkt->set( eq );
-//
-//	try
-//	{
-//		Mkt::save( mkt, evanTest );
-//	}
-//	catch( const TMQException& e )
-//	{
-//		int y = 0;
-//	}
-//}
+TEST_F( ConsolidatingTIDSetTests, DefaultConstructorIsEmpty )
+{
+    EXPECT_TRUE( m_set.getAll().empty() );
+}
+
+TEST_F( ConsolidatingTIDSetTests, InitializerListConstructor )
+{
+    Mkt::ConsolidatingTIDSet set{
+        {MDEntities::Type::FXR, "EUR/USD"},
+        {MDEntities::Type::EQP, "AAPL"},
+        {MDEntities::Type::FXR} // Type without ID
+    };
+
+    const auto& items = set.getAll();
+    EXPECT_EQ( items.size(), 2 ); // Should have consolidated FXR entries
+
+    // Should contain type-level FXR (which subsumes the specific EUR/USD)
+    EXPECT_TRUE( set.contains( { MDEntities::Type::FXR } ) );
+    EXPECT_TRUE( set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) ); // Any FXR ID should match
+
+    // Should contain specific EQP
+    EXPECT_TRUE( set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+    EXPECT_FALSE( set.contains( { MDEntities::Type::EQP, "MSFT" } ) ); // Different EQP ID should not match
+    EXPECT_FALSE( set.contains( { MDEntities::Type::EQP } ) ); // Type-level EQP should not match
+}
+
+TEST_F( ConsolidatingTIDSetTests, AddSpecificItems )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    EXPECT_EQ( m_set.getAll().size(), 3 );
+
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "USD/JPY" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP, "MSFT" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, AddTypeWithoutID_ConsolidatesExistingItems )
+{
+    // Add specific items first
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    EXPECT_EQ( m_set.getAll().size(), 3 );
+
+    // Add type-level FXR - should remove all specific FXR items
+    m_set.add( { MDEntities::Type::FXR } );
+
+    const auto& items = m_set.getAll();
+    EXPECT_EQ( items.size(), 2 ); // Should have FXR (type-level) and EQP (specific)
+
+    // All FXR IDs should now match the type-level entry
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "USD/JPY" } ) ); // Any FXR ID
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR } ) ); // Type-level
+
+    // EQP should remain specific
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP, "MSFT" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP } ) ); // Not type-level
+}
+
+TEST_F( ConsolidatingTIDSetTests, AddDuplicateItemsIgnored )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } ); // Duplicate
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } ); // Another duplicate
+
+    EXPECT_EQ( m_set.getAll().size(), 1 );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, DeleteSpecificItem )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    m_set.del( { MDEntities::Type::FXR, "EUR/USD" } );
+
+    EXPECT_EQ( m_set.getAll().size(), 2 );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, DeleteTypeWithoutID_RemovesAllOfThatType )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    // Delete all FXR items
+    m_set.del( { MDEntities::Type::FXR } );
+
+    EXPECT_EQ( m_set.getAll().size(), 1 );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, DeleteTypeWithoutID_RemovesTypeLevelEntry )
+{
+    m_set.add( { MDEntities::Type::FXR } ); // Type-level entry
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    m_set.del( { MDEntities::Type::FXR } );
+
+    EXPECT_EQ( m_set.getAll().size(), 1 );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, DeleteNonExistentItem )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+
+    // Should not crash or affect existing items
+    m_set.del( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.del( { MDEntities::Type::EQP, "AAPL" } );
+
+    EXPECT_EQ( m_set.getAll().size(), 1 );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, AppendOtherSet )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    Mkt::ConsolidatingTIDSet otherSet{
+        {MDEntities::Type::FXR, "GBP/USD"},
+        {MDEntities::Type::EQP, "MSFT"}
+    };
+
+    m_set.append( otherSet );
+
+    EXPECT_EQ( m_set.getAll().size(), 4 );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "MSFT" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, AppendWithConsolidation )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    Mkt::ConsolidatingTIDSet otherSet {
+        { MDEntities::Type::FXR } // Type-level - should consolidate existing FXR items
+    };
+
+    m_set.append( otherSet );
+
+    const auto& items = m_set.getAll();
+    EXPECT_EQ( items.size(), 2 ); // FXR (type-level) and EQP (specific)
+
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "USD/JPY" } ) ); // Any FXR ID
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, RemoveOtherSet )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+    m_set.add( { MDEntities::Type::EQP, "MSFT" } );
+
+    Mkt::ConsolidatingTIDSet otherSet {
+        { MDEntities::Type::FXR, "EUR/USD" },
+        { MDEntities::Type::EQP, "MSFT" }
+    };
+
+    m_set.remove( otherSet );
+
+    EXPECT_EQ( m_set.getAll().size(), 2 );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP, "MSFT" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, RemoveWithTypeLevelEntry )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    Mkt::ConsolidatingTIDSet otherSet {
+        { MDEntities::Type::FXR } // Type-level - should remove all FXR items
+    };
+
+    m_set.remove( otherSet );
+
+    EXPECT_EQ( m_set.getAll().size(), 1 );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, ItemIsMatchBehavior )
+{
+    Mkt::ConsolidatingTIDSet::Item typeLevelFXR{ MDEntities::Type::FXR };
+    Mkt::ConsolidatingTIDSet::Item specificFXR{ MDEntities::Type::FXR, "EUR/USD" };
+    Mkt::ConsolidatingTIDSet::Item otherSpecificFXR{ MDEntities::Type::FXR, "GBP/USD" };
+    Mkt::ConsolidatingTIDSet::Item specificEQP{ MDEntities::Type::EQP, "AAPL" };
+
+    // Type-level matches any specific of same type
+    EXPECT_TRUE( typeLevelFXR.isMatch( specificFXR ) );
+    EXPECT_FALSE( specificFXR.isMatch( typeLevelFXR ) ); // specific doesn't match type-level
+    EXPECT_TRUE( typeLevelFXR.isMatch( otherSpecificFXR ) );
+
+    // Type-level doesn't match different type
+    EXPECT_FALSE( typeLevelFXR.isMatch( specificEQP ) );
+
+    // Specific items only match exact same ID
+    EXPECT_TRUE( specificFXR.isMatch( specificFXR ) );
+    EXPECT_FALSE( specificFXR.isMatch( otherSpecificFXR ) );
+    EXPECT_FALSE( specificFXR.isMatch( specificEQP ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, ContainsWithTypeLevelEntry )
+{
+    m_set.add( { MDEntities::Type::FXR } ); // Type-level entry
+
+    // Should match any FXR ID
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "ANY_ID" } ) );
+
+    // Should not match different types
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP, "AAPL" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, ContainsWithSpecificEntry )
+{
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+
+    // Should match exact item and type-level query
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "EUR/USD" } ) );
+
+    // Should not match different IDs or type-level
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR, "GBP/USD" } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::FXR } ) );
+    EXPECT_FALSE( m_set.contains( { MDEntities::Type::EQP, "EUR/USD" } ) );
+}
+
+TEST_F( ConsolidatingTIDSetTests, ItemEquality )
+{
+    Mkt::ConsolidatingTIDSet::Item item1{ MDEntities::Type::FXR, "EUR/USD" };
+    Mkt::ConsolidatingTIDSet::Item item2{ MDEntities::Type::FXR, "EUR/USD" };
+    Mkt::ConsolidatingTIDSet::Item item3{ MDEntities::Type::FXR, "GBP/USD" };
+    Mkt::ConsolidatingTIDSet::Item item4{ MDEntities::Type::EQP, "EUR/USD" };
+    Mkt::ConsolidatingTIDSet::Item item5{ MDEntities::Type::FXR };
+
+    EXPECT_TRUE( item1 == item2 );
+    EXPECT_FALSE( item1 == item3 );
+    EXPECT_FALSE( item1 == item4 );
+    EXPECT_FALSE( item1 == item5 );
+}
+
+TEST_F( ConsolidatingTIDSetTests, ComplexScenario )
+{
+    // Start with some specific items
+    m_set.add( { MDEntities::Type::FXR, "EUR/USD" } );
+    m_set.add( { MDEntities::Type::FXR, "GBP/USD" } );
+    m_set.add( { MDEntities::Type::EQP, "AAPL" } );
+
+    EXPECT_EQ( m_set.getAll().size(), 3 );
+
+    // Add type-level FXR (should consolidate)
+    m_set.add( { MDEntities::Type::FXR } );
+    EXPECT_EQ( m_set.getAll().size(), 2 );
+
+    // Add more specific EQP items
+    m_set.add( { MDEntities::Type::EQP, "MSFT" } );
+    m_set.add( { MDEntities::Type::EQP, "GOOGL" } );
+    EXPECT_EQ( m_set.getAll().size(), 4 ); // FXR (type-level) + 3 EQP (specific)
+
+    // Add type-level EQP (should consolidate all EQP)
+    m_set.add( { MDEntities::Type::EQP } );
+    EXPECT_EQ( m_set.getAll().size(), 2 ); // Both type-level
+
+    // Verify final state
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::FXR, "USD/JPY" } ) ); // Any FXR
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP } ) );
+    EXPECT_TRUE( m_set.contains( { MDEntities::Type::EQP, "TSLA" } ) ); // Any EQP
+}

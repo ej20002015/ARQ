@@ -3,6 +3,8 @@
 
 #include <TMQMarket/market.h>
 
+#include <algorithm>
+
 namespace TMQ
 {
 namespace Mkt
@@ -21,20 +23,82 @@ std::string Name::str() const
 
 Market::Market( const MarketSnapshot& mktSnapshot )
 {
-    m_FXRates.setObjMap( mktSnapshot.m_FXRates );
-    m_EQPrices.setObjMap( mktSnapshot.m_EQPrices );
+    setAllFXRates( mktSnapshot.m_FXRates );
+    setAllEQPrices( mktSnapshot.m_EQPrices );
 }
 
 MarketSnapshot Market::snap() const
 {
-	std::unique_lock<std::shared_mutex> ul( m_mut );
+    // Acquire ALL mutexes at once to ensure atomic snapshot
+    std::shared_lock<std::shared_mutex> sl1( m_FXRatesMut );
+    std::shared_lock<std::shared_mutex> sl2( m_EQPricesMut );
 
-	MarketSnapshot snapshot;
+    MarketSnapshot snapshot;
 
-    snapshot.m_FXRates = m_FXRates.objMap();
-    snapshot.m_EQPrices = m_EQPrices.objMap();
+    snapshot.m_FXRates = m_FXRates;
+    snapshot.m_EQPrices = m_EQPrices;
 
-	return snapshot;
+    return snapshot;
+}
+
+std::shared_mutex& Market::getMutexForEntity(MDEntities::Type entityType) const
+{
+    switch( entityType )
+    {
+        case MDEntities::Type::FXR:
+            return m_FXRatesMut;
+        case MDEntities::Type::EQP:
+            return m_EQPricesMut;
+        default:
+            TMQ_ASSERT( false );
+            return m_FXRatesMut; // Fallback to avoid compiler warning
+    }
+}
+
+// -------------- MarketReadLock implementation --------------
+
+MarketReadLock::MarketReadLock( const Market& market )
+    : MarketReadLock( market, std::vector<MDEntities::Type>{
+          MDEntities::Type::FXR,
+          MDEntities::Type::EQP
+       })
+{
+}
+
+MarketReadLock::MarketReadLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes )
+{
+    // Sort entity types to ensure consistent lock ordering and prevent deadlocks
+    std::vector<MDEntities::Type> sortedTypes = entityTypes;
+    std::sort( sortedTypes.begin(), sortedTypes.end() );
+    sortedTypes.erase( std::unique( sortedTypes.begin(), sortedTypes.end()), sortedTypes.end() );
+    
+    m_locks.reserve( sortedTypes.size() );
+    // Acquire locks
+    for( MDEntities::Type entityType : sortedTypes )
+        m_locks.emplace_back( market.getMutexForEntity( entityType ) );
+}
+
+// -------------- MarketWriteLock implementation --------------
+
+MarketWriteLock::MarketWriteLock( const Market& market )
+    : MarketWriteLock( market, std::vector<MDEntities::Type>{
+          MDEntities::Type::FXR,
+          MDEntities::Type::EQP
+      } )
+{
+}
+
+MarketWriteLock::MarketWriteLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes )
+{
+    // Sort entity types to ensure consistent lock ordering and prevent deadlocks
+    std::vector<MDEntities::Type> sortedTypes = entityTypes;
+    std::sort( sortedTypes.begin(), sortedTypes.end() );
+    sortedTypes.erase( std::unique( sortedTypes.begin(), sortedTypes.end()), sortedTypes.end());
+
+    m_locks.reserve( sortedTypes.size() );
+    // Acquire locks
+    for( MDEntities::Type entityType : sortedTypes )
+        m_locks.emplace_back( market.getMutexForEntity( entityType ) );
 }
 
 // -------------- ConsolidatingTIDSet implementation --------------
@@ -54,12 +118,17 @@ bool ConsolidatingTIDSet::Item::isMatch( const ConsolidatingTIDSet::Item& other 
 {
     if( type != other.type )
         return false;
-    else if( !id.has_value() || !other.id.has_value() )
+        
+    // If this item has no ID (type-level), it covers any item of the same type
+    if( !id.has_value() )
         return true;
-    else if( id.value() == other.id.value() )
-        return true;
-    else
+        
+    // If the other item has no ID (type-level query), this specific item doesn't cover it
+    if( !other.id.has_value() )
         return false;
+        
+    // Both have IDs, check for exact match
+    return id.value() == other.id.value();
 }
 
 void ConsolidatingTIDSet::add( const Item& item )
@@ -104,7 +173,7 @@ bool ConsolidatingTIDSet::contains( const Item& item ) const
 {
     for( const Item& listItem : m_list )
     {
-        if( item.isMatch( listItem ) )
+        if( listItem.isMatch( item ) )
             return true;
     }
 

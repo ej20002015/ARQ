@@ -65,7 +65,6 @@ void ManagedMarket::subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber
 
 void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<ConsolidatingTIDSet>>& subList )
 {
-	// TODO: Need to have logic to check for old subscribers that have gone null and to remove them from m_subscriptions
 	std::unique_lock<std::shared_mutex> ul( m_subMut );
 
 	const auto it = m_subscriptions.find( subscriber );
@@ -79,6 +78,12 @@ void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, con
 		it->second.remove( *subList );
 	else
 		m_subscriptions.erase( it );
+}
+
+bool ManagedMarket::isSubscriber( const std::weak_ptr<Subscriber> subscriber ) const
+{
+	std::shared_lock<std::shared_mutex> sl( m_subMut );
+	return m_subscriptions.find( subscriber ) != m_subscriptions.end();
 }
 
 void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
@@ -103,11 +108,13 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 
 				for( MDEntities::FXRate& loadedObj : loadedObjs )
 				{
-					// TODO: this checking should be done whilst having a lock on what's being added to the market obj map - we need a ConcurrentMarket and a normal Market that this ManagedMarket uses (is that the same as the MarketSnapshot?)
-					std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRate( loadedObj.ID );
+					// Use atomic check-then-set with proper locking
+					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::FXR } );
+					
+					std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRateUnsafe( loadedObj.ID );
 					const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
 					if( insertIntoMkt )
-						m_mkt.setFXRate( std::move( loadedObj ) );
+						m_mkt.setFXRateUnsafe( std::move( loadedObj ) );
 				}
 
                 break;
@@ -126,11 +133,13 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 
 				for( MDEntities::EQPrice& loadedObj : loadedObjs )
 				{
-					// TODO: this checking should be done whilst having a lock on what's being added to the market obj map - we need a ConcurrentMarket and a normal Market that this ManagedMarket uses (is that the same as the MarketSnapshot?)
-					std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPrice( loadedObj.ID );
+					// Use atomic check-then-set with proper locking
+					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::EQP } );
+					
+					std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPriceUnsafe( loadedObj.ID );
 					const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
 					if( insertIntoMkt )
-						m_mkt.setEQPrice( std::move( loadedObj ) );
+						m_mkt.setEQPriceUnsafe( std::move( loadedObj ) );
 				}
 
                 break;
@@ -145,6 +154,9 @@ template<MDEntities::c_MDEntity T>
 void ManagedMarket::sendMktUpdateToSubscribers( const T& updatedObj )
 {
 	std::shared_lock<std::shared_mutex> sl( m_subMut );
+
+	// Any subscribers that no longer exist should be removed
+	std::vector<std::weak_ptr<Subscriber>> subsToRemove;
 
 	for( const auto& [subscriber, interestedIn] : m_subscriptions )
 	{
@@ -168,41 +180,54 @@ void ManagedMarket::sendMktUpdateToSubscribers( const T& updatedObj )
 						subSharedPtr->m_onEQPriceUpdateFunc( updatedObj );
 				}
 			}
+			else
+				subsToRemove.push_back( subscriber );
 		}
 	}
+
+	for( const auto subToRemove : subsToRemove )
+		m_subscriptions.erase( subToRemove );
 }
 
 void ManagedMarket::onFXRateUpdate( const MDEntities::FXRate& updatedObj )
 {
-	// TODO: this checking should be done whilst having a lock on what's being added to the market obj map - we need a ConcurrentMarket and a normal Market that this ManagedMarket uses (is that the same as the MarketSnapshot?)
-	std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRate( updatedObj.ID );
-	const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( updatedObj, *objInMkt );
-
-	if( !insertIntoMkt )
 	{
-		Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [FXR#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
-		return;
+		// Use atomic check-then-set with proper locking
+		auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::FXR } );
+		
+		std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRateUnsafe( updatedObj.ID );
+		const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( updatedObj, *objInMkt );
+
+		if( !insertIntoMkt )
+		{
+			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [FXR#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
+			return;
+		}
+
+		m_mkt.setFXRateUnsafe( updatedObj );
 	}
-
-	m_mkt.setFXRate( updatedObj );
-
+	
 	sendMktUpdateToSubscribers<MDEntities::FXRate>( updatedObj );
 }
 
 void ManagedMarket::onEQPriceUpdate( const MDEntities::EQPrice& updatedObj )
 {
-	// TODO: this checking should be done whilst having a lock on what's being added to the market obj map - we need a ConcurrentMarket and a normal Market that this ManagedMarket uses (is that the same as the MarketSnapshot?)
-	std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPrice( updatedObj.ID );
-	const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( updatedObj, *objInMkt );
-
-	if( !insertIntoMkt )
 	{
-		Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [EQP#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
-		return;
+		// Use atomic check-then-set with proper locking
+		auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::EQP } );
+		
+		std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPriceUnsafe( updatedObj.ID );
+		const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( updatedObj, *objInMkt );
+
+		if( !insertIntoMkt )
+		{
+			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [EQP#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
+			return;
+		}
+
+		m_mkt.setEQPriceUnsafe( updatedObj );
 	}
-
-	m_mkt.setEQPrice( updatedObj );
-
+	
 	sendMktUpdateToSubscribers<MDEntities::EQPrice>( updatedObj );
 }
 

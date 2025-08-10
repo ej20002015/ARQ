@@ -56,8 +56,8 @@ public:
     };
 
 public:
-    RefDataManager( const std::shared_ptr<RefDataSource>& source = nullptr )
-	    : m_rdSource( source ? source : GlobalRefDataSource::get() )
+    RefDataManager( const std::string_view dsh )
+	    : m_rdSource( RefDataSourceFactory::create( dsh ) )
     {}
 
     // --- Methods for Currency (CCY) ---

@@ -75,27 +75,7 @@ function(create_master_inc_dir)
         file(MAKE_DIRECTORY ${INC_DIR})
     endif()
 
-    # file(GLOB_RECURSE TMQ_LIBS "${CMAKE_SOURCE_DIR}/TMQLib/*")
-
-    # message("Checking directories and files found by GLOB_RECURSE:")
-    # foreach(FILE_PATH IN LISTS TMQ_LIBS)
-    #     message("  - ${FILE_PATH}")
-    # endforeach()
-
-    # # Filter only directories that contain 'inc' directory
-    # set(TMQ_INC_DIRS)
-    # foreach(DIR IN LISTS TMQ_LIBS)
-    #     if(EXISTS "${DIR}/inc")
-    #         list(APPEND TMQ_INC_DIRS "${DIR}/inc")
-    #     endif()
-    # endforeach()
-
-    # message("Found the following 'inc' directories:")
-    # foreach(INC_DIR_PATH IN LISTS TMQ_INC_DIRS)
-    #     message("  - ${INC_DIR_PATH}")
-    # endforeach()
-
-    file(GLOB_RECURSE TMQ_LIBS_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/TMQLib/TMQ*/inc")
+    file(GLOB_RECURSE TMQ_LIBS_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/TMQLib/*TMQ*/inc")
 
     # Filter only directories that contain 'inc' directory
     set(TMQ_INC_DIRS)

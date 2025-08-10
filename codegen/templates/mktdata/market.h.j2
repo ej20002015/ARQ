@@ -39,69 +39,56 @@ struct Name
 template<MDEntities::c_MDEntity T>
 using MktObjMap = std::unordered_map<std::string, T, TransparentStringHash, std::equal_to<>>;
 
-template<MDEntities::c_MDEntity T>
-class MktObjStore
+// Forward declarations
+class Market;
+class MarketSnapshot;
+
+class MarketReadLock
 {
 public:
-	MktObjStore() = default;
-
-	[[nodiscard]] std::optional<T> get( const std::string_view ID ) const
-	{
-		std::shared_lock<std::shared_mutex> sl( m_mut );
-
-		const auto it = m_objects.find( ID );
-		if( it == m_objects.end() )
-			return std::nullopt;
-
-		return it->second;
-	}
-
-	void set( const T& obj )
-	{
-		std::unique_lock<std::shared_mutex> ul( m_mut );
-
-		m_objects[obj.ID] = obj;
-	}
-
-    void set( T&& obj )
-	{
-		std::unique_lock<std::shared_mutex> ul( m_mut );
-
-		m_objects[obj.ID] = std::move( obj );
-	}
-
-	size_t size() const noexcept
-	{
-		std::shared_lock<std::shared_mutex> sl( m_mut );
-
-		return m_objects.size();
-	}
-
-	MktObjMap<T> objMap() const
-	{
-		std::shared_lock<std::shared_mutex> sl( m_mut );
-
-		return m_objects;
-	}
-
-    void setObjMap( const MktObjMap<T>& newMap )
-    {
-        std::unique_lock<std::shared_mutex> ul( m_mut );
-
-        m_objects = newMap;
-    }
+    // Lock all entities
+    explicit MarketReadLock( const Market& market );
+    
+    // Lock specific entities
+    explicit MarketReadLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
+    
+    ~MarketReadLock() = default; // RAII handles unlock
+    
+    // Non-copyable, moveable
+    MarketReadLock( const MarketReadLock& ) = delete;
+    MarketReadLock& operator=( const MarketReadLock& ) = delete;
+    MarketReadLock( MarketReadLock&& ) = default;
+    MarketReadLock& operator=( MarketReadLock&& ) = default;
 
 private:
-	MktObjMap<T> m_objects;
-	mutable std::shared_mutex m_mut;
+    std::vector<std::shared_lock<std::shared_mutex>> m_locks;
 };
 
-class MarketSnapshot;
+class MarketWriteLock
+{
+public:
+    // Lock all entities
+    explicit MarketWriteLock( const Market& market );
+    
+    // Lock specific entities
+    explicit MarketWriteLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
+
+    ~MarketWriteLock() = default; // RAII handles unlock
+    
+    // Non-copyable, moveable
+    MarketWriteLock( const MarketWriteLock& ) = delete;
+    MarketWriteLock& operator=( const MarketWriteLock& ) = delete;
+    MarketWriteLock( MarketWriteLock&& ) = default;
+    MarketWriteLock& operator=( MarketWriteLock&& ) = default;
+
+private:
+    std::vector<std::unique_lock<std::shared_mutex>> m_locks;
+};
 
 class Market
 {
 public:
-	Market() = default;
+    Market() = default;
     explicit TMQMarket_API Market( const MarketSnapshot& mktSnapshot );
 
     {% for entity in entities %}
@@ -109,36 +96,106 @@ public:
 
     [[nodiscard]] std::optional<MDEntities::{{ entity.name }}> get{{ entity.name }}( const std::string_view ID ) const
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        return m_{{ entity.name_plural }}.get( ID );
+        std::shared_lock<std::shared_mutex> sl( m_{{ entity.name_plural }}Mut );
+        return get{{ entity.name }}Unsafe( ID );
     }
 
     void set{{ entity.name }}( const MDEntities::{{ entity.name }}& newObj )
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        m_{{ entity.name_plural }}.set( newObj );
+        std::unique_lock<std::shared_mutex> ul( m_{{ entity.name_plural }}Mut );
+        set{{ entity.name }}Unsafe( newObj );
     }
 
     void set{{ entity.name }}( MDEntities::{{ entity.name }}&& newObj )
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        m_{{ entity.name_plural }}.set( std::move( newObj ) );
+        std::unique_lock<std::shared_mutex> ul( m_{{ entity.name_plural }}Mut );
+        set{{ entity.name }}Unsafe( std::move( newObj ) );
+    }
+
+    size_t get{{ entity.name }}Count() const noexcept
+    {
+        std::shared_lock<std::shared_mutex> sl( m_{{ entity.name_plural }}Mut );
+        return m_{{ entity.name_plural }}.size();
+    }
+
+    [[nodiscard]] MktObjMap<MDEntities::{{ entity.name }}> getAll{{ entity.name_plural }}() const
+    {
+        std::shared_lock<std::shared_mutex> sl( m_{{ entity.name_plural }}Mut );
+        return m_{{ entity.name_plural }};
+    }
+
+    void setAll{{ entity.name_plural }}( const MktObjMap<MDEntities::{{ entity.name }}>& newMap )
+    {
+        std::unique_lock<std::shared_mutex> ul( m_{{ entity.name_plural }}Mut );
+        m_{{ entity.name_plural }} = newMap;
+    }
+
+    // Unsafe methods (no locking - for use when already holding appropriate locks)
+    
+    [[nodiscard]] std::optional<MDEntities::{{ entity.name }}> get{{ entity.name }}Unsafe( const std::string_view ID ) const
+    {
+        const auto it = m_{{ entity.name_plural }}.find( ID );
+        if( it == m_{{ entity.name_plural }}.end() )
+            return std::nullopt;
+
+        return it->second;
+    }
+
+    void set{{ entity.name }}Unsafe( const MDEntities::{{ entity.name }}& newObj )
+    {
+        m_{{ entity.name_plural }}[newObj.ID] = newObj;
+    }
+
+    void set{{ entity.name }}Unsafe( MDEntities::{{ entity.name }}&& newObj )
+    {
+        m_{{ entity.name_plural }}[newObj.ID] = std::move( newObj );
     }
 
     {% endfor %}
 
     // --- Misc Methods ---
 
-	[[nodiscard]] TMQMarket_API MarketSnapshot snap() const;
+    [[nodiscard]] TMQMarket_API MarketSnapshot snap() const;
+
+    // --- Lock Acquisition Methods ---
+    
+    // Lock specific entities for reading
+    MarketReadLock acquireReadLock( const std::vector<MDEntities::Type>& entityTypes ) const
+    {
+        return MarketReadLock( *this, entityTypes );
+    }
+    
+    // Lock specific entities for writing
+    MarketWriteLock acquireWriteLock( const std::vector<MDEntities::Type>& entityTypes ) const
+    {
+        return MarketWriteLock( *this, entityTypes );
+    }
+    
+    // Lock all entities for reading
+    MarketReadLock acquireReadLockAll() const
+    {
+        return MarketReadLock( *this );
+    }
+    
+    // Lock all entities for writing
+    MarketWriteLock acquireWriteLockAll() const
+    {
+        return MarketWriteLock( *this );
+    }
 
 private:
-    // TODO
-    // Time::Date m_date; // The date of the market - what to do for the live market?
-	mutable std::shared_mutex m_mut;
-
     {% for entity in entities %}
-    MktObjStore<MDEntities::{{ entity.name }}> m_{{ entity.name_plural }};
+    MktObjMap<MDEntities::{{ entity.name }}> m_{{ entity.name_plural }};
+    mutable std::shared_mutex m_{{ entity.name_plural }}Mut;
     {% endfor %}
+
+    // Friend class for accessing internal maps
+    friend class MarketSnapshot;
+    friend class MarketReadLock;
+    friend class MarketWriteLock;
+
+    // Helper method for lock classes to get mutex reference
+    std::shared_mutex& getMutexForEntity(MDEntities::Type entityType) const;
 };
 
 class MarketSnapshot

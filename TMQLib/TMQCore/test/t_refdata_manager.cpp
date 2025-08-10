@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "mock_refdata_source_interface.h"
+#include <t_TMQ/mock_refdata_source_interface.h>
 
 using namespace TMQ;
 using namespace TMQ::RDEntities;
@@ -21,8 +21,14 @@ protected:
     void SetUp() override
     {
         mockSource = std::make_shared<NiceMock<MockRefDataSource>>();
+        RefDataSourceFactory::addCustomSource( "TestRD", mockSource );
         // Instantiate the manager with our mock data source
-        manager = std::make_unique<RefDataManager>( mockSource );
+        manager = std::make_unique<RefDataManager>( "TestRD" );
+    }
+
+    void TearDown() override
+    {
+        RefDataSourceFactory::delCustomSource( "TestRD" );
     }
 
     // Helper to create a timestamp for testing staleness

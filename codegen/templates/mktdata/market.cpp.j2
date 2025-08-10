@@ -7,6 +7,8 @@
 
 #include <TMQMarket/market.h>
 
+#include <algorithm>
+
 namespace TMQ
 {
 namespace Mkt
@@ -26,21 +28,88 @@ std::string Name::str() const
 Market::Market( const MarketSnapshot& mktSnapshot )
 {
     {% for entity in entities %}
-    m_{{ entity.name_plural }}.setObjMap( mktSnapshot.m_{{ entity.name_plural }} );
+    setAll{{ entity.name_plural }}( mktSnapshot.m_{{ entity.name_plural }} );
     {% endfor %}
 }
 
 MarketSnapshot Market::snap() const
 {
-	std::unique_lock<std::shared_mutex> ul( m_mut );
-
-	MarketSnapshot snapshot;
-
+    // Acquire ALL mutexes at once to ensure atomic snapshot
     {% for entity in entities %}
-    snapshot.m_{{ entity.name_plural }} = m_{{ entity.name_plural }}.objMap();
+    std::shared_lock<std::shared_mutex> sl{{ loop.index }}( m_{{ entity.name_plural }}Mut );
     {% endfor %}
 
-	return snapshot;
+    MarketSnapshot snapshot;
+
+    {% for entity in entities %}
+    snapshot.m_{{ entity.name_plural }} = m_{{ entity.name_plural }};
+    {% endfor %}
+
+    return snapshot;
+}
+
+std::shared_mutex& Market::getMutexForEntity(MDEntities::Type entityType) const
+{
+    switch( entityType )
+    {
+        {% for entity in entities %}
+        case MDEntities::Type::{{ entity.type_string }}:
+            return m_{{ entity.name_plural }}Mut;
+        {% endfor %}
+        default:
+            TMQ_ASSERT( false );
+            {% if entities %}
+            return m_{{ entities[0].name_plural }}Mut; // Fallback to avoid compiler warning
+            {% endif %}
+    }
+}
+
+// -------------- MarketReadLock implementation --------------
+
+MarketReadLock::MarketReadLock( const Market& market )
+    : MarketReadLock( market, std::vector<MDEntities::Type>{
+          {% for entity in entities %}
+          MDEntities::Type::{{ entity.type_string }}{{ "," if not loop.last }}
+          {% endfor %}
+       })
+{
+}
+
+MarketReadLock::MarketReadLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes )
+{
+    // Sort entity types to ensure consistent lock ordering and prevent deadlocks
+    std::vector<MDEntities::Type> sortedTypes = entityTypes;
+    std::sort( sortedTypes.begin(), sortedTypes.end() );
+    sortedTypes.erase( std::unique( sortedTypes.begin(), sortedTypes.end()), sortedTypes.end() );
+    
+    m_locks.reserve( sortedTypes.size() );
+    // Acquire locks
+    for( MDEntities::Type entityType : sortedTypes )
+        m_locks.emplace_back( market.getMutexForEntity( entityType ) );
+}
+
+// -------------- MarketWriteLock implementation --------------
+
+MarketWriteLock::MarketWriteLock( const Market& market )
+    : MarketWriteLock( market, std::vector<MDEntities::Type>{
+          {% for entity in entities %}
+          MDEntities::Type::{{ entity.type_string }}{{ "," if not loop.last }}
+          {% endfor %}
+      } )
+{
+}
+
+MarketWriteLock::MarketWriteLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes )
+{
+    // Sort entity types to ensure consistent lock ordering and prevent deadlocks
+    std::vector<MDEntities::Type> sortedTypes = entityTypes;
+    std::sort( sortedTypes.begin(), sortedTypes.end() );
+    sortedTypes.erase( std::unique( sortedTypes.begin(), sortedTypes.end()), sortedTypes.end());
+
+    m_locks.reserve( sortedTypes.size() );
+    // Acquire locks
+    for( MDEntities::Type entityType : sortedTypes )
+        m_locks.emplace_back( market.getMutexForEntity( entityType ) );
 }
 
 // -------------- ConsolidatingTIDSet implementation --------------
@@ -61,12 +130,17 @@ bool ConsolidatingTIDSet::Item::isMatch( const ConsolidatingTIDSet::Item& other 
 {
     if( type != other.type )
         return false;
-    else if( !id.has_value() || !other.id.has_value() )
+        
+    // If this item has no ID (type-level), it covers any item of the same type
+    if( !id.has_value() )
         return true;
-    else if( id.value() == other.id.value() )
-        return true;
-    else
+        
+    // If the other item has no ID (type-level query), this specific item doesn't cover it
+    if( !other.id.has_value() )
         return false;
+        
+    // Both have IDs, check for exact match
+    return id.value() == other.id.value();
 }
 
 void ConsolidatingTIDSet::add( const Item& item )
@@ -111,7 +185,7 @@ bool ConsolidatingTIDSet::contains( const Item& item ) const
 {
     for( const Item& listItem : m_list )
     {
-        if( item.isMatch( listItem ) )
+        if( listItem.isMatch( item ) )
             return true;
     }
 

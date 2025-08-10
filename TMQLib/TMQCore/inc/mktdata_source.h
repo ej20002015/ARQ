@@ -1,11 +1,13 @@
 #pragma once
 #include <TMQCore/dll.h>
 
+#include <TMQUtils/hashers.h>
 #include <TMQCore/mktdata_source_interface.h>
 
 #include <array>
 #include <shared_mutex>
 #include <functional>
+#include <unordered_map>
 
 namespace TMQ
 {
@@ -16,6 +18,12 @@ class MktDataSourceFactory
 {
 public:
 	[[nodiscard]] static std::shared_ptr<MktDataSource> create( const std::string_view dsh );
+
+	TMQCore_API static void addCustomSource( const std::string_view dsh, const std::shared_ptr<MktDataSource>& source );
+	TMQCore_API static void delCustomSource( const std::string_view dsh );
+
+private:
+	static inline std::unordered_map<std::string, std::shared_ptr<MktDataSource>, TransparentStringHash, std::equal_to<>> s_customSources;
 };
 
 class GlobalMktDataSource

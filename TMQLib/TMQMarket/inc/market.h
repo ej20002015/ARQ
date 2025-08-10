@@ -35,123 +35,220 @@ struct Name
 template<MDEntities::c_MDEntity T>
 using MktObjMap = std::unordered_map<std::string, T, TransparentStringHash, std::equal_to<>>;
 
-template<MDEntities::c_MDEntity T>
-class MktObjStore
+// Forward declarations
+class Market;
+class MarketSnapshot;
+
+class MarketReadLock
 {
 public:
-	MktObjStore() = default;
-
-	[[nodiscard]] std::optional<T> get( const std::string_view ID ) const
-	{
-		std::shared_lock<std::shared_mutex> sl( m_mut );
-
-		const auto it = m_objects.find( ID );
-		if( it == m_objects.end() )
-			return std::nullopt;
-
-		return it->second;
-	}
-
-	void set( const T& obj )
-	{
-		std::unique_lock<std::shared_mutex> ul( m_mut );
-
-		m_objects[obj.ID] = obj;
-	}
-
-    void set( T&& obj )
-	{
-		std::unique_lock<std::shared_mutex> ul( m_mut );
-
-		m_objects[obj.ID] = std::move( obj );
-	}
-
-	size_t size() const noexcept
-	{
-		std::shared_lock<std::shared_mutex> sl( m_mut );
-
-		return m_objects.size();
-	}
-
-	MktObjMap<T> objMap() const
-	{
-		std::shared_lock<std::shared_mutex> sl( m_mut );
-
-		return m_objects;
-	}
-
-    void setObjMap( const MktObjMap<T>& newMap )
-    {
-        std::unique_lock<std::shared_mutex> ul( m_mut );
-
-        m_objects = newMap;
-    }
+    // Lock all entities
+    explicit MarketReadLock( const Market& market );
+    
+    // Lock specific entities
+    explicit MarketReadLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
+    
+    ~MarketReadLock() = default; // RAII handles unlock
+    
+    // Non-copyable, moveable
+    MarketReadLock( const MarketReadLock& ) = delete;
+    MarketReadLock& operator=( const MarketReadLock& ) = delete;
+    MarketReadLock( MarketReadLock&& ) = default;
+    MarketReadLock& operator=( MarketReadLock&& ) = default;
 
 private:
-	MktObjMap<T> m_objects;
-	mutable std::shared_mutex m_mut;
+    std::vector<std::shared_lock<std::shared_mutex>> m_locks;
 };
 
-class MarketSnapshot;
+class MarketWriteLock
+{
+public:
+    // Lock all entities
+    explicit MarketWriteLock( const Market& market );
+    
+    // Lock specific entities
+    explicit MarketWriteLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
+
+    ~MarketWriteLock() = default; // RAII handles unlock
+    
+    // Non-copyable, moveable
+    MarketWriteLock( const MarketWriteLock& ) = delete;
+    MarketWriteLock& operator=( const MarketWriteLock& ) = delete;
+    MarketWriteLock( MarketWriteLock&& ) = default;
+    MarketWriteLock& operator=( MarketWriteLock&& ) = default;
+
+private:
+    std::vector<std::unique_lock<std::shared_mutex>> m_locks;
+};
 
 class Market
 {
 public:
-	Market() = default;
+    Market() = default;
     explicit TMQMarket_API Market( const MarketSnapshot& mktSnapshot );
 
     // --- Methods for FXRate (FXR) ---
 
     [[nodiscard]] std::optional<MDEntities::FXRate> getFXRate( const std::string_view ID ) const
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        return m_FXRates.get( ID );
+        std::shared_lock<std::shared_mutex> sl( m_FXRatesMut );
+        return getFXRateUnsafe( ID );
     }
 
     void setFXRate( const MDEntities::FXRate& newObj )
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        m_FXRates.set( newObj );
+        std::unique_lock<std::shared_mutex> ul( m_FXRatesMut );
+        setFXRateUnsafe( newObj );
     }
 
     void setFXRate( MDEntities::FXRate&& newObj )
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        m_FXRates.set( std::move( newObj ) );
+        std::unique_lock<std::shared_mutex> ul( m_FXRatesMut );
+        setFXRateUnsafe( std::move( newObj ) );
+    }
+
+    size_t getFXRateCount() const noexcept
+    {
+        std::shared_lock<std::shared_mutex> sl( m_FXRatesMut );
+        return m_FXRates.size();
+    }
+
+    [[nodiscard]] MktObjMap<MDEntities::FXRate> getAllFXRates() const
+    {
+        std::shared_lock<std::shared_mutex> sl( m_FXRatesMut );
+        return m_FXRates;
+    }
+
+    void setAllFXRates( const MktObjMap<MDEntities::FXRate>& newMap )
+    {
+        std::unique_lock<std::shared_mutex> ul( m_FXRatesMut );
+        m_FXRates = newMap;
+    }
+
+    // Unsafe methods (no locking - for use when already holding appropriate locks)
+    
+    [[nodiscard]] std::optional<MDEntities::FXRate> getFXRateUnsafe( const std::string_view ID ) const
+    {
+        const auto it = m_FXRates.find( ID );
+        if( it == m_FXRates.end() )
+            return std::nullopt;
+
+        return it->second;
+    }
+
+    void setFXRateUnsafe( const MDEntities::FXRate& newObj )
+    {
+        m_FXRates[newObj.ID] = newObj;
+    }
+
+    void setFXRateUnsafe( MDEntities::FXRate&& newObj )
+    {
+        m_FXRates[newObj.ID] = std::move( newObj );
     }
 
     // --- Methods for EQPrice (EQP) ---
 
     [[nodiscard]] std::optional<MDEntities::EQPrice> getEQPrice( const std::string_view ID ) const
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        return m_EQPrices.get( ID );
+        std::shared_lock<std::shared_mutex> sl( m_EQPricesMut );
+        return getEQPriceUnsafe( ID );
     }
 
     void setEQPrice( const MDEntities::EQPrice& newObj )
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        m_EQPrices.set( newObj );
+        std::unique_lock<std::shared_mutex> ul( m_EQPricesMut );
+        setEQPriceUnsafe( newObj );
     }
 
     void setEQPrice( MDEntities::EQPrice&& newObj )
     {
-        std::shared_lock<std::shared_mutex> sl( m_mut );
-        m_EQPrices.set( std::move( newObj ) );
+        std::unique_lock<std::shared_mutex> ul( m_EQPricesMut );
+        setEQPriceUnsafe( std::move( newObj ) );
+    }
+
+    size_t getEQPriceCount() const noexcept
+    {
+        std::shared_lock<std::shared_mutex> sl( m_EQPricesMut );
+        return m_EQPrices.size();
+    }
+
+    [[nodiscard]] MktObjMap<MDEntities::EQPrice> getAllEQPrices() const
+    {
+        std::shared_lock<std::shared_mutex> sl( m_EQPricesMut );
+        return m_EQPrices;
+    }
+
+    void setAllEQPrices( const MktObjMap<MDEntities::EQPrice>& newMap )
+    {
+        std::unique_lock<std::shared_mutex> ul( m_EQPricesMut );
+        m_EQPrices = newMap;
+    }
+
+    // Unsafe methods (no locking - for use when already holding appropriate locks)
+    
+    [[nodiscard]] std::optional<MDEntities::EQPrice> getEQPriceUnsafe( const std::string_view ID ) const
+    {
+        const auto it = m_EQPrices.find( ID );
+        if( it == m_EQPrices.end() )
+            return std::nullopt;
+
+        return it->second;
+    }
+
+    void setEQPriceUnsafe( const MDEntities::EQPrice& newObj )
+    {
+        m_EQPrices[newObj.ID] = newObj;
+    }
+
+    void setEQPriceUnsafe( MDEntities::EQPrice&& newObj )
+    {
+        m_EQPrices[newObj.ID] = std::move( newObj );
     }
 
 
     // --- Misc Methods ---
 
-	[[nodiscard]] TMQMarket_API MarketSnapshot snap() const;
+    [[nodiscard]] TMQMarket_API MarketSnapshot snap() const;
+
+    // --- Lock Acquisition Methods ---
+    
+    // Lock specific entities for reading
+    MarketReadLock acquireReadLock( const std::vector<MDEntities::Type>& entityTypes ) const
+    {
+        return MarketReadLock( *this, entityTypes );
+    }
+    
+    // Lock specific entities for writing
+    MarketWriteLock acquireWriteLock( const std::vector<MDEntities::Type>& entityTypes ) const
+    {
+        return MarketWriteLock( *this, entityTypes );
+    }
+    
+    // Lock all entities for reading
+    MarketReadLock acquireReadLockAll() const
+    {
+        return MarketReadLock( *this );
+    }
+    
+    // Lock all entities for writing
+    MarketWriteLock acquireWriteLockAll() const
+    {
+        return MarketWriteLock( *this );
+    }
 
 private:
-    // TODO
-    // Time::Date m_date; // The date of the market - what to do for the live market?
-	mutable std::shared_mutex m_mut;
+    MktObjMap<MDEntities::FXRate> m_FXRates;
+    mutable std::shared_mutex m_FXRatesMut;
+    MktObjMap<MDEntities::EQPrice> m_EQPrices;
+    mutable std::shared_mutex m_EQPricesMut;
 
-    MktObjStore<MDEntities::FXRate> m_FXRates;
-    MktObjStore<MDEntities::EQPrice> m_EQPrices;
+    // Friend class for accessing internal maps
+    friend class MarketSnapshot;
+    friend class MarketReadLock;
+    friend class MarketWriteLock;
+
+    // Helper method for lock classes to get mutex reference
+    std::shared_mutex& getMutexForEntity(MDEntities::Type entityType) const;
 };
 
 class MarketSnapshot

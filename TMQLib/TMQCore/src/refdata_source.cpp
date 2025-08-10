@@ -9,6 +9,9 @@ namespace TMQ
 
 std::shared_ptr<RefDataSource> RefDataSourceFactory::create( const std::string_view dsh )
 {
+	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
+		return it->second;
+
 	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
 
 	std::string dynaLibName;
@@ -23,6 +26,17 @@ std::shared_ptr<RefDataSource> RefDataSourceFactory::create( const std::string_v
 
 	const auto createFunc = lib.getFunc<RefDataSourceCreateFunc>( "createRefDataSource" ); // TODO: Need to cache the loaded functions?
 	return std::shared_ptr<RefDataSource>( createFunc( dsc.dsh ) );
+}
+
+void RefDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<RefDataSource>& source )
+{
+	s_customSources.emplace( dsh, source );
+}
+
+void RefDataSourceFactory::delCustomSource( const std::string_view dsh )
+{
+	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
+		s_customSources.erase( it );
 }
 
 std::shared_ptr<RefDataSource> GlobalRefDataSource::get()

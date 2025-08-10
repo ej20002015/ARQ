@@ -70,7 +70,9 @@ public:
 
     TMQMarket_API void subscribe( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
     TMQMarket_API void subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
-    TMQMarket_API void unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<ConsolidatingTIDSet>>& subscriptionList );
+    TMQMarket_API void unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<ConsolidatingTIDSet>>& subscriptionList = std::nullopt );
+
+    TMQMarket_API bool isSubscriber( const std::weak_ptr<Subscriber> subscriber ) const;
 
     TMQMarket_API void load( const ConsolidatingTIDSet& toLoad );
 
@@ -92,7 +94,7 @@ private:
     Market m_mkt;
 
     std::map<std::weak_ptr<Subscriber>, ConsolidatingTIDSet, std::owner_less<std::weak_ptr<Subscriber>>> m_subscriptions;
-    std::shared_mutex m_subMut;
+    mutable std::shared_mutex m_subMut;
 };
 
 }
