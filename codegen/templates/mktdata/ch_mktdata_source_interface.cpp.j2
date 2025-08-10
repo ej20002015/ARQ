@@ -83,7 +83,7 @@ static std::vector<MDEntities::{{ entity.name }}> internalFetch{{ entity.name_pl
                 {%- endfor %}
                 obj._isActive = col_isActive->At( i );
                 obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
-                obj._lastUpdatedBy = col_lastUpdatedTs->At( i );
+                obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
