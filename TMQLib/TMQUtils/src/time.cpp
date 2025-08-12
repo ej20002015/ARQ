@@ -65,6 +65,23 @@ Date::Date( const TimeZone tz )
 	}
 }
 
+Date::Date( const std::chrono::year_month_day ymd )
+	: m_ymd( ymd )
+{
+	if( !m_ymd->ok() )
+		throw TMQException( std::format( "Invalid std::chrono:year_month_day given: year={}, month={}, day={}", static_cast<int32_t>( ymd.year() ), static_cast<uint32_t>( ymd.month() ), static_cast<uint32_t>( ymd.day() ) ) );
+}
+
+Date Date::now()
+{
+	return Date( TimeZone::Local );
+}
+
+Date Date::nowUTC()
+{
+	return Date( TimeZone::UTC );
+}
+
 Year Date::year() const noexcept
 {
 	return isSet() ? Year(static_cast<int32_t>( m_ymd->year() ) ) : Year();
@@ -90,54 +107,67 @@ int32_t Date::serial() const noexcept
 	return isSet() ? std::chrono::sys_days( *m_ymd ).time_since_epoch().count() : std::numeric_limits<int32_t>::min();
 }
 
-void Date::addYears( const int32_t years ) noexcept
+std::chrono::year_month_day Date::ymd() const noexcept
+{
+	return isSet() ? *m_ymd : std::chrono::year_month_day();
+}
+
+Date Date::addYears( const int32_t years ) const noexcept
 {
 	if( !isSet() )
-		return;
+		return *this;
 
-	m_ymd.value() += std::chrono::years( years );
-	if( !m_ymd->ok() )
+	Date dt;
+	dt.m_ymd = m_ymd.value() + std::chrono::years( years );
+	if( !dt.m_ymd->ok() )
 	{
 		// Must have advanced from Feb 29th to a non-leap-year
-		m_ymd = m_ymd->year() / std::chrono::February / std::chrono::day( 28 );
+		dt.m_ymd = dt.m_ymd->year() / std::chrono::February / std::chrono::day( 28 );
 	}
+
+	return dt;
 }
 
-void Date::subYears( const int32_t years ) noexcept
+Date Date::subYears( const int32_t years ) const noexcept
 {
-	addYears( -years );
+	return addYears( -years );
 }
 
-void Date::addMonths( const int32_t months ) noexcept
+Date Date::addMonths( const int32_t months ) const noexcept
 {
 	if( !isSet() )
-		return;
+		return *this;
 
-	m_ymd.value() += std::chrono::months(months);
-	if( !m_ymd->ok() )
+	Date dt;
+	dt.m_ymd = m_ymd.value() + std::chrono::months( months );
+	if( !dt.m_ymd->ok() )
 	{
 		// Must be past the final day of the month
-		std::chrono::year_month_day_last last = m_ymd->year() / m_ymd->month() / std::chrono::last;
-		m_ymd = m_ymd->year() / m_ymd->month() / last.day();
+		std::chrono::year_month_day_last last = dt.m_ymd->year() / dt.m_ymd->month() / std::chrono::last;
+		dt.m_ymd = dt.m_ymd->year() / dt.m_ymd->month() / last.day();
 	}
+
+	return dt;
 }
 
-void Date::subMonths( const int32_t months ) noexcept
+Date Date::subMonths( const int32_t months ) const noexcept
 {
-	addMonths( -months );
+	return addMonths( -months );
 }
 
-void Date::addDays( const int32_t days ) noexcept
+Date Date::addDays( const int32_t days ) const noexcept
 {
 	if( !isSet() )
-		return;
+		return *this;
 
-	m_ymd = std::chrono::sys_days( *m_ymd ) + std::chrono::days( days );
+	Date dt( std::chrono::sys_days( *m_ymd ) + std::chrono::days( days ) );
+
+	return dt;
 }
 
-void Date::subDays( const int32_t days ) noexcept
+Date Date::subDays( const int32_t days ) const noexcept
 {
-	addDays( -days );
+	return addDays( -days );
 }
 
 std::ostream& operator<<( std::ostream& os, const Date& date )

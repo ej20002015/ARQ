@@ -116,68 +116,68 @@ TEST( DateTest, AddYears )
 {
     Date date( Year( 2024 ), Month::Feb, Day( 29 ) ); // Leap year date
 
-    date.addYears( 1 );
-    EXPECT_EQ( date.year(), 2025 );
-    EXPECT_EQ( date.month(), Month::Feb );
-    EXPECT_EQ( date.day(), 28 ); // Should adjust to Feb 28 in non-leap year
+    Date newDate = date.addYears( 1 );
+    EXPECT_EQ( newDate.year(), 2025 );
+    EXPECT_EQ( newDate.month(), Month::Feb );
+    EXPECT_EQ( newDate.day(), 28 ); // Should adjust to Feb 28 in non-leap year
 
-    date.addYears( -1 );
-    EXPECT_EQ( date.year(), 2024 );
-    EXPECT_EQ( date.month(), Month::Feb );
-    EXPECT_EQ( date.day(), 28 ); // Should stay at 28
+    newDate = newDate - Years( 1 );
+    EXPECT_EQ( newDate.year(), 2024 );
+    EXPECT_EQ( newDate.month(), Month::Feb );
+    EXPECT_EQ( newDate.day(), 28 ); // Should stay at 28
 }
 
 TEST( DateTest, AddMonths )
 {
     Date date( Year( 2024 ), Month::Jan, Day( 31 ) );
 
-    date.addMonths( 1 );
-    EXPECT_EQ( date.year(), 2024 );
-    EXPECT_EQ( date.month(), Month::Feb );
-    EXPECT_EQ( date.day(), 29 ); // Should adjust to last day of February in leap year
+    Date newDate = date.addMonths( 1 );
+    EXPECT_EQ( newDate.year(), 2024 );
+    EXPECT_EQ( newDate.month(), Month::Feb );
+    EXPECT_EQ( newDate.day(), 29 ); // Should adjust to last day of February in leap year
 
-    date.addMonths( 1 );
-    EXPECT_EQ( date.year(), 2024 );
-    EXPECT_EQ( date.month(), Month::Mar );
-    EXPECT_EQ( date.day(), 29 ); // Should stay at 29
+    newDate = newDate + Months( 1 );
+    EXPECT_EQ( newDate.year(), 2024 );
+    EXPECT_EQ( newDate.month(), Month::Mar );
+    EXPECT_EQ( newDate.day(), 29 ); // Should stay at 29
 }
 
 TEST( DateTest, AddDays )
 {
     Date date( Year( 2024 ), Month::Dec, Day( 30 ) );
 
-    date.addDays( 2 );
-    EXPECT_EQ( date.year(), 2025 );
-    EXPECT_EQ( date.month(), Month::Jan );
-    EXPECT_EQ( date.day(), 1 );
+    Date newDate = date.addDays( 2 );
+    EXPECT_EQ( newDate.year(), 2025 );
+    EXPECT_EQ( newDate.month(), Month::Jan );
+    EXPECT_EQ( newDate.day(), 1 );
 
-    date.addDays( -1 );
-    EXPECT_EQ( date.year(), 2024 );
-    EXPECT_EQ( date.month(), Month::Dec );
-    EXPECT_EQ( date.day(), 31 );
+    newDate = newDate + Days( -1 );
+    EXPECT_EQ( newDate.year(), 2024 );
+    EXPECT_EQ( newDate.month(), Month::Dec );
+    EXPECT_EQ( newDate.day(), 31 );
 }
 
 TEST( DateTest, MinusOperations )
 {
     Date date( Year( 2024 ), Month::May, Day( 26 ) );
 
-    date.subYears( 1 );
-    EXPECT_EQ( date.year(), 2023 );
+    Date newDate = date.subYears( 1 );
+    EXPECT_EQ( newDate.year(), 2023 );
 
-    date.subMonths( 2 );
-    EXPECT_EQ( date.month(), Month::Mar );
+    newDate = newDate.subMonths( 2 );
+    EXPECT_EQ( newDate.month(), Month::Mar );
 
-    date.subDays( 5 );
-    EXPECT_EQ( date.day(), 21 );
+    newDate = newDate.subDays( 5 );
+    EXPECT_EQ( newDate.day(), 21 );
 }
 
 TEST( DateTest, ArithmeticOnUnsetDate )
 {
     Date date; // Unset date
 
-    date.addYears( 1 );
-    date.addMonths( 1 );
-    date.addDays( 1 );
+    date = date.addYears( 1 );
+    date = date.addMonths( 1 );
+    date = date.addDays( 1 );
 
     // Should remain unset
     EXPECT_FALSE( date.isSet() );
@@ -252,10 +252,10 @@ TEST( DateTest, SerialProgression )
     Date date( Year( 2024 ), Month::May, Day( 26 ) );
     int32_t baseSerial = date.serial();
 
-    date.addDays( 1 );
+    date = date.addDays( 1 );
     EXPECT_EQ( date.serial(), baseSerial + 1 );
 
-    date.addDays( -2 );
+    date = date.addDays( -2 );
     EXPECT_EQ( date.serial(), baseSerial - 1 );
 }
 

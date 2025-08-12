@@ -77,6 +77,9 @@ public:
     Date(const TimeZone tz);
     Date();
 
+    static Date now();
+    static Date nowUTC();
+
     // Query methods
     bool isValid() const noexcept;
     bool isSet() const noexcept;
@@ -88,12 +91,12 @@ public:
     int32_t serial() const noexcept;
 
     // Arithmetic methods
-    void addYears(const int32_t years) noexcept;
-    void subYears(const int32_t years) noexcept;
-    void addMonths(const int32_t months) noexcept;
-    void subMonths(const int32_t months) noexcept;
-    void addDays(const int32_t days) noexcept;
-    void subDays(const int32_t days) noexcept;
+    Date addYears(const int32_t years) noexcept;
+    Date subYears(const int32_t years) noexcept;
+    Date addMonths(const int32_t months) noexcept;
+    Date subMonths(const int32_t months) noexcept;
+    Date addDays(const int32_t days) noexcept;
+    Date subDays(const int32_t days) noexcept;
 
     // Operators
     int32_t operator-(const Date& other) const noexcept;
@@ -103,6 +106,8 @@ public:
     static const Date MIN;
     static const Date MAX;
 };
+
+// TODO: Need to add the StrongType template
 
 }
 }

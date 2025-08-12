@@ -1,6 +1,8 @@
 #pragma once
 #include <TMQUtils/dll.h>
 
+#include "types.h"
+
 #include <string>
 #include <chrono>
 #include <optional>
@@ -71,41 +73,29 @@ enum Weekday
 	Sun
 };
 
-class Year
-{
-public:
-	explicit Year(int32_t value) noexcept : 
-		m_value(value) 
-	{}
-	Year() noexcept = default;
-	
-	operator int32_t() const noexcept { return m_value; }
-	
-private:
-	int32_t m_value = 0;
-};
+struct YearTag {};
+using Year = StrongType<YearTag, int32_t>;
+struct DayTag {};
+using Day = StrongType<DayTag, int32_t>;
 
-class Day
-{
-public:
-	explicit Day(int32_t value) noexcept
-		: m_value(value) 
-	{}
-	Day() noexcept = default;
-	
-	operator int32_t() const noexcept { return m_value; }
-	
-private:
-	int32_t m_value = 0;
-};
+struct YearsTag {};
+using Years = StrongType<YearsTag, int32_t>;
+struct MonthsTag {};
+using Months = StrongType<MonthsTag, int32_t>;
+struct DaysTag {};
+using Days = StrongType<DaysTag, int32_t>;
 
 class Date
 {
 public:
-	TMQUtils_API Date( const Year y, const Month m, const Day d );
-	TMQUtils_API Date( const int32_t serial );
-	TMQUtils_API Date( const TimeZone tz );
+	TMQUtils_API explicit Date( const Year y, const Month m, const Day d );
+	TMQUtils_API explicit Date( const int32_t serial );
+	TMQUtils_API explicit Date( const TimeZone tz );
+	TMQUtils_API explicit Date( const std::chrono::year_month_day ymd );
 	Date() = default;
+
+	static Date now();
+	static Date nowUTC();
 
 	[[nodiscard]] inline bool isValid() const noexcept { return m_ymd.has_value() ? m_ymd->ok() : false; };
 
@@ -118,12 +108,21 @@ public:
 
 	[[nodiscard]] TMQUtils_API int32_t serial() const noexcept;
 
-	TMQUtils_API void addYears( const int32_t years ) noexcept;
-	TMQUtils_API void subYears( const int32_t years ) noexcept;
-	TMQUtils_API void addMonths( const int32_t months ) noexcept;
-	TMQUtils_API void subMonths( const int32_t months ) noexcept;
-	TMQUtils_API void addDays( const int32_t days ) noexcept;
-	TMQUtils_API void subDays( const int32_t days ) noexcept;
+	[[nodiscard]] TMQUtils_API std::chrono::year_month_day ymd() const noexcept;
+
+	TMQUtils_API Date addYears( const int32_t years ) const noexcept;
+	TMQUtils_API Date subYears( const int32_t years ) const noexcept;
+	TMQUtils_API Date addMonths( const int32_t months ) const noexcept;
+	TMQUtils_API Date subMonths( const int32_t months ) const noexcept;
+	TMQUtils_API Date addDays( const int32_t days ) const noexcept;
+	TMQUtils_API Date subDays( const int32_t days ) const noexcept;
+
+	inline Date operator+( const Years years )   const { return addYears( years ); }
+	inline Date operator-( const Years years )   const { return subYears( years ); }
+	inline Date operator+( const Months months ) const { return addMonths( months ); }
+	inline Date operator-( const Months months ) const { return subMonths( months ); }
+	inline Date operator+( const Days days )     const { return addDays( days ); }
+	inline Date operator-( const Days days )     const { return subDays( days ); }
 
 	inline int32_t operator-( const Date& other ) const noexcept { return serial() - other.serial(); }
 
