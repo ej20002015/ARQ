@@ -63,8 +63,8 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
                 obj.decimalPlaces = col_decimalPlaces->At( i );
                 obj.settlementDays = col_settlementDays->At( i );
                 obj._isActive = col_isActive->At( i );
-                obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
-                obj._lastUpdatedBy = col_lastUpdatedTs->At( i );
+                obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
+                obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -82,7 +82,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
 // TODO: Need to implement fetchAsOfCurrencies in a similar manner
 // TODO: Need to create some audit load capability
 
-[[nodiscard]] std::vector<RDEntities::Currency> CHRefDataSource::fetchAsOfCurrencies( std::chrono::system_clock::time_point asof )
+[[nodiscard]] std::vector<RDEntities::Currency> CHRefDataSource::fetchAsOfCurrencies( const Time::DateTime asof )
 {
     return std::vector<RDEntities::Currency>();
 }
@@ -179,8 +179,8 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
                 obj.email = col_email->At( i );
                 obj.tradingDesk = col_tradingDesk->At( i );
                 obj._isActive = col_isActive->At( i );
-                obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
-                obj._lastUpdatedBy = col_lastUpdatedTs->At( i );
+                obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
+                obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -198,7 +198,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
 // TODO: Need to implement fetchAsOfUsers in a similar manner
 // TODO: Need to create some audit load capability
 
-[[nodiscard]] std::vector<RDEntities::User> CHRefDataSource::fetchAsOfUsers( std::chrono::system_clock::time_point asof )
+[[nodiscard]] std::vector<RDEntities::User> CHRefDataSource::fetchAsOfUsers( const Time::DateTime asof )
 {
     return std::vector<RDEntities::User>();
 }

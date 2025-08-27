@@ -7,8 +7,7 @@
 #include <TMQSerialisation/ser_mktdata_entities.h>
 
 using namespace TMQ;
-using namespace std::chrono_literals;
-using namespace std::chrono;
+using namespace TMQ::Time;
 
 using ::testing::Return;
 using ::testing::HasSubstr;
@@ -17,13 +16,6 @@ class MarketTests : public ::testing::Test
 {
 protected:
     Mkt::Market m_market;
-
-    std::chrono::system_clock::time_point makeTp( year year, month month, day day, hours hour = 0h, minutes min = 0min, seconds sec = 0s )
-    {
-        const year_month_day ymd( year, month, day );
-        const std::chrono::sys_days datePoint = std::chrono::sys_days( ymd );
-        return datePoint + hour + min + sec;
-    }
 };
 
 TEST( MarketNameTests, LiveMkt )
@@ -52,7 +44,7 @@ TEST_F( MarketTests, SetAndGetFXRate )
     MDEntities::FXRate fx1;
     fx1.ID = "EURUSD";
     fx1.source = "SRC_A";
-    fx1.asofTs = makeTp( 2025y, May, 6d, 10h, 0min, 0s );
+    fx1.asofTs = DateTime( Date( Year( 2025 ), Month::May, Day( 6 ) ), Hour( 10 ), Minute( 0 ), Second( 0 ) );
     fx1.mid = 1.1;
     fx1.bid = 1.099;
     fx1.ask = 1.101;
@@ -68,7 +60,7 @@ TEST_F( MarketTests, SetAndGetEQ )
     MDEntities::EQPrice eq1;
     eq1.ID = "AAPL US";
     eq1.source = "SRC_B";
-    eq1.asofTs = makeTp( 2025y, May, 6d, 10h, 0min, 0s );
+    eq1.asofTs = DateTime( Date( Year( 2025 ), Month::May, Day( 6 ) ), Hour( 10 ), Minute( 0 ), Second( 0 ) );
     eq1.last = 150.5;
 
     m_market.setEQPrice( eq1 );
@@ -82,11 +74,11 @@ TEST_F( MarketTests, SetDifferentTypesWithSameID )
     MDEntities::FXRate fx1;
     fx1.ID = "COMMON_ID";
     fx1.mid = 1.23;
-    fx1.asofTs = makeTp( 2025y, January, 1d );
+    fx1.asofTs = DateTime( Date( Year( 2025 ), Month::May, Day( 6 ) ) );
     MDEntities::EQPrice eq1;
     eq1.ID = "COMMON_ID";
     eq1.last = 45.67;
-    eq1.asofTs = makeTp( 2025y, January, 1d );
+    eq1.asofTs = DateTime( Date( Year( 2025 ), Month::May, Day( 6 ) ) );
 
     m_market.setFXRate( fx1 );
     m_market.setEQPrice( eq1 );
@@ -114,15 +106,15 @@ TEST_F( MarketTests, SnapPopulatedMarket )
     MDEntities::FXRate fx1;
     fx1.ID = "EURUSD";
     fx1.mid = 1.1;
-    fx1.asofTs = makeTp( 2025y, January, 1d );
+    fx1.asofTs = DateTime( Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
     MDEntities::EQPrice eq1;
     eq1.ID = "AAPL US";
     eq1.last = 150.0;
-    eq1.asofTs = makeTp( 2025y, January, 1d );
+    eq1.asofTs = DateTime( Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
     MDEntities::EQPrice eq2;
     eq2.ID = "MSFT US";
     eq2.last = 300.0;
-    eq2.asofTs = makeTp( 2025y, January, 1d );
+    eq2.asofTs = DateTime( Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
 
     m_market.setFXRate( fx1 );
     m_market.setEQPrice( eq1 );
@@ -156,7 +148,7 @@ TEST_F( MarketTests, SnapIsIndependent )
     MDEntities::FXRate fx1;
     fx1.ID = "EURUSD";
     fx1.mid = 1.1;
-    fx1.asofTs = makeTp( 2025y, January, 1d );
+    fx1.asofTs = DateTime( Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
     m_market.setFXRate( fx1 );
 
     // Snapshot taken here
@@ -166,13 +158,13 @@ TEST_F( MarketTests, SnapIsIndependent )
     MDEntities::FXRate fx2;
     fx2.ID = "EURUSD";
     fx2.mid = 1.2; // Updated rate
-    fx2.asofTs = makeTp( 2025y, January, 1d, 1h );
+    fx2.asofTs = fx1.asofTs + Hours( 1 );
     m_market.setFXRate( fx2 );
 
     MDEntities::EQPrice eq1;
     eq1.ID = "AAPL US";
     eq1.last = 150.0;
-    eq1.asofTs = makeTp( 2025y, January, 1d );
+    eq1.asofTs = DateTime( Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
     m_market.setEQPrice( eq1 );
 
     // Check snapshot1 - should still have the old data

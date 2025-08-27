@@ -7,6 +7,8 @@
 
 #include <TMQSerialisation/ser_refdata_entities.h>
 
+#include <TMQUtils/time.h>
+
 #include <flatbuffers/flatbuffers.h>
 
 namespace TMQ
@@ -19,7 +21,7 @@ RDEntities::{{ entity.name }} deserialise{{ entity.name }}( const fbs::{{entity.
 {
     RDEntities::{{ entity.name }} obj = {
 		payload.isActive(),
-        std::chrono::system_clock::time_point(),
+        Time::DateTime(),
 		"",
         {% for member in entity.members %}
         {% if types[member.type].flatbuffer == "string" %}

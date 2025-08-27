@@ -129,7 +129,7 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 
 		// Create the full log entry (use OrderedJSON to preserve order of keys)
 		OrderedJSON logEntry;
-		logEntry["timestamp"]      = Time::getTmNowAsISO8601Str();
+		logEntry["timestamp"]      = Time::DateTime::nowUTC().fmtISO8601();
 		logEntry["level"]          = LOG_LEVEL_STRS[static_cast<size_t>( level )];
 		logEntry["proc_id"]        = m_procID;
 		logEntry["proc_name"]      = m_procName;

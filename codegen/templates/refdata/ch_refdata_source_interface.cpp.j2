@@ -65,14 +65,14 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
             {
                 RDEntities::{{ entity.name }} obj;
                 {% for member in entity.members %}
-                {% if types[member.type].clickhouse == "DateTime64(9)" %}
-                obj.{{ member.name }} = Time::longToTp( static_cast<uint64_t>( col_{{ member.name }}->At( i ) ) );
+                {% if types[member.type].clickhouse == "DateTime64(6)" %}
+                obj.{{ member.name }} = Time::DateTime( Time::Microseconds( col_{{ member.name }}->At( i ) ) );
                 {% else %}
                 obj.{{ member.name }} = col_{{ member.name }}->At( i );
                 {% endif %}
                 {%- endfor %}
                 obj._isActive = col_isActive->At( i );
-                obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
+                obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
@@ -91,7 +91,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
 // TODO: Need to implement fetchAsOf{{ entity.name_plural }} in a similar manner
 // TODO: Need to create some audit load capability
 
-[[nodiscard]] std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchAsOf{{ entity.name_plural }}( std::chrono::system_clock::time_point asof )
+[[nodiscard]] std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchAsOf{{ entity.name_plural }}( const Time::DateTime asof )
 {
     return std::vector<RDEntities::{{ entity.name }}>();
 }
@@ -105,8 +105,8 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
     try
     {
         {% for member in entity.members %}
-        {% if types[member.type].clickhouse == "DateTime64(9)" %}
-        auto col_{{ member.name }} = std::make_shared<clickhouse::ColumnDateTime64>( 9 );
+        {% if types[member.type].clickhouse == "DateTime64(6)" %}
+        auto col_{{ member.name }} = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         {% else %}
         auto col_{{ member.name }} = std::make_shared<clickhouse::Column{{ types[member.type].clickhouse }}>();
         {% endif %}
@@ -118,8 +118,8 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
         for( const auto& obj : data )
         {
             {% for member in entity.members %}
-            {% if types[member.type].clickhouse == "DateTime64(9)" %}
-            col_{{ member.name }}->Append( Time::tpToLong( obj.{{ member.name }} ) );
+            {% if types[member.type].clickhouse == "DateTime64(6)" %}
+            col_{{ member.name }}->Append( obj.{{ member.name }}.microsecondsSinceEpoch() );
             {% else %}
             col_{{ member.name }}->Append( obj.{{ member.name }} );
             {% endif %}

@@ -4,9 +4,9 @@
 #pragma once
 
 #include <TMQUtils/core.h>
+#include <TMQUtils/time.h>
 
 #include <string>
-#include <chrono>
 #include <cstdint>
 #include <concepts>
 #include <string_view>
@@ -29,7 +29,7 @@ namespace MDEntities
 struct MDEntity
 {
     bool _isActive = true;
-    std::chrono::system_clock::time_point _lastUpdatedTs;
+    Time::DateTime _lastUpdatedTs;
     std::string _lastUpdatedBy;
 
     /// The unique identifier for the market data entity.
@@ -37,7 +37,7 @@ struct MDEntity
     /// The source of the market data.
 	std::string source;
     /// The point-in-time when the market data was effective.
-	std::chrono::system_clock::time_point asofTs;
+	Time::DateTime asofTs;
 };
 
 template<typename T>

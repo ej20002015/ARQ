@@ -117,7 +117,7 @@ protected:
         rate.ask = ask;
         rate.mid = ( bid + ask ) / 2.0;
         rate.source = source;
-        rate.asofTs = std::chrono::system_clock::now();
+        rate.asofTs = Time::DateTime::nowUTC();
         return rate;
     }
 
@@ -127,7 +127,7 @@ protected:
         eqPrice.ID = id;
         eqPrice.last = price;
         eqPrice.source = source;
-        eqPrice.asofTs = std::chrono::system_clock::now();
+        eqPrice.asofTs = Time::DateTime::nowUTC();
         return eqPrice;
     }
 
@@ -300,10 +300,10 @@ TEST_F( ManagedMarketTest, MixedEntityTypes )
 TEST_F( ManagedMarketTest, OlderUpdatesRejected )
 {
     auto newerRate = createFXRate( "EUR/USD", 1.05, 1.06 );
-    newerRate.asofTs = std::chrono::system_clock::now();
+    newerRate.asofTs = Time::DateTime::nowUTC();
 
     auto olderRate = createFXRate( "EUR/USD", 1.07, 1.08 );
-    olderRate.asofTs = std::chrono::system_clock::now() - std::chrono::hours( 1 );
+    olderRate.asofTs = Time::DateTime::nowUTC() - Time::Hours( 1 );
 
     managedMarket->subscribe( subscriber1, { MDEntities::Type::FXR } );
 

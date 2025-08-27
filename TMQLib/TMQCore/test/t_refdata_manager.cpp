@@ -30,12 +30,6 @@ protected:
     {
         RefDataSourceFactory::delCustomSource( "TestRD" );
     }
-
-    // Helper to create a timestamp for testing staleness
-    static std::chrono::system_clock::time_point makeTs( int seconds_offset )
-    {
-        return std::chrono::system_clock::now() + std::chrono::seconds( seconds_offset );
-    }
 };
 
 TEST_F( RefDataManagerTests, InitiallyHasNoData )
@@ -110,10 +104,12 @@ TEST_F( RefDataManagerTests, InsertHappyPath )
 
 TEST_F( RefDataManagerTests, InsertStaleRecordThrowsWithCacheCheck )
 {
+    const Time::DateTime baseTs = Time::DateTime::nowUTC();
+
     // 1. Pre-populate the cache with a "newer" item
     Currency cachedCcy;
     cachedCcy.ccyID = "USD";
-    cachedCcy._lastUpdatedTs = makeTs( 100 ); // Newer timestamp
+    cachedCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 ); // Newer timestamp
     EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ cachedCcy } ) );
     auto cachePtr = manager->Currencies(); // Trigger initial load
@@ -121,7 +117,7 @@ TEST_F( RefDataManagerTests, InsertStaleRecordThrowsWithCacheCheck )
     // 2. Prepare an item to insert that is "stale"
     Currency staleCcy;
     staleCcy.ccyID = "USD";
-    staleCcy._lastUpdatedTs = makeTs( 50 ); // Older timestamp
+    staleCcy._lastUpdatedTs = baseTs + Time::Seconds( 50 ); // Older timestamp
 
     // 3. Assert
     // Expect an exception because the stale check is active by default.
@@ -132,10 +128,12 @@ TEST_F( RefDataManagerTests, InsertStaleRecordThrowsWithCacheCheck )
 
 TEST_F( RefDataManagerTests, InsertStaleRecordSucceedsWithNoCheck )
 {
+    const Time::DateTime baseTs = Time::DateTime::nowUTC();
+
     // 1. Pre-populate the cache with a "newer" item
     Currency cachedCcy;
     cachedCcy.ccyID = "USD";
-    cachedCcy._lastUpdatedTs = makeTs( 100 );
+    cachedCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
     EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ cachedCcy } ) );
     auto cachePtr = manager->Currencies();
@@ -143,7 +141,7 @@ TEST_F( RefDataManagerTests, InsertStaleRecordSucceedsWithNoCheck )
     // 2. Prepare a stale item
     Currency staleCcy;
     staleCcy.ccyID = "USD";
-    staleCcy._lastUpdatedTs = makeTs( 50 );
+    staleCcy._lastUpdatedTs = baseTs + Time::Seconds( 50 );
 
     // 3. Assert
     // Expect no exception, and expect insert to be called because check is NONE.
@@ -158,10 +156,12 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
 {
     // This tests the StaleCheck::USING_DB logic.
 
+    const Time::DateTime baseTs = Time::DateTime::nowUTC();
+
     // 1. Initial cache load
     Currency cachedCcy;
     cachedCcy.ccyID = "USD";
-    cachedCcy._lastUpdatedTs = makeTs( 50 );
+    cachedCcy._lastUpdatedTs = baseTs + Time::Seconds( 50 );
     EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ cachedCcy } ) );
     auto cachePtr = manager->Currencies();
@@ -169,7 +169,7 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
     // 2. Setup a "fresher" version that only exists in the DB
     Currency dbFresherCcy;
     dbFresherCcy.ccyID = "USD";
-    dbFresherCcy._lastUpdatedTs = makeTs( 100 );
+    dbFresherCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
     // This is the expectation for the forced reload inside insert()
     EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ dbFresherCcy } ) );
@@ -177,7 +177,7 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
     // 3. Try to insert something that is stale compared to the DB version
     Currency itemToInsert;
     itemToInsert.ccyID = "USD";
-    itemToInsert._lastUpdatedTs = makeTs( 75 ); // Newer than cache, older than DB
+    itemToInsert._lastUpdatedTs = baseTs + Time::Seconds( 75 ); // Newer than cache, older than DB
 
     // 4. Assert
     // Expect an exception because the forced reload will find the 100s timestamp.
@@ -188,9 +188,11 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
 
 TEST_F( RefDataManagerTests, GetReturnsReferenceToDataInSnapshot )
 {
+    const Time::DateTime baseTs = Time::DateTime::nowUTC();
+
     Currency ccy;
     ccy.ccyID = "USD";
-    ccy._lastUpdatedTs = makeTs( 100 );
+    ccy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
     EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ ccy } ) );
 
@@ -210,7 +212,7 @@ TEST_F( RefDataManagerTests, GetReturnsReferenceToDataInSnapshot )
     // 3. Reload the RefDataManagers cache of currencies to remove USD
     Currency newCcy;
     newCcy.ccyID = "EUR";
-    newCcy._lastUpdatedTs = makeTs( 100 );
+    newCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
     EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ newCcy } ) );
 

@@ -4,9 +4,9 @@
 #pragma once
 
 #include <TMQUtils/core.h>
+#include <TMQUtils/time.h>
 
 #include <string>
-#include <chrono>
 #include <cstdint>
 #include <concepts>
 #include <string_view>
@@ -29,7 +29,7 @@ namespace RDEntities
 struct RDEntity
 {
     bool _isActive = true;
-    std::chrono::system_clock::time_point _lastUpdatedTs;
+    Time::DateTime _lastUpdatedTs;
     std::string _lastUpdatedBy;
 };
 

@@ -68,13 +68,13 @@ static std::vector<MDEntities::FXRate> internalFetchFXRates( const std::string_v
                 MDEntities::FXRate obj;
                 obj.ID = col_id->At( i );
                 obj.source = col_source->At( i );
-                obj.asofTs = Time::longToTp( static_cast<uint64_t>( col_asofTs->At( i ) ) );
+                obj.asofTs = Time::DateTime( Time::Microseconds( col_asofTs->At( i ) ) );
                 obj.mid = col_mid->At( i );
                 obj.bid = col_bid->At( i );
                 obj.ask = col_ask->At( i );
                 obj._isActive = col_isActive->At( i );
-                obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
-                obj._lastUpdatedBy = col_lastUpdatedTs->At( i );
+                obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
+                obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -114,7 +114,7 @@ void CHMktDataSource::insertFXRates( const std::vector<MDEntities::FXRate>& data
         auto col_mktName = std::make_shared<clickhouse::ColumnString>();
         auto col_id = std::make_shared<clickhouse::ColumnString>();
         auto col_source = std::make_shared<clickhouse::ColumnString>();
-        auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 9 );
+        auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         auto col_mid = std::make_shared<clickhouse::ColumnFloat64>();
         auto col_bid = std::make_shared<clickhouse::ColumnFloat64>();
         auto col_ask = std::make_shared<clickhouse::ColumnFloat64>();
@@ -127,7 +127,7 @@ void CHMktDataSource::insertFXRates( const std::vector<MDEntities::FXRate>& data
             col_mktName->Append( mktName );
             col_id->Append( obj.ID );
             col_source->Append( obj.source );
-            col_asofTs->Append( Time::tpToLong( obj.asofTs ) );
+            col_asofTs->Append( obj.asofTs.microsecondsSinceEpoch() );
             col_mid->Append( obj.mid );
             col_bid->Append( obj.bid );
             col_ask->Append( obj.ask );
@@ -216,7 +216,7 @@ static std::vector<MDEntities::EQPrice> internalFetchEQPrices( const std::string
                 MDEntities::EQPrice obj;
                 obj.ID = col_id->At( i );
                 obj.source = col_source->At( i );
-                obj.asofTs = Time::longToTp( static_cast<uint64_t>( col_asofTs->At( i ) ) );
+                obj.asofTs = Time::DateTime( Time::Microseconds( col_asofTs->At( i ) ) );
                 obj.last = col_last->At( i );
                 obj.bid = col_bid->At( i );
                 obj.ask = col_ask->At( i );
@@ -224,8 +224,8 @@ static std::vector<MDEntities::EQPrice> internalFetchEQPrices( const std::string
                 obj.close = col_close->At( i );
                 obj.volume = col_volume->At( i );
                 obj._isActive = col_isActive->At( i );
-                obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
-                obj._lastUpdatedBy = col_lastUpdatedTs->At( i );
+                obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
+                obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -265,7 +265,7 @@ void CHMktDataSource::insertEQPrices( const std::vector<MDEntities::EQPrice>& da
         auto col_mktName = std::make_shared<clickhouse::ColumnString>();
         auto col_id = std::make_shared<clickhouse::ColumnString>();
         auto col_source = std::make_shared<clickhouse::ColumnString>();
-        auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 9 );
+        auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         auto col_last = std::make_shared<clickhouse::ColumnFloat64>();
         auto col_bid = std::make_shared<clickhouse::ColumnFloat64>();
         auto col_ask = std::make_shared<clickhouse::ColumnFloat64>();
@@ -281,7 +281,7 @@ void CHMktDataSource::insertEQPrices( const std::vector<MDEntities::EQPrice>& da
             col_mktName->Append( mktName );
             col_id->Append( obj.ID );
             col_source->Append( obj.source );
-            col_asofTs->Append( Time::tpToLong( obj.asofTs ) );
+            col_asofTs->Append( obj.asofTs.microsecondsSinceEpoch() );
             col_last->Append( obj.last );
             col_bid->Append( obj.bid );
             col_ask->Append( obj.ask );

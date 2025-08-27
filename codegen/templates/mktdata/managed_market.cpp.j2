@@ -175,7 +175,7 @@ void ManagedMarket::on{{ entity.name }}Update( const MDEntities::{{ entity.name 
 
 		if( !insertIntoMkt )
 		{
-			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [{{ entity.type_string }}#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
+			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [{{ entity.type_string }}#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, updatedObj.asofTs.fmtISO8601(), objInMkt->_lastUpdatedTs.fmtISO8601() );
 			return;
 		}
 

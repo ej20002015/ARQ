@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS RefData.Currencies
     `DecimalPlaces` UInt8 COMMENT 'Number of decimal places for standard formatting.',
     `SettlementDays` UInt8 COMMENT 'Standard number of days for spot settlement (commonly 2).',
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS RefData.Users
     `Email` String COMMENT 'The user&#39;s contact email address.',
     `TradingDesk` LowCardinality(String) COMMENT 'The primary trading desk the user belongs to.',
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree

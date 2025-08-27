@@ -8,12 +8,12 @@ CREATE TABLE IF NOT EXISTS MktData.FXRates
     `MarketName` LowCardinality(String) COMMENT 'The name of the market this data belongs to (e.g., LIVE, EOD_20250724).',
     `ID` String COMMENT 'The unique identifier for the market data entity.',
     `Source` LowCardinality(String) COMMENT 'The source of the market data.',
-    `AsofTs` Datetime64(9) COMMENT 'The point-in-time when the market data was effective',
+    `AsofTs` Datetime64(6) COMMENT 'The point-in-time when the market data was effective',
     `Mid` Float64 COMMENT 'The mid-market rate.',
     `Bid` Float64 COMMENT 'The price at which a market maker is willing to buy.',
     `Ask` Float64 COMMENT 'The price at which a market maker is willing to sell.',
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS MktData.EQPrices
     `MarketName` LowCardinality(String) COMMENT 'The name of the market this data belongs to (e.g., LIVE, EOD_20250724).',
     `ID` String COMMENT 'The unique identifier for the market data entity.',
     `Source` LowCardinality(String) COMMENT 'The source of the market data.',
-    `AsofTs` Datetime64(9) COMMENT 'The point-in-time when the market data was effective',
+    `AsofTs` Datetime64(6) COMMENT 'The point-in-time when the market data was effective',
     `Last` Float64 COMMENT 'The price of the last executed trade.',
     `Bid` Float64 COMMENT 'The highest price a buyer is willing to pay.',
     `Ask` Float64 COMMENT 'The lowest price a seller is willing to accept.',
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS MktData.EQPrices
     `Close` Float64 COMMENT 'The closing price from the previous trading session.',
     `Volume` Int64 COMMENT 'The cumulative volume for the current trading session.',
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree

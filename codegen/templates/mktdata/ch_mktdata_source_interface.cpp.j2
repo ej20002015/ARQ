@@ -73,16 +73,16 @@ static std::vector<MDEntities::{{ entity.name }}> internalFetch{{ entity.name_pl
                 MDEntities::{{ entity.name }} obj;
                 obj.ID = col_id->At( i );
                 obj.source = col_source->At( i );
-                obj.asofTs = Time::longToTp( static_cast<uint64_t>( col_asofTs->At( i ) ) );
+                obj.asofTs = Time::DateTime( Time::Microseconds( col_asofTs->At( i ) ) );
                 {% for member in entity.members %}
-                {% if types[member.type].clickhouse == "DateTime64(9)" %}
-                obj.{{ member.name }} = Time::longToTp( static_cast<uint64_t>( col_{{ member.name }}->At( i ) ) );
+                {% if types[member.type].clickhouse == "DateTime64(6)" %}
+                obj.{{ member.name }} = Time::DateTime( Time::Microseconds( col_{{ member.name }}->At( i ) ) );
                 {% else %}
                 obj.{{ member.name }} = col_{{ member.name }}->At( i );
                 {% endif %}
                 {%- endfor %}
                 obj._isActive = col_isActive->At( i );
-                obj._lastUpdatedTs = Time::longToTp( static_cast<uint64_t>( col_lastUpdatedTs->At( i ) ) );
+                obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
                 results.push_back( std::move( obj ) );
             }
@@ -123,10 +123,10 @@ void CHMktDataSource::insert{{ entity.name_plural }}( const std::vector<MDEntiti
         auto col_mktName = std::make_shared<clickhouse::ColumnString>();
         auto col_id = std::make_shared<clickhouse::ColumnString>();
         auto col_source = std::make_shared<clickhouse::ColumnString>();
-        auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 9 );
+        auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         {% for member in entity.members %}
-        {% if types[member.type].clickhouse == "DateTime64(9)" %}
-        auto col_{{ member.name }} = std::make_shared<clickhouse::ColumnDateTime64>( 9 );
+        {% if types[member.type].clickhouse == "DateTime64(6)" %}
+        auto col_{{ member.name }} = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         {% else %}
         auto col_{{ member.name }} = std::make_shared<clickhouse::Column{{ types[member.type].clickhouse }}>();
         {% endif %}
@@ -140,10 +140,10 @@ void CHMktDataSource::insert{{ entity.name_plural }}( const std::vector<MDEntiti
             col_mktName->Append( mktName );
             col_id->Append( obj.ID );
             col_source->Append( obj.source );
-            col_asofTs->Append( Time::tpToLong( obj.asofTs ) );
+            col_asofTs->Append( obj.asofTs.microsecondsSinceEpoch() );
             {% for member in entity.members %}
-            {% if types[member.type].clickhouse == "DateTime64(9)" %}
-            col_{{ member.name }}->Append( Time::tpToLong( obj.{{ member.name }} ) );
+            {% if types[member.type].clickhouse == "DateTime64(6)" %}
+            col_{{ member.name }}->Append( obj.{{ member.name }}.microsecondsSinceEpoch() );
             {% else %}
             col_{{ member.name }}->Append( obj.{{ member.name }} );
             {% endif %}

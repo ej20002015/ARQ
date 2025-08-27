@@ -13,14 +13,14 @@ CREATE TABLE IF NOT EXISTS MktData.{{ entity.table_name }}
     `MarketName` LowCardinality(String) COMMENT 'The name of the market this data belongs to (e.g., LIVE, EOD_20250724).',
     `ID` String COMMENT 'The unique identifier for the market data entity.',
     `Source` LowCardinality(String) COMMENT 'The source of the market data.',
-    `AsofTs` Datetime64(9) COMMENT 'The point-in-time when the market data was effective',
+    `AsofTs` Datetime64(6) COMMENT 'The point-in-time when the market data was effective',
     {# Loop through the members to create columns #}
     {% for member in entity.members %}
     {% set CHType = "LowCardinality(String)" if "LowCardinality(String)" in member.clickhouse_modifier else types[member.type].clickhouse %}
     `{{ member.name | capitalise_first }}` {{ CHType }} {% if member.comment %}COMMENT '{{ member.comment | e }}'{% endif %},
     {% endfor %}
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
-    `_LastUpdatedTs` Datetime64(9) DEFAULT now64(9) COMMENT 'Timestamp of the last update to this record',
+    `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
 )
 ENGINE = MergeTree

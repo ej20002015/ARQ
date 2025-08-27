@@ -14,13 +14,13 @@ Timer::Timer( const StartOnConstruction soc )
 
 void Timer::start()
 {
-	m_tStart = std::chrono::system_clock::now();
+	m_tStart = std::chrono::steady_clock::now();
 }
 
 void Timer::stop()
 {
-	if( m_tEnd != std::chrono::system_clock::time_point() )
-		m_tEnd = std::chrono::system_clock::now();
+	if( m_tEnd != std::chrono::steady_clock::time_point() )
+		m_tEnd = std::chrono::steady_clock::now();
 }
 
 }

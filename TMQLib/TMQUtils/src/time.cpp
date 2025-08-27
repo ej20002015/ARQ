@@ -6,6 +6,7 @@
 #include <sstream>
 #include <limits>
 #include <format>
+#include "time.h"
 
 namespace TMQ
 {
@@ -13,40 +14,9 @@ namespace TMQ
 namespace Time
 {
 
-TMQUtils_API std::string tpToISO8601Str( const std::chrono::system_clock::time_point tp )
-{
-	using namespace std::chrono;
-
-	auto now_time_t = system_clock::to_time_t( tp );
-	auto micros = duration_cast<microseconds>( tp.time_since_epoch() ) % 1'000'000;
-
-	std::ostringstream oss;
-	oss << std::put_time( std::gmtime( &now_time_t ), "%FT%T" );
-	oss << '.' << std::setw( 6 ) << std::setfill( '0' ) << micros.count() << 'Z';
-	return oss.str();
-}
-
-std::string getTmNowAsISO8601Str()
-{
-	using namespace std::chrono;
-
-	auto now = system_clock::now();
-	return tpToISO8601Str( now );
-}
-
-Time::Date::Date( const Year y, const Month m, const Day d )
-	: m_ymd( std::chrono::year_month_day( std::chrono::year( y ), std::chrono::month( m ), std::chrono::day( d ) ) )
-{
-	if( !m_ymd->ok() )
-		throw TMQException( std::format( "Invalid date args given: year={}, month={}, day={}", static_cast<int32_t>( y ), static_cast<int32_t>( m ), static_cast<int32_t>( d ) ) );
-}
-
-Time::Date::Date( const int32_t serial )
-	: m_ymd( std::chrono::sys_days( std::chrono::days( serial ) ) )
-{
-	if( !m_ymd->ok() )
-		throw TMQException( std::format( "Invalid date serial arg given: serial={} (equivalent to {:%Y%m%d})", serial, m_ymd.value() ) );
-}
+/*
+* ------------------------- Date class implementation -------------------------
+*/
 
 Date::Date( const TimeZone tz )
 {
@@ -63,6 +33,20 @@ Date::Date( const TimeZone tz )
 		default:
 			TMQ_ASSERT( false );
 	}
+}
+
+Time::Date::Date( const Year y, const Month m, const Day d )
+	: m_ymd( std::chrono::year_month_day( std::chrono::year( y ), std::chrono::month( m ), std::chrono::day( d ) ) )
+{
+	if( !m_ymd->ok() )
+		throw TMQException( std::format( "Invalid date args given: year={}, month={}, day={}", static_cast<int32_t>( y ), static_cast<int32_t>( m ), static_cast<int32_t>( d ) ) );
+}
+
+Time::Date::Date( const int32_t serial )
+	: m_ymd( std::chrono::sys_days( std::chrono::days( serial ) ) )
+{
+	if( !m_ymd->ok() )
+		throw TMQException( std::format( "Invalid date serial arg given: serial={} (equivalent to {:%Y%m%d})", serial, m_ymd.value() ) );
 }
 
 Date::Date( const std::chrono::year_month_day ymd )
@@ -84,7 +68,7 @@ Date Date::nowUTC()
 
 Year Date::year() const noexcept
 {
-	return isSet() ? Year(static_cast<int32_t>( m_ymd->year() ) ) : Year();
+	return isSet() ? Year( static_cast<int32_t>( m_ymd->year() ) ) : Year();
 }
 
 Month Date::month() const noexcept
@@ -180,8 +164,224 @@ std::ostream& operator<<( std::ostream& os, const Date& date )
 	return os;
 }
 
-const Date Date::MIN( Year( static_cast<int32_t>( std::chrono::year::min() ) ), Jan, Day( 01 ) );
-const Date Date::MAX( Year( static_cast<int32_t>( std::chrono::year::max() ) ), Dec, Day( 31 ) );
+const Date Date::MIN( Year( 0 ), Jan, Day( 1 ) );
+const Date Date::MAX( Year( 9999 ), Dec, Day( 31 ) );
+
+/*
+* ------------------------- DateTime class implementation -------------------------
+*/
+
+DateTime::DateTime( const Date& dt )
+	: m_tp( std::chrono::sys_days( dt.ymd() ) )
+{
+}
+
+DateTime::DateTime( const Date& dt, const Hour h, const Minute m, const Second s )
+{
+	m_tp = std::chrono::sys_days( dt.ymd() );
+	*m_tp += std::chrono::hours( h );
+	*m_tp += std::chrono::minutes( m );
+	*m_tp += std::chrono::seconds( s );
+}
+
+DateTime::DateTime( const Date& dt, const TimeOfDay& tod )
+{
+	m_tp = std::chrono::sys_days( dt.ymd() );
+	*m_tp += std::chrono::hours( tod.hour );
+	*m_tp += std::chrono::minutes( tod.minute );
+	*m_tp += std::chrono::seconds( tod.second );
+	*m_tp += std::chrono::milliseconds( tod.millisecond );
+	*m_tp += std::chrono::microseconds( tod.microsecond );
+}
+
+DateTime::DateTime( const Microseconds us )
+	: m_tp( std::chrono::microseconds( us ) )
+{
+}
+
+DateTime::DateTime( const std::chrono::system_clock::time_point tp )
+	: m_tp( tp )
+{
+}
+
+DateTime DateTime::nowUTC()
+{
+	return DateTime( std::chrono::system_clock::now() );
+}
+
+Date DateTime::date() const noexcept
+{
+	return isSet() ? Date( floor<std::chrono::days>( *m_tp ) ) : Date();
+}
+
+TimeOfDay DateTime::timeOfDay() const noexcept
+{
+	using namespace std::chrono;
+
+	if( !isSet() )
+		return TimeOfDay();
+
+	const auto sinceMidnight = *m_tp - floor<days>( *m_tp );
+	const hh_mm_ss hms( sinceMidnight );
+	const auto subSeconds = sinceMidnight - floor<seconds>( sinceMidnight );
+	int64_t totalUs = duration_cast<microseconds>( subSeconds ).count();
+
+	TimeOfDay tod;
+	tod.hour = Hour( hms.hours().count() );
+	tod.minute = Minute( hms.minutes().count() );
+	tod.second = Second( hms.seconds().count() );
+	tod.millisecond = Millisecond( static_cast<int32_t>( totalUs / 1'000 ) );
+	tod.microsecondsPast = Microseconds( totalUs );
+	totalUs -= tod.millisecond * 1'000;
+	tod.microsecond = Microsecond( totalUs );
+
+	return tod;
+}
+
+Hour DateTime::hour() const noexcept
+{
+	return isSet() ? timeOfDay().hour : Hour();
+}
+
+Minute DateTime::minute() const noexcept
+{
+	return isSet() ? timeOfDay().minute : Minute();
+}
+
+Second DateTime::second() const noexcept
+{
+	return isSet() ? timeOfDay().second : Second();
+}
+
+Millisecond DateTime::millisecond() const noexcept
+{
+	return isSet() ? timeOfDay().millisecond : Millisecond();
+}
+
+Microsecond DateTime::microsecond() const noexcept
+{
+	return isSet() ? timeOfDay().microsecond : Microsecond();
+}
+
+Microseconds DateTime::microsecondsPast() const noexcept
+{
+	return isSet() ? timeOfDay().microsecondsPast : Microseconds();
+}
+
+Microseconds DateTime::microsecondsSinceEpoch() const noexcept
+{
+	return isSet() ? Microseconds( std::chrono::duration_cast<std::chrono::microseconds>( m_tp->time_since_epoch() ).count() ) : Microseconds( std::numeric_limits<int64_t>::min() );
+}
+
+std::chrono::system_clock::time_point DateTime::tp() const noexcept
+{
+	return isSet() ? *m_tp : std::chrono::system_clock::time_point();
+}
+
+DateTime DateTime::addYears( const int32_t years ) const noexcept
+{
+	return isSet() ? DateTime( date().addYears( years ), timeOfDay() ) : *this;
+}
+
+DateTime DateTime::subYears( const int32_t years ) const noexcept
+{
+	return addYears( -years );
+}
+
+DateTime DateTime::addMonths( const int32_t months ) const noexcept
+{
+	return isSet() ? DateTime( date().addMonths( months ), timeOfDay() ) : *this;
+}
+
+DateTime DateTime::subMonths( const int32_t months ) const noexcept
+{
+	return addMonths( -months );
+}
+
+DateTime DateTime::addDays( const int32_t days ) const noexcept
+{
+	return isSet() ? DateTime( *m_tp + std::chrono::days( days ) ) : *this;
+}
+
+DateTime DateTime::subDays( const int32_t days ) const noexcept
+{
+	return addDays( -days );
+}
+
+DateTime DateTime::addHours( const int64_t hours ) const noexcept
+{
+	return isSet() ? DateTime( *m_tp + std::chrono::hours( hours ) ) : *this;
+}
+
+DateTime DateTime::subHours( const int64_t hours ) const noexcept
+{
+	return addHours( -hours );
+}
+
+DateTime DateTime::addMinutes( const int64_t minutes ) const noexcept
+{
+	return isSet() ? DateTime( *m_tp + std::chrono::minutes( minutes ) ) : *this;
+}
+
+DateTime DateTime::subMinutes( const int64_t minutes ) const noexcept
+{
+	return addMinutes( -minutes );
+}
+
+DateTime DateTime::addSeconds( const int64_t seconds ) const noexcept
+{
+	return isSet() ? DateTime( *m_tp + std::chrono::seconds( seconds ) ) : *this;
+}
+
+DateTime DateTime::subSeconds( const int64_t seconds ) const noexcept
+{
+	return addSeconds( -seconds );
+}
+
+DateTime DateTime::addMilliseconds( const int64_t milliseconds ) const noexcept
+{
+	return isSet() ? DateTime( *m_tp + std::chrono::milliseconds( milliseconds ) ) : *this;
+}
+
+DateTime DateTime::subMilliseconds( const int64_t milliseconds ) const noexcept
+{
+	return addMilliseconds( -milliseconds );
+}
+
+DateTime DateTime::addMicroseconds( const int64_t microseconds ) const noexcept
+{
+	return isSet() ? DateTime( *m_tp + std::chrono::microseconds( microseconds ) ) : *this;
+}
+
+DateTime DateTime::subMicroseconds( const int64_t microseconds ) const noexcept
+{
+	return addMicroseconds( -microseconds );
+}
+
+std::ostream& operator<<( std::ostream& os, const DateTime& dateTime )
+{
+	if( dateTime.isSet() )
+		os << dateTime.m_tp.value();
+	else
+		os << DateTime::NOT_SET_STR;
+
+	return os;
+}
+
+std::string DateTime::fmtISO8601() const
+{
+	return std::format( "{:%FT%TZ}", std::chrono::floor<std::chrono::microseconds>( tp() ) );
+}
+
+const DateTime DateTime::MIN( Date::MIN );
+const DateTime DateTime::MAX( Date::MAX, TimeOfDay{
+	.hour             = Hour( 23 ),
+	.minute           = Minute( 59 ),
+	.second           = Second( 59 ),
+	.millisecond      = Millisecond( 999 ),
+	.microsecond      = Microsecond( 999 ),
+	.microsecondsPast = Microseconds( 999'999 )
+} );
 
 }
 

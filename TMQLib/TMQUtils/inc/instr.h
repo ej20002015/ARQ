@@ -36,8 +36,8 @@ public:
 	}
 
 private:
-	std::chrono::system_clock::time_point m_tStart;
-	std::chrono::system_clock::time_point m_tEnd;
+	std::chrono::steady_clock::time_point m_tStart;
+	std::chrono::steady_clock::time_point m_tEnd;
 };
 
 }

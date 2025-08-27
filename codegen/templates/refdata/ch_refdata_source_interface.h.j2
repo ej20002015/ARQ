@@ -8,6 +8,7 @@
 #pragma once
 #include <TMQClickHouse/dll.h>
 
+#include <TMQUtils/time.h>
 #include <TMQCore/refdata_entities.h>
 #include <TMQCore/refdata_source_interface.h>
 
@@ -25,7 +26,7 @@ public:
     {% for entity in entities %}
     // --- Methods for {{ entity.name }} ({{ entity.type_string }}) ---
     [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::{{ entity.name }}> fetchLatest{{ entity.name_plural }}() override;
-    [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( std::chrono::system_clock::time_point asof ) override;
+    [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( const Time::DateTime asof ) override;
     TMQClickHouse_API void insert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data ) override;
 
     {% endfor %}

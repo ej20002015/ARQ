@@ -4,6 +4,7 @@
 #pragma once
 #include <TMQCore/dll.h>
 
+#include <TMQUtils/core.h>
 #include <TMQCore/refdata_entities.h>
 
 #include <vector>
@@ -19,12 +20,12 @@ public:
 
     // --- Methods for Currency (CCY) ---
     [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::Currency> fetchLatestCurrencies() = 0;
-    [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::Currency> fetchAsOfCurrencies( std::chrono::system_clock::time_point asof ) = 0;
+    [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::Currency> fetchAsOfCurrencies( const Time::DateTime asof ) = 0;
     TMQCore_API virtual void insertCurrencies( const std::vector<RDEntities::Currency>& data ) = 0;
 
     // --- Methods for User (USER) ---
     [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::User> fetchLatestUsers() = 0;
-    [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::User> fetchAsOfUsers( std::chrono::system_clock::time_point asof ) = 0;
+    [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::User> fetchAsOfUsers( const Time::DateTime asof ) = 0;
     TMQCore_API virtual void insertUsers( const std::vector<RDEntities::User>& data ) = 0;
 
 };

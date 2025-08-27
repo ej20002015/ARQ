@@ -12,8 +12,8 @@ clickhouse = "Float64"
 flatbuffer = "double"
 
 [types.datetime]
-cpp = "std::chrono::system_clock::time_point"
-clickhouse = "DateTime64(9)"
+cpp = "Time::DateTime"
+clickhouse = "DateTime64(6)"
 flatbuffer = "ulong" # Representing nanoseconds since epoch
 
 [types.bool]

@@ -4,6 +4,7 @@
 #pragma once
 #include <TMQClickHouse/dll.h>
 
+#include <TMQUtils/time.h>
 #include <TMQCore/refdata_entities.h>
 #include <TMQCore/refdata_source_interface.h>
 
@@ -20,12 +21,12 @@ public:
 
     // --- Methods for Currency (CCY) ---
     [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::Currency> fetchLatestCurrencies() override;
-    [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::Currency> fetchAsOfCurrencies( std::chrono::system_clock::time_point asof ) override;
+    [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::Currency> fetchAsOfCurrencies( const Time::DateTime asof ) override;
     TMQClickHouse_API void insertCurrencies( const std::vector<RDEntities::Currency>& data ) override;
 
     // --- Methods for User (USER) ---
     [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::User> fetchLatestUsers() override;
-    [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::User> fetchAsOfUsers( std::chrono::system_clock::time_point asof ) override;
+    [[nodiscard]] TMQClickHouse_API std::vector<RDEntities::User> fetchAsOfUsers( const Time::DateTime asof ) override;
     TMQClickHouse_API void insertUsers( const std::vector<RDEntities::User>& data ) override;
 
 private:

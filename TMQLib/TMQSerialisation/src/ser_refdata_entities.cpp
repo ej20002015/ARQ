@@ -3,6 +3,8 @@
 
 #include <TMQSerialisation/ser_refdata_entities.h>
 
+#include <TMQUtils/time.h>
+
 #include <flatbuffers/flatbuffers.h>
 
 namespace TMQ
@@ -14,7 +16,7 @@ RDEntities::Currency deserialiseCurrency( const fbs::CurrencyPayload& payload )
 {
     RDEntities::Currency obj = {
 		payload.isActive(),
-        std::chrono::system_clock::time_point(),
+        Time::DateTime(),
 		"",
         payload.ccyID()->c_str(),
         payload.name()->c_str(),
@@ -60,7 +62,7 @@ RDEntities::User deserialiseUser( const fbs::UserPayload& payload )
 {
     RDEntities::User obj = {
 		payload.isActive(),
-        std::chrono::system_clock::time_point(),
+        Time::DateTime(),
 		"",
         payload.userID()->c_str(),
         payload.fullName()->c_str(),

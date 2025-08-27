@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <TMQUtils/time.h>
 #include <TMQCore/refdata_entities.h>
 #include <TMQCore/refdata_source_interface.h>
 
@@ -18,12 +19,12 @@ public:
 
     // --- Mock Methods for Currency (CCY) ---
     MOCK_METHOD( std::vector<RDEntities::Currency>, fetchLatestCurrencies, (), ( override ) );
-    MOCK_METHOD( std::vector<RDEntities::Currency>, fetchAsOfCurrencies, ( std::chrono::system_clock::time_point asof ), ( override ) );
+    MOCK_METHOD( std::vector<RDEntities::Currency>, fetchAsOfCurrencies, ( const Time::DateTime asof ), ( override ) );
     MOCK_METHOD( void, insertCurrencies, ( const std::vector<RDEntities::Currency>& data ), ( override ) );
 
     // --- Mock Methods for User (USER) ---
     MOCK_METHOD( std::vector<RDEntities::User>, fetchLatestUsers, (), ( override ) );
-    MOCK_METHOD( std::vector<RDEntities::User>, fetchAsOfUsers, ( std::chrono::system_clock::time_point asof ), ( override ) );
+    MOCK_METHOD( std::vector<RDEntities::User>, fetchAsOfUsers, ( const Time::DateTime asof ), ( override ) );
     MOCK_METHOD( void, insertUsers, ( const std::vector<RDEntities::User>& data ), ( override ) );
 
 };

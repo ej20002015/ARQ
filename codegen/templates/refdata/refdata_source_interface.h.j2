@@ -8,6 +8,7 @@
 #pragma once
 #include <TMQCore/dll.h>
 
+#include <TMQUtils/core.h>
 #include <TMQCore/refdata_entities.h>
 
 #include <vector>
@@ -25,7 +26,7 @@ public:
     {% for entity in entities %}
     // --- Methods for {{ entity.name }} ({{ entity.type_string }}) ---
     [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::{{ entity.name }}> fetchLatest{{ entity.name_plural }}() = 0;
-    [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( std::chrono::system_clock::time_point asof ) = 0;
+    [[nodiscard]] TMQCore_API virtual std::vector<RDEntities::{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( const Time::DateTime asof ) = 0;
     TMQCore_API virtual void insert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data ) = 0;
 
     {% endfor %}

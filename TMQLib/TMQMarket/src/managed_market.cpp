@@ -200,7 +200,7 @@ void ManagedMarket::onFXRateUpdate( const MDEntities::FXRate& updatedObj )
 
 		if( !insertIntoMkt )
 		{
-			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [FXR#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
+			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [FXR#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, updatedObj.asofTs.fmtISO8601(), objInMkt->_lastUpdatedTs.fmtISO8601() );
 			return;
 		}
 
@@ -221,7 +221,7 @@ void ManagedMarket::onEQPriceUpdate( const MDEntities::EQPrice& updatedObj )
 
 		if( !insertIntoMkt )
 		{
-			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [EQP#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, Time::tpToISO8601Str( updatedObj.asofTs ), Time::tpToISO8601Str( objInMkt->_lastUpdatedTs ) );
+			Log( Module::MKT ).error( "ManagedMarket [{}, {}]: Updated [EQP#{}] with asof {} is older than that already stored in the mkt which has asof {}", m_mktName.str(), m_dsh, updatedObj.ID, updatedObj.asofTs.fmtISO8601(), objInMkt->_lastUpdatedTs.fmtISO8601() );
 			return;
 		}
 

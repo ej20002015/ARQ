@@ -10,20 +10,9 @@
 using namespace TMQ;
 using namespace TMQ::Time;
 
-TEST( TimeUtilsTest, ISO8601FormatValidation )
-{
-    std::string timestamp = Time::getTmNowAsISO8601Str();
-    ASSERT_FALSE( timestamp.empty() ) << "Timestamp string should not be empty.";
-    // Expected format: YYYY-MM-DDTHH:MM:SS.ffffffZ (27 chars)
-    ASSERT_EQ( timestamp.length(), 27 ) << "Timestamp string should have length 27. Actual: " << timestamp;
-
-    // 2. Regex Check: Validate against the ISO 8601 pattern
-    // Pattern: YYYY-MM-DD T HH:MM:SS . ffffff Z
-    const std::regex iso8601_regex( R"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z)" );
-
-    EXPECT_TRUE( std::regex_match( timestamp, iso8601_regex ) )
-        << "Timestamp '" << timestamp << "' does not match expected ISO8601 format YYYY-MM-DDTHH:MM:SS.ffffffZ";
-}
+/*
+* ------------------------- Date class tests -------------------------
+*/
 
 // Construction Tests
 TEST( DateTest, DefaultConstruction )
@@ -264,13 +253,13 @@ TEST( DateTest, StaticMembers )
 {
     EXPECT_TRUE( Date::MIN.isSet() );
     EXPECT_TRUE( Date::MIN.isValid() );
-    EXPECT_EQ( Date::MIN.year(), -32767 );
+    EXPECT_EQ( Date::MIN.year(), 0 );
     EXPECT_EQ( Date::MIN.month(), Month::Jan );
     EXPECT_EQ( Date::MIN.day(), 1 );
 
     EXPECT_TRUE( Date::MAX.isSet() );
     EXPECT_TRUE( Date::MAX.isValid() );
-    EXPECT_EQ( Date::MAX.year(), 32767 );
+    EXPECT_EQ( Date::MAX.year(), 9999 );
     EXPECT_EQ( Date::MAX.month(), Month::Dec );
     EXPECT_EQ( Date::MAX.day(), 31 );
 
@@ -328,4 +317,462 @@ TEST( DateTest, Hashing )
 
     EXPECT_EQ( hasher( date1 ), hasher( date2 ) ); // Same dates should have same hash
     EXPECT_NE( hasher( date1 ), hasher( date3 ) ); // Different dates should have different hash
+}
+
+/*
+* ------------------------- DateTime class tests -------------------------
+*/
+
+TEST( DateTimeTest, DefaultConstruction )
+{
+    DateTime dateTime;
+    EXPECT_FALSE( dateTime.isSet() );
+    EXPECT_EQ( dateTime.date(), Date() );
+    EXPECT_EQ( dateTime.hour(), Hour() );
+    EXPECT_EQ( dateTime.minute(), Minute() );
+    EXPECT_EQ( dateTime.second(), Second() );
+    EXPECT_EQ( dateTime.millisecond(), Millisecond() );
+    EXPECT_EQ( dateTime.microsecond(), Microsecond() );
+}
+
+TEST( DateTimeTest, DateOnlyConstruction )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date );
+
+    EXPECT_TRUE( dateTime.isSet() );
+    EXPECT_EQ( dateTime.date(), date );
+    EXPECT_EQ( dateTime.hour(), Hour( 0 ) );
+    EXPECT_EQ( dateTime.minute(), Minute( 0 ) );
+    EXPECT_EQ( dateTime.second(), Second( 0 ) );
+    EXPECT_EQ( dateTime.millisecond(), Millisecond( 0 ) );
+    EXPECT_EQ( dateTime.microsecond(), Microsecond( 0 ) );
+}
+
+TEST( DateTimeTest, DateTimeConstruction )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    EXPECT_TRUE( dateTime.isSet() );
+    EXPECT_EQ( dateTime.date(), date );
+    EXPECT_EQ( dateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( dateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( dateTime.second(), Second( 45 ) );
+    EXPECT_EQ( dateTime.millisecond(), Millisecond( 0 ) );
+    EXPECT_EQ( dateTime.microsecond(), Microsecond( 0 ) );
+}
+
+TEST( DateTimeTest, TimeOfDayConstruction )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    TimeOfDay tod{
+        .hour = Hour( 14 ),
+        .minute = Minute( 30 ),
+        .second = Second( 45 ),
+        .millisecond = Millisecond( 123 ),
+        .microsecond = Microsecond( 456 ),
+        .microsecondsPast = Microseconds( 123456 )
+    };
+
+    DateTime dateTime( date, tod );
+
+    EXPECT_TRUE( dateTime.isSet() );
+    EXPECT_EQ( dateTime.date(), date );
+    EXPECT_EQ( dateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( dateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( dateTime.second(), Second( 45 ) );
+    EXPECT_EQ( dateTime.millisecond(), Millisecond( 123 ) );
+    EXPECT_EQ( dateTime.microsecond(), Microsecond( 456 ) );
+}
+
+TEST( DateTimeTest, MicrosecondsConstruction )
+{
+    Microseconds us( 1234567890123456LL );
+    DateTime dateTime( us );
+
+    EXPECT_TRUE( dateTime.isSet() );
+    EXPECT_EQ( dateTime.microsecondsSinceEpoch(), us );
+}
+
+TEST( DateTimeTest, TimePointConstruction )
+{
+    auto tp = std::chrono::system_clock::now();
+    DateTime dateTime( tp );
+
+    EXPECT_TRUE( dateTime.isSet() );
+    // Note: Precision may be reduced to microseconds
+    auto extractedTp = dateTime.tp();
+    auto diffUs = std::chrono::duration_cast<std::chrono::microseconds>( tp - extractedTp ).count();
+    EXPECT_LT( std::abs( diffUs ), 1 ); // Should be within 1 microsecond
+}
+
+TEST( DateTimeTest, NowUTC )
+{
+    DateTime now1 = DateTime::nowUTC();
+    std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
+    DateTime now2 = DateTime::nowUTC();
+
+    EXPECT_TRUE( now1.isSet() );
+    EXPECT_TRUE( now2.isSet() );
+    EXPECT_LT( now1, now2 );
+}
+
+// DateTime Arithmetic Tests
+TEST( DateTimeTest, AddYears )
+{
+    Date date( Year( 2024 ), Month::Feb, Day( 29 ) ); // Leap year
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    DateTime newDateTime = dateTime.addYears( 1 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2025 ), Month::Feb, Day( 28 ) ) ); // Adjusted for non-leap year
+    EXPECT_EQ( newDateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 45 ) );
+
+    newDateTime = newDateTime - Years( 1 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2024 ), Month::Feb, Day( 28 ) ) ); // Should stay at 28
+}
+
+TEST( DateTimeTest, AddMonths )
+{
+    Date date( Year( 2024 ), Month::Jan, Day( 31 ) );
+    DateTime dateTime( date, Hour( 12 ), Minute( 0 ), Second( 0 ) );
+
+    DateTime newDateTime = dateTime.addMonths( 1 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2024 ), Month::Feb, Day( 29 ) ) ); // Adjusted to last day of Feb
+    EXPECT_EQ( newDateTime.hour(), Hour( 12 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 0 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 0 ) );
+}
+
+TEST( DateTimeTest, AddDays )
+{
+    Date date( Year( 2024 ), Month::Dec, Day( 30 ) );
+    DateTime dateTime( date, Hour( 23 ), Minute( 59 ), Second( 59 ) );
+
+    DateTime newDateTime = dateTime.addDays( 2 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
+    EXPECT_EQ( newDateTime.hour(), Hour( 23 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 59 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 59 ) );
+}
+
+TEST( DateTimeTest, AddHours )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 22 ), Minute( 30 ), Second( 0 ) );
+
+    DateTime newDateTime = dateTime.addHours( 3 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2024 ), Month::May, Day( 27 ) ) );
+    EXPECT_EQ( newDateTime.hour(), Hour( 1 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 0 ) );
+}
+
+TEST( DateTimeTest, AddMinutes )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 58 ), Second( 0 ) );
+
+    DateTime newDateTime = dateTime.addMinutes( 5 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2024 ), Month::May, Day( 26 ) ) );
+    EXPECT_EQ( newDateTime.hour(), Hour( 15 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 3 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 0 ) );
+}
+
+TEST( DateTimeTest, AddSeconds )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 59 ), Second( 58 ) );
+
+    DateTime newDateTime = dateTime.addSeconds( 5 );
+    EXPECT_EQ( newDateTime.date(), Date( Year( 2024 ), Month::May, Day( 26 ) ) );
+    EXPECT_EQ( newDateTime.hour(), Hour( 15 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 0 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 3 ) );
+}
+
+TEST( DateTimeTest, AddMilliseconds )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 59 ) );
+
+    DateTime newDateTime = dateTime.addMilliseconds( 1500 );
+    EXPECT_EQ( newDateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 31 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 0 ) );
+    EXPECT_EQ( newDateTime.millisecond(), Millisecond( 500 ) );
+}
+
+TEST( DateTimeTest, AddMicroseconds )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    DateTime newDateTime = dateTime.addMicroseconds( 1500000 ); // 1.5 seconds
+    EXPECT_EQ( newDateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 46 ) );
+    EXPECT_EQ( newDateTime.millisecond(), Millisecond( 500 ) );
+}
+
+TEST( DateTimeTest, SubtractionOperations )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    DateTime newDateTime = dateTime.subYears( 1 );
+    EXPECT_EQ( newDateTime.date().year(), Year( 2023 ) );
+
+    newDateTime = dateTime.subMonths( 2 );
+    EXPECT_EQ( newDateTime.date().month(), Month::Mar );
+
+    newDateTime = dateTime.subDays( 5 );
+    EXPECT_EQ( newDateTime.date().day(), Day( 21 ) );
+
+    newDateTime = dateTime.subHours( 2 );
+    EXPECT_EQ( newDateTime.hour(), Hour( 12 ) );
+
+    newDateTime = dateTime.subMinutes( 35 );
+    EXPECT_EQ( newDateTime.minute(), Minute( 55 ) );
+    EXPECT_EQ( newDateTime.hour(), Hour( 13 ) );
+
+    newDateTime = dateTime.subSeconds( 50 );
+    EXPECT_EQ( newDateTime.second(), Second( 55 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 29 ) );
+}
+
+TEST( DateTimeTest, ArithmeticOnUnsetDateTime )
+{
+    DateTime dateTime; // Unset
+
+    dateTime = dateTime.addYears( 1 );
+    dateTime = dateTime.addHours( 5 );
+    dateTime = dateTime.addMilliseconds( 1000 );
+
+    // Should remain unset
+    EXPECT_FALSE( dateTime.isSet() );
+}
+
+// DateTime Comparison Tests
+TEST( DateTimeTest, Equality )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime1( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime dateTime2( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime dateTime3( date, Hour( 14 ), Minute( 30 ), Second( 46 ) );
+    DateTime unsetDateTime;
+
+    EXPECT_EQ( dateTime1, dateTime2 );
+    EXPECT_NE( dateTime1, dateTime3 );
+    EXPECT_NE( dateTime1, unsetDateTime );
+}
+
+TEST( DateTimeTest, Ordering )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime early( date, Hour( 14 ), Minute( 30 ), Second( 44 ) );
+    DateTime late( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime unsetDateTime;
+
+    EXPECT_LT( early, late );
+    EXPECT_GT( late, early );
+    EXPECT_LE( early, late );
+    EXPECT_GE( late, early );
+
+    // Unset datetimes should compare as less than set datetimes
+    EXPECT_LT( unsetDateTime, early );
+}
+
+TEST( DateTimeTest, DateTimeDifference )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime1( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime dateTime2( date, Hour( 14 ), Minute( 30 ), Second( 49 ) );
+
+    int64_t diffUs = dateTime2 - dateTime1;
+    EXPECT_EQ( diffUs, 4000000LL ); // 4 seconds in microseconds
+
+    int64_t reverseDiffUs = dateTime1 - dateTime2;
+    EXPECT_EQ( reverseDiffUs, -4000000LL );
+}
+
+// DateTime TimeOfDay Tests
+TEST( DateTimeTest, TimeOfDayExtraction )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    TimeOfDay originalTod{
+        .hour = Hour( 14 ),
+        .minute = Minute( 30 ),
+        .second = Second( 45 ),
+        .millisecond = Millisecond( 123 ),
+        .microsecond = Microsecond( 456 ),
+        .microsecondsPast = Microseconds( 123456 )
+    };
+
+    DateTime dateTime( date, originalTod );
+    TimeOfDay extractedTod = dateTime.timeOfDay();
+
+    EXPECT_EQ( extractedTod.hour, originalTod.hour );
+    EXPECT_EQ( extractedTod.minute, originalTod.minute );
+    EXPECT_EQ( extractedTod.second, originalTod.second );
+    EXPECT_EQ( extractedTod.millisecond, originalTod.millisecond );
+    EXPECT_EQ( extractedTod.microsecond, originalTod.microsecond );
+}
+
+TEST( DateTimeTest, IndividualTimeComponents )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    EXPECT_EQ( dateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( dateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( dateTime.second(), Second( 45 ) );
+    EXPECT_EQ( dateTime.millisecond(), Millisecond( 0 ) );
+    EXPECT_EQ( dateTime.microsecond(), Microsecond( 0 ) );
+}
+
+// DateTime Static Members Tests
+TEST( DateTimeTest, StaticMembers )
+{
+    EXPECT_TRUE( DateTime::MIN.isSet() );
+    EXPECT_EQ( DateTime::MIN.date(), Date::MIN );
+
+    EXPECT_TRUE( DateTime::MAX.isSet() );
+    EXPECT_EQ( DateTime::MAX.date(), Date::MAX );
+    EXPECT_EQ( DateTime::MAX.hour(), Hour( 23 ) );
+    EXPECT_EQ( DateTime::MAX.minute(), Minute( 59 ) );
+    EXPECT_EQ( DateTime::MAX.second(), Second( 59 ) );
+
+    EXPECT_LT( DateTime::MIN, DateTime::MAX );
+}
+
+// DateTime Output Tests
+TEST( DateTimeTest, StreamOutput )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime unsetDateTime;
+
+    std::ostringstream oss1;
+    oss1 << dateTime;
+    std::string dateTimeStr = oss1.str();
+    EXPECT_FALSE( dateTimeStr.empty() );
+
+    std::ostringstream oss2;
+    oss2 << unsetDateTime;
+    std::string unsetStr = oss2.str();
+    EXPECT_EQ( unsetStr, "DATETIME_NOT_SET" );
+}
+
+// DateTime Formatting Tests
+TEST( DateTimeTest, StdFormatting )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime unsetDateTime;
+
+    // Test formatting of valid datetime
+    std::string formatted = std::format( "{}", dateTime );
+    EXPECT_FALSE( formatted.empty() );
+
+    // Test formatting of unset datetime
+    std::string unsetFormatted = std::format( "{}", unsetDateTime );
+    EXPECT_EQ( unsetFormatted, "DATETIME_NOT_SET" );
+}
+
+TEST( DateTimeTest, ISO8601FormatValidation )
+{
+    std::string timestamp = DateTime::nowUTC().fmtISO8601();
+    ASSERT_FALSE( timestamp.empty() ) << "Timestamp string should not be empty.";
+    // Expected format: YYYY-MM-DDTHH:MM:SS.ffffffZ (27 chars)
+    ASSERT_EQ( timestamp.length(), 27 ) << "Timestamp string should have length 27. Actual: " << timestamp;
+
+    // 2. Regex Check: Validate against the ISO 8601 pattern
+    // Pattern: YYYY-MM-DD T HH:MM:SS . ffffff Z
+    const std::regex iso8601_regex( R"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}Z)" );
+
+    EXPECT_TRUE( std::regex_match( timestamp, iso8601_regex ) )
+        << "Timestamp '" << timestamp << "' does not match expected ISO8601 format YYYY-MM-DDTHH:MM:SS.ffffffZ";
+}
+
+// DateTime Hash Tests
+TEST( DateTimeTest, Hashing )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime1( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime dateTime2( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+    DateTime dateTime3( date, Hour( 14 ), Minute( 30 ), Second( 46 ) );
+
+    DateTime::Hasher hasher;
+
+    EXPECT_EQ( hasher( dateTime1 ), hasher( dateTime2 ) ); // Same datetimes should have same hash
+    EXPECT_NE( hasher( dateTime1 ), hasher( dateTime3 ) ); // Different datetimes should have different hash
+}
+
+// DateTime Edge Cases
+TEST( DateTimeTest, MidnightTransition )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 23 ), Minute( 59 ), Second( 59 ) );
+
+    DateTime nextSecond = dateTime.addSeconds( 1 );
+    EXPECT_EQ( nextSecond.date(), Date( Year( 2024 ), Month::May, Day( 27 ) ) );
+    EXPECT_EQ( nextSecond.hour(), Hour( 0 ) );
+    EXPECT_EQ( nextSecond.minute(), Minute( 0 ) );
+    EXPECT_EQ( nextSecond.second(), Second( 0 ) );
+}
+
+TEST( DateTimeTest, YearBoundaryTransition )
+{
+    Date date( Year( 2024 ), Month::Dec, Day( 31 ) );
+    DateTime dateTime( date, Hour( 23 ), Minute( 59 ), Second( 59 ) );
+
+    DateTime nextSecond = dateTime.addSeconds( 1 );
+    EXPECT_EQ( nextSecond.date(), Date( Year( 2025 ), Month::Jan, Day( 1 ) ) );
+    EXPECT_EQ( nextSecond.hour(), Hour( 0 ) );
+    EXPECT_EQ( nextSecond.minute(), Minute( 0 ) );
+    EXPECT_EQ( nextSecond.second(), Second( 0 ) );
+}
+
+// DateTime Precision Tests
+TEST( DateTimeTest, SubSecondPrecision )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime baseTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    DateTime withMillis = baseTime.addMilliseconds( 123 );
+    EXPECT_EQ( withMillis.millisecond(), Millisecond( 123 ) );
+
+    DateTime withMicros = withMillis.addMicroseconds( 456 );
+    EXPECT_EQ( withMicros.microsecond(), Microsecond( 456 ) );
+}
+
+// DateTime Microsecond Boundary Tests
+TEST( DateTimeTest, MicrosecondBoundary )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    // Test adding exactly 1 second worth of microseconds
+    DateTime newDateTime = dateTime.addMicroseconds( 1000000 );
+    EXPECT_EQ( newDateTime.hour(), Hour( 14 ) );
+    EXPECT_EQ( newDateTime.minute(), Minute( 30 ) );
+    EXPECT_EQ( newDateTime.second(), Second( 46 ) );
+    EXPECT_EQ( newDateTime.millisecond(), Millisecond( 0 ) );
+    EXPECT_EQ( newDateTime.microsecond(), Microsecond( 0 ) );
+}
+
+TEST( DateTimeTest, MaxMicrosecondPrecision )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    DateTime dateTime( date, Hour( 14 ), Minute( 30 ), Second( 45 ) );
+
+    // Test maximum sub-second precision
+    DateTime precise = dateTime.addMicroseconds( 999999 ); // 999.999 milliseconds
+    EXPECT_EQ( precise.millisecond(), Millisecond( 999 ) );
+    EXPECT_EQ( precise.microsecond(), Microsecond( 999 ) );
+    EXPECT_EQ( precise.microsecondsPast(), Microseconds( 999'999 ) );
 }
