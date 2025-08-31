@@ -2,7 +2,7 @@
 --  Dummy Data for RefData.Currencies
 -- =================================================================
 
-INSERT INTO RefData.Currencies (ccyID, name, decimalPlaces, settlementDays, IsActive, LastUpdatedBy) VALUES
+INSERT INTO RefData.Currencies (CcyID, Name, DecimalPlaces, SettlementDays, _IsActive, _LastUpdatedBy) VALUES
 ('USD', 'US Dollar', 2, 2, 1, 'System'),
 ('EUR', 'Euro', 2, 2, 1, 'System'),
 ('JPY', 'Japanese Yen', 2, 2, 1, 'System'),
@@ -24,7 +24,7 @@ INSERT INTO RefData.Currencies (ccyID, name, decimalPlaces, settlementDays, IsAc
 --  Dummy Data for RefData.Users
 -- =================================================================
 
-INSERT INTO RefData.Users (userID, fullName, email, tradingDesk, IsActive, LastUpdatedBy) VALUES
+INSERT INTO RefData.Users (UserID, FullName, Email, TradingDesk, _IsActive, _LastUpdatedBy) VALUES
 ('jdoe', 'John Doe', 'john.doe@example.com', 'FX G10', 1, 'Admin'),
 ('asmith', 'Alice Smith', 'alice.smith@example.com', 'Rates', 1, 'Admin'),
 ('bwilliams', 'Bob Williams', 'bob.williams@example.com', 'Commodities', 1, 'Admin'),

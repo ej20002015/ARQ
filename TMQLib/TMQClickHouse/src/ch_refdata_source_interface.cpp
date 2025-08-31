@@ -27,7 +27,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
 
     static constexpr auto SELECT_STMT = R"(
 		SELECT
-            ccyID,
+            CcyID,
             argMax(Name, _LastUpdatedTs) AS max_Name,
             argMax(DecimalPlaces, _LastUpdatedTs) AS max_DecimalPlaces,
             argMax(SettlementDays, _LastUpdatedTs) AS max_SettlementDays,
@@ -35,7 +35,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
             argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
 		FROM RefData.Currencies
-        GROUP BY ccyID
+        GROUP BY CcyID
 		HAVING max_IsActive = 1;
 	)";
 
@@ -143,7 +143,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
 
     static constexpr auto SELECT_STMT = R"(
 		SELECT
-            userID,
+            UserID,
             argMax(FullName, _LastUpdatedTs) AS max_FullName,
             argMax(Email, _LastUpdatedTs) AS max_Email,
             argMax(TradingDesk, _LastUpdatedTs) AS max_TradingDesk,
@@ -151,7 +151,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
             argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
 		FROM RefData.Users
-        GROUP BY userID
+        GROUP BY UserID
 		HAVING max_IsActive = 1;
 	)";
 

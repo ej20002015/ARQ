@@ -32,7 +32,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
 
     static constexpr auto SELECT_STMT = R"(
 		SELECT
-            {{ entity.key }},
+            {{ entity.key | capitalise_first }},
             {% for member in entity.members %}
             {% if member.name != entity.key %}
             argMax({{ member.name | capitalise_first }}, _LastUpdatedTs) AS max_{{ member.name | capitalise_first }},
@@ -42,7 +42,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
             argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
 		FROM RefData.{{ entity.table_name }}
-        GROUP BY {{ entity.key }}
+        GROUP BY {{ entity.key | capitalise_first }}
 		HAVING max_IsActive = 1;
 	)";
 
