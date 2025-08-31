@@ -1,0 +1,1 @@
+![ARQ Logo](ARQLogo.jpeg)
