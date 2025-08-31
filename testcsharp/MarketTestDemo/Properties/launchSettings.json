@@ -3,7 +3,7 @@
     "MarketTestDemo": {
       "commandName": "Project",
       "environmentVariables": {
-        "PATH": "C:\\Development\\Projects\\TMQ\\.build\\bin\\Debug;%PATH%"
+        "PATH": "C:\\Development\\Projects\\ARQ\\.build\\bin\\Debug;%PATH%"
       },
       "nativeDebugging": true
     }

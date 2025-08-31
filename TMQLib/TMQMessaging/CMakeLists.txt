@@ -1,3 +1,0 @@
-TMQ_define_dynalib(TMQMessaging)
-
-TMQ_define_dynalib_tests(TMQMessaging)

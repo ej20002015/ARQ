@@ -8,19 +8,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\.build\bin\Debug\TMQLibPINVOKE.cs" Link="src\TMQLib\TMQLibPINVOKE.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Mkt\Context.cs" Link="src\TMQLib\TMQMarket\Context.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Date.cs" Link="src\TMQLib\TMQUtils\Date.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Day.cs" Link="src\TMQLib\TMQUtils\Day.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Month.cs" Link="src\TMQLib\TMQUtils\Month.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\TimeZone.cs" Link="src\TMQLib\TMQUtils\TimeZone.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Weekday.cs" Link="src\TMQLib\TMQUtils\Weekday.cs" />
-    <Compile Include="..\..\.build\bin\Debug\TMQ\Time\Year.cs" Link="src\TMQLib\TMQUtils\Year.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQLibPINVOKE.cs" Link="src\ARQLib\ARQLibPINVOKE.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\Context.cs" Link="src\ARQLib\ARQMarket\Context.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Date.cs" Link="src\ARQLib\ARQUtils\Date.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Day.cs" Link="src\ARQLib\ARQUtils\Day.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Month.cs" Link="src\ARQLib\ARQUtils\Month.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\TimeZone.cs" Link="src\ARQLib\ARQUtils\TimeZone.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Weekday.cs" Link="src\ARQLib\ARQUtils\Weekday.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Year.cs" Link="src\ARQLib\ARQUtils\Year.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="src\TMQLib\TMQMarket\" />
-    <Folder Include="src\TMQLib\TMQUtils\" />
+    <Folder Include="src\ARQLib\ARQMarket\" />
+    <Folder Include="src\ARQLib\ARQUtils\" />
   </ItemGroup>
   
 </Project>

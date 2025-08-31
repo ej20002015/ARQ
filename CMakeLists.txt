@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
 
 # Project name
-project(TMQLib)
+project(ARQLib)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -68,26 +68,26 @@ set_target_properties( benchmark_main PROPERTIES FOLDER "vendor/gbenchmark")
 
 set(MASTER_INC_DIR "${CMAKE_BINARY_DIR}/inc")
 
-# Function to create symlinks in the 'inc/' directory for all TMQ* libraries' 'inc' directories
+# Function to create symlinks in the 'inc/' directory for all ARQ* libraries' 'inc' directories
 function(create_master_inc_dir)
     set(INC_DIR ${MASTER_INC_DIR})
     if (NOT EXISTS ${INC_DIR})
         file(MAKE_DIRECTORY ${INC_DIR})
     endif()
 
-    file(GLOB_RECURSE TMQ_LIBS_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/TMQLib/*TMQ*/inc")
+    file(GLOB_RECURSE ARQ_LIBS_DIRS LIST_DIRECTORIES true "${CMAKE_SOURCE_DIR}/ARQLib/*ARQ*/inc")
 
     # Filter only directories that contain 'inc' directory
-    set(TMQ_INC_DIRS)
-    foreach(DIR IN LISTS TMQ_LIBS_DIRS)
+    set(ARQ_INC_DIRS)
+    foreach(DIR IN LISTS ARQ_LIBS_DIRS)
         if(DIR MATCHES "inc$")
-            list(APPEND TMQ_INC_DIRS ${DIR})
+            list(APPEND ARQ_INC_DIRS ${DIR})
         endif()
     endforeach()
 
-    foreach(INC_DIR_PATH IN LISTS TMQ_INC_DIRS)
-        string(REGEX MATCH "TMQLib/([^/]+)/inc" LIBRARY_NAME ${INC_DIR_PATH})
-        string(REGEX REPLACE "TMQLib/([^/]+)/inc" "\\1" LIBRARY_NAME ${LIBRARY_NAME})
+    foreach(INC_DIR_PATH IN LISTS ARQ_INC_DIRS)
+        string(REGEX MATCH "ARQLib/([^/]+)/inc" LIBRARY_NAME ${INC_DIR_PATH})
+        string(REGEX REPLACE "ARQLib/([^/]+)/inc" "\\1" LIBRARY_NAME ${LIBRARY_NAME})
 
         # Define the symlink path in the root 'inc' directory
         set(SYMLINK_PATH "${INC_DIR}/${LIBRARY_NAME}")
@@ -124,10 +124,10 @@ endfunction()
 
 create_master_inc_dir()
 
-function(TMQ_define_dynalib TARGET)
-    file(GLOB SOURCES  "${CMAKE_SOURCE_DIR}/TMQLib/${TARGET}/src/*.cpp")
-    file(GLOB HEADERS  "${CMAKE_SOURCE_DIR}/TMQLib/${TARGET}/src/*.h")
-    file(GLOB INCLUDES "${CMAKE_SOURCE_DIR}/TMQLib/${TARGET}/inc/*.h")
+function(ARQ_define_dynalib TARGET)
+    file(GLOB SOURCES  "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src/*.cpp")
+    file(GLOB HEADERS  "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src/*.h")
+    file(GLOB INCLUDES "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/inc/*.h")
 
     add_library(${TARGET}
                 SHARED
@@ -145,9 +145,9 @@ function(TMQ_define_dynalib TARGET)
     source_group("inc" FILES ${INCLUDES})
 endfunction()
 
-function(TMQ_define_dynalib_tests DYNALIB_NAME)
-    file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/TMQLib/${DYNALIB_NAME}/test/*.cpp")
-    file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/TMQLib/${DYNALIB_NAME}/test/*.h")
+function(ARQ_define_dynalib_tests DYNALIB_NAME)
+    file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/test/*.cpp")
+    file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/test/*.h")
 
     set(TESTS_TARGET_NAME "t_${DYNALIB_NAME}")
 
@@ -166,9 +166,9 @@ function(TMQ_define_dynalib_tests DYNALIB_NAME)
     gtest_discover_tests(${TESTS_TARGET_NAME})
 endfunction()
 
-function(TMQ_define_dynalib_bench DYNALIB_NAME)
-    file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/TMQLib/${DYNALIB_NAME}/bench/*.cpp")
-    file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/TMQLib/${DYNALIB_NAME}/bench/*.h")
+function(ARQ_define_dynalib_bench DYNALIB_NAME)
+    file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/bench/*.cpp")
+    file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/bench/*.h")
 
     set(BENCH_TARGET_NAME "b_${DYNALIB_NAME}")
 
@@ -195,11 +195,11 @@ function(TMQ_define_dynalib_bench DYNALIB_NAME)
     )
 endfunction()
 
-function(TMQ_define_tools_exe EXE_NAME)
-    TMQ_define_exe(${EXE_NAME} "tools/${EXE_NAME}")
+function(ARQ_define_tools_exe EXE_NAME)
+    ARQ_define_exe(${EXE_NAME} "tools/${EXE_NAME}")
 endfunction()
 
-function(TMQ_define_exe EXE_NAME EXE_ROOT_DIR)
+function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR)
     file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/*.cpp")
     file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/*.h")
 
@@ -245,7 +245,7 @@ function(append_link_libraries TARGET)
     target_link_libraries(${TARGET} PRIVATE ${CURRENT_LIBRARIES})
 endfunction()
 
-# Aeron set up (TODO: Move to it's own TMQAeron project)
+# Aeron set up (TODO: Move to it's own ARQAeron project)
 
 set(CMAKE_FOLDER "vendor/aeron")
 add_subdirectory(vendor/aeron)
@@ -321,18 +321,18 @@ unset(CMAKE_FOLDER)
 add_subdirectory(vendor/tomlplusplus)
 set(TOMLPP_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/tomlplusplus/include")
 
-# Add TMQLib subdirectories
-add_subdirectory(TMQLib/TMQCore)
-add_subdirectory(TMQLib/TMQUtils)
-add_subdirectory(TMQLib/TMQMarket)
-add_subdirectory(TMQLib/TMQSolace)
-add_subdirectory(TMQLib/TMQMessaging)
-add_subdirectory(TMQLib/TMQClickHouse)
-add_subdirectory(TMQLib/TMQSerialisation)
+# Add ARQLib subdirectories
+add_subdirectory(ARQLib/ARQCore)
+add_subdirectory(ARQLib/ARQUtils)
+add_subdirectory(ARQLib/ARQMarket)
+add_subdirectory(ARQLib/ARQSolace)
+add_subdirectory(ARQLib/ARQMessaging)
+add_subdirectory(ARQLib/ARQClickHouse)
+add_subdirectory(ARQLib/ARQSerialisation)
 
 # Add tools subdirectories
 add_subdirectory(tools/aeron_publisher)
 add_subdirectory(tools/aeron_subscriber)
 
 # Add SWIG wrappers
-add_subdirectory(TMQLib/SWIG)
+add_subdirectory(ARQLib/SWIG)

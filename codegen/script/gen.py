@@ -1,5 +1,5 @@
 """
-TMQ Code Generation Script
+ARQ Code Generation Script
 
 This script generates C++ code from TOML entity definitions using Jinja2 templates.
 It supports multiple entity types (refdata, mktdata, etc.) and can generate code
@@ -288,7 +288,7 @@ class CodeGenerator:
 def main():
     """Main entry point for the code generation script."""
     parser = argparse.ArgumentParser(
-        description="TMQ Code Generation Script - Generate C++ code from TOML entity definitions"
+        description="ARQ Code Generation Script - Generate C++ code from TOML entity definitions"
     )
     parser.add_argument(
         '--definitions-dir', 

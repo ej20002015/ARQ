@@ -1,12 +1,12 @@
-﻿using TMQ = TMQLib.TMQ;
+﻿using ARQ = ARQLib.ARQ;
 
-TMQ.Time.Date date = new TMQ.Time.Date();
+ARQ.Time.Date date = new ARQ.Time.Date();
 System.Console.WriteLine(date.isSet());
 System.Console.WriteLine($"{date.year().toInt()}-{date.month().ToString()}-{date.day().toInt()}");
 
 try
 {
-    TMQ.Time.Date date2 = new TMQ.Time.Date(new TMQ.Time.Year(2025), TMQ.Time.Month.May, new TMQ.Time.Day(40));
+    ARQ.Time.Date date2 = new ARQ.Time.Date(new ARQ.Time.Year(2025), ARQ.Time.Month.May, new ARQ.Time.Day(40));
     System.Console.WriteLine(date2.isSet());
     System.Console.WriteLine($"{date2.year().toInt()}-{date2.month().ToString()}-{date2.day().toInt()}");
 }
@@ -15,28 +15,28 @@ catch (Exception e)
     Console.WriteLine(e.ToString());
 }
 
-TMQ.Time.Date date3 = new TMQ.Time.Date(TMQ.Time.TimeZone.Local);
+ARQ.Time.Date date3 = new ARQ.Time.Date(ARQ.Time.TimeZone.Local);
 System.Console.WriteLine(date3.isSet());
 System.Console.WriteLine($"{date3.year().toInt()}-{date3.month().ToString()}-{date3.day().toInt()}");
 
-TMQ.Time.Date date4 = new TMQ.Time.Date(0);
+ARQ.Time.Date date4 = new ARQ.Time.Date(0);
 System.Console.WriteLine(date4.isSet());
 System.Console.WriteLine($"{date4.year().toInt()}-{date4.month().ToString()}-{date4.day().toInt()}");
 
-TMQLib.TMQ.Mkt.Context context = new TMQLib.TMQ.Mkt.Context("EOD", date3);
+ARQLib.ARQ.Mkt.Context context = new ARQLib.ARQ.Mkt.Context("EOD", date3);
 Console.WriteLine(context.str());
 
-var context2 = TMQLib.TMQ.Mkt.Context.LIVE;
+var context2 = ARQLib.ARQ.Mkt.Context.LIVE;
 Console.WriteLine(context2.str());
 
-var context3 = new TMQLib.TMQ.Mkt.Context("LIVE_EVAN");
+var context3 = new ARQLib.ARQ.Mkt.Context("LIVE_EVAN");
 Console.WriteLine(context3.str());
 
 //// See https://aka.ms/new-console-template for more information
-//using MarketTestDemo.src.TMQ.Extensions;
+//using MarketTestDemo.src.ARQ.Extensions;
 //using System.Runtime.CompilerServices;
 //using System.Runtime.InteropServices;
-//using TMQTime = TMQ.TMQUtils.Time;
+//using ARQTime = ARQ.ARQUtils.Time;
 
 //Console.WriteLine("Hello, World!");
 
@@ -149,27 +149,27 @@ Console.WriteLine(context3.str());
 ////    throw new Exception();
 
 
-//TMQTime.Date date = new TMQTime.Date();
+//ARQTime.Date date = new ARQTime.Date();
 //System.Console.WriteLine(date.isSet());
 //System.Console.WriteLine($"{date.year().toInt()}-{date.month().ToString()}-{date.day().toInt()}");
 
-//TMQTime.Date date2 = new TMQTime.Date(new TMQTime.Year(2025), TMQTime.Month.May, new TMQTime.Day(40));
+//ARQTime.Date date2 = new ARQTime.Date(new ARQTime.Year(2025), ARQTime.Month.May, new ARQTime.Day(40));
 //System.Console.WriteLine(date2.isSet());
 //System.Console.WriteLine($"{date2.year().toInt()}-{date2.month().ToString()}-{date2.day().toInt()}");
 
-//TMQTime.Date date3 = new TMQTime.Date(TMQTime.TimeZone.Local);
+//ARQTime.Date date3 = new ARQTime.Date(ARQTime.TimeZone.Local);
 //System.Console.WriteLine(date3.isSet());
 //System.Console.WriteLine($"{date3.year().toInt()}-{date3.month().ToString()}-{date3.day().toInt()}");
 
-//TMQTime.Date date4 = new TMQTime.Date(0);
+//ARQTime.Date date4 = new ARQTime.Date(0);
 //System.Console.WriteLine(date4.isSet());
 //System.Console.WriteLine($"{date4.year().toInt()}-{date4.month().ToString()}-{date4.day().toInt()}");
 
-//var dateTest = new TMQLib.TMQUtils.Time.Date(0);
+//var dateTest = new ARQLib.ARQUtils.Time.Date(0);
 //var only = dateTest.ToDateOnly();
 //System.Console.WriteLine(only);
 
-//var onlyDate = only.ToTMQDate();
+//var onlyDate = only.ToARQDate();
 //var onlyBack = onlyDate.ToDateOnly();
 //System.Console.WriteLine(onlyBack);
 

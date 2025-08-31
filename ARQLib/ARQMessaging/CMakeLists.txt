@@ -1,0 +1,3 @@
+ARQ_define_dynalib(ARQMessaging)
+
+ARQ_define_dynalib_tests(ARQMessaging)

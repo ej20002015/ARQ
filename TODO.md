@@ -1,4 +1,4 @@
-- Integration testing for TMQClickHouse?
+- Integration testing for ARQClickHouse?
 - Add stack trace library
 - Add event logging of some description
 - Create FXSpot trade class and valuation class?

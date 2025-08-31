@@ -1,3 +1,0 @@
-TMQ_define_dynalib(TMQSolace)
-
-TMQ_define_dynalib_tests(TMQSolace)
