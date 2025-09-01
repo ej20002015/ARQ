@@ -7,7 +7,6 @@
 #include <ARQMarket/market.h>
 
 #include <map>
-#include <vector>
 #include <functional>
 #include <shared_mutex>
 
@@ -31,10 +30,10 @@ public:
 
     ARQMarket_API virtual const std::string_view description() const = 0;
 
-    void setOnMktObjUpdateFunc( OnMktObjUpdateFunc&& onMktObjUpdateFunc );
+    ARQMarket_API void setOnMktObjUpdateFunc( OnMktObjUpdateFunc&& onMktObjUpdateFunc );
 
-    void setOnFXRateUpdateFunc( OnFXRateUpdateFunc&& onFXRateUpdateFunc );
-    void setOnEQPriceUpdateFunc( OnEQPriceUpdateFunc&& onEQPriceUpdateFunc );
+    ARQMarket_API void setOnFXRateUpdateFunc( OnFXRateUpdateFunc&& onFXRateUpdateFunc );
+    ARQMarket_API void setOnEQPriceUpdateFunc( OnEQPriceUpdateFunc&& onEQPriceUpdateFunc );
 
 private:
     std::shared_mutex m_mut;
@@ -46,6 +45,24 @@ private:
 
 private:
     friend class ManagedMarket;
+};
+
+/// <summary>Primarily used to enable subscriber callbacks from C++ to other languages using SWIG directors</summary>
+class VirtualSubscriber : public Subscriber
+{
+public:
+    ARQMarket_API explicit VirtualSubscriber( const std::string_view description );
+    ~VirtualSubscriber() = default;
+
+    virtual const std::string_view description() const override { return m_description; }
+
+    virtual void onMktObjUpdate( const MDEntities::Type type, const std::string& ID ) {}
+
+    virtual void onFXRateUpdate( const MDEntities::FXRate& updatedObj ) {}
+    virtual void onEQPriceUpdate( const MDEntities::EQPrice& updatedObj ) {}
+
+private:
+    std::string m_description;
 };
 
 class ManagedMarket
@@ -63,11 +80,13 @@ public:
 
     ARQMarket_API void subscribe( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
     ARQMarket_API void subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
-    ARQMarket_API void unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<ConsolidatingTIDSet>>& subscriptionList = std::nullopt );
+    ARQMarket_API void unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<const ConsolidatingTIDSet>>& subscriptionList = std::nullopt );
 
     ARQMarket_API bool isSubscriber( const std::weak_ptr<Subscriber> subscriber ) const;
 
     ARQMarket_API void load( const ConsolidatingTIDSet& toLoad );
+
+    [[nodiscard]] ARQMarket_API MarketSnapshot snap() const;
 
     // --- Methods for FXRate (FXR) ---
     [[nodiscard]] std::optional<MDEntities::FXRate> getFXRate( const std::string_view ID ) const { return m_mkt.getFXRate( ID ); }

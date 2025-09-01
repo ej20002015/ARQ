@@ -20,7 +20,7 @@ std::unique_ptr<clickhouse::Client> CHConnPool::getConn( const std::string_view 
 
 	try
 	{
-		Log( Module::CLICKHOUSE ).info( "Creating new ClickHouse connection for dsh []", dsh );
+		Log( Module::CLICKHOUSE ).info( "Creating new ClickHouse connection for dsh [{}]", dsh );
 
 		const DataSourceConfig config = DataSourceConfigManager::inst().get( dsh );
 		clickhouse::ClientOptions opt = {
@@ -33,7 +33,7 @@ std::unique_ptr<clickhouse::Client> CHConnPool::getConn( const std::string_view 
 	}
 	catch( const std::exception& e )
 	{
-		throw ARQException( std::format( "Cannot connect to clickhouse DB: {0}", e.what() ) );
+		throw ARQException( std::format( "Cannot connect to clickhouse DB: {}", e.what() ) );
 	}
 	catch( ... )
 	{

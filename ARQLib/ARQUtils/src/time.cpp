@@ -42,11 +42,11 @@ Time::Date::Date( const Year y, const Month m, const Day d )
 		throw ARQException( std::format( "Invalid date args given: year={}, month={}, day={}", static_cast<int32_t>( y ), static_cast<int32_t>( m ), static_cast<int32_t>( d ) ) );
 }
 
-Time::Date::Date( const int32_t serial )
+Time::Date::Date( const Days serial )
 	: m_ymd( std::chrono::sys_days( std::chrono::days( serial ) ) )
 {
 	if( !m_ymd->ok() )
-		throw ARQException( std::format( "Invalid date serial arg given: serial={} (equivalent to {:%Y%m%d})", serial, m_ymd.value() ) );
+		throw ARQException( std::format( "Invalid date serial arg given: serial={} (equivalent to {:%Y%m%d})", serial.val(), m_ymd.value() ) );
 }
 
 Date::Date( const std::chrono::year_month_day ymd )
@@ -86,9 +86,9 @@ Weekday Date::weekday() const noexcept
 	return isSet() ? static_cast<Weekday>( std::chrono::weekday( *m_ymd ).iso_encoding() ) : Weekday::WKD_INV;
 }
 
-int32_t Date::serial() const noexcept
+Days Date::serial() const noexcept
 {
-	return isSet() ? std::chrono::sys_days( *m_ymd ).time_since_epoch().count() : std::numeric_limits<int32_t>::min();
+	return isSet() ? Days( std::chrono::sys_days( *m_ymd ).time_since_epoch().count() ) : Days( std::numeric_limits<int32_t>::min() );
 }
 
 std::chrono::year_month_day Date::ymd() const noexcept

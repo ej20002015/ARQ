@@ -9,6 +9,10 @@ project(ARQLib)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if (MSVC)
+    add_compile_options("/Zc:__cplusplus")
+endif()
+
 # Allow for folders in the IDE
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 

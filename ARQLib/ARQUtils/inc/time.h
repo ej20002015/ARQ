@@ -73,7 +73,7 @@ class Date
 public:
 	ARQUtils_API explicit Date( const TimeZone tz );
 	ARQUtils_API explicit Date( const Year y, const Month m, const Day d );
-	ARQUtils_API explicit Date( const int32_t serial );
+	ARQUtils_API explicit Date( const Days serial );
 	ARQUtils_API explicit Date( const std::chrono::year_month_day ymd );
 	Date() = default;
 
@@ -89,7 +89,7 @@ public:
 	[[nodiscard]] ARQUtils_API Day     day()     const noexcept;
 	[[nodiscard]] ARQUtils_API Weekday weekday() const noexcept;
 
-	[[nodiscard]] ARQUtils_API int32_t serial() const noexcept;
+	[[nodiscard]] ARQUtils_API Days serial() const noexcept;
 
 	[[nodiscard]] ARQUtils_API std::chrono::year_month_day ymd() const noexcept;
 
@@ -107,7 +107,7 @@ public:
 	inline Date operator+( const Days days )     const { return addDays( days ); }
 	inline Date operator-( const Days days )     const { return subDays( days ); }
 
-	inline int32_t operator-( const Date& other ) const noexcept { return serial() - other.serial(); }
+	inline Days operator-( const Date& other ) const noexcept { return Days( serial() - other.serial() ); }
 
 	inline bool operator ==( const Date& other ) const noexcept { return m_ymd == other.m_ymd; }
 	inline std::strong_ordering operator<=>( const Date& other ) const noexcept { return m_ymd <=> other.m_ymd; };
@@ -146,7 +146,7 @@ using Second = StrongType<SecondTag, int32_t>;
 struct MillisecondTag {};
 using Millisecond = StrongType<MillisecondTag, int32_t>;
 struct MicrosecondTag {};
-using Microsecond = StrongType<MicrosecondTag, int64_t>;
+using Microsecond = StrongType<MicrosecondTag, int32_t>;
 
 struct HoursTag {};
 using Hours = StrongType<HoursTag, int64_t>;
@@ -232,7 +232,7 @@ public:
 	inline DateTime operator+( const Microseconds microseconds ) const { return addMicroseconds( microseconds ); }
 	inline DateTime operator-( const Microseconds microseconds ) const { return subMicroseconds( microseconds ); }
 
-	inline int64_t operator-( const DateTime& other ) const noexcept { return microsecondsSinceEpoch() - other.microsecondsSinceEpoch(); }
+	inline Microseconds operator-( const DateTime& other ) const noexcept { return Microseconds( microsecondsSinceEpoch() - other.microsecondsSinceEpoch() ); }
 
 	inline bool operator ==( const DateTime& other ) const noexcept { return m_tp == other.m_tp; }
 	inline std::strong_ordering operator<=>( const DateTime& other ) const noexcept { return m_tp <=> other.m_tp; };

@@ -65,7 +65,7 @@ TEST( DateTest, LeapYearHandling )
 TEST( DateTest, SerialConstruction )
 {
     // Test serial construction with known values
-    Date unixEpoch( 0 ); // January 1, 1970
+    Date unixEpoch( Days( 0 ) ); // January 1, 1970
     EXPECT_TRUE( unixEpoch.isSet() );
     EXPECT_TRUE( unixEpoch.isValid() );
     EXPECT_EQ( unixEpoch.year(), 1970 );
@@ -74,7 +74,7 @@ TEST( DateTest, SerialConstruction )
 
     // Test a known date
     Date date( Year( 2024 ), Month::May, Day( 26 ) );
-    int32_t serial = date.serial();
+    Days serial = Days( date.serial() );
     Date fromSerial( serial );
     EXPECT_EQ( date.year(), fromSerial.year() );
     EXPECT_EQ( date.month(), fromSerial.month() );
@@ -227,7 +227,7 @@ TEST( DateTest, WeekdayCalculation )
 TEST( DateTest, SerialRoundTrip )
 {
     Date original( Year( 2024 ), Month::May, Day( 26 ) );
-    int32_t serial = original.serial();
+    Days serial = original.serial();
     Date reconstructed( serial );
 
     EXPECT_EQ( original, reconstructed );

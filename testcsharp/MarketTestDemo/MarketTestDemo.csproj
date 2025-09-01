@@ -1,26 +1,64 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UseWPF>false</UseWPF>
+    <UseWindowsForms>false</UseWindowsForms>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\.build\bin\Debug\ARQLibPINVOKE.cs" Link="src\ARQLib\ARQLibPINVOKE.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\Context.cs" Link="src\ARQLib\ARQMarket\Context.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Date.cs" Link="src\ARQLib\ARQUtils\Date.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Day.cs" Link="src\ARQLib\ARQUtils\Day.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Month.cs" Link="src\ARQLib\ARQUtils\Month.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\TimeZone.cs" Link="src\ARQLib\ARQUtils\TimeZone.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Weekday.cs" Link="src\ARQLib\ARQUtils\Weekday.cs" />
-    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Year.cs" Link="src\ARQLib\ARQUtils\Year.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQLibPINVOKE.cs" Link="ARQLib\ARQLibPINVOKE.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\EQPrice.cs" Link="ARQLib\ARQCore\MDEntities\EQPrice.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\FXRate.cs" Link="ARQLib\ARQCore\MDEntities\FXRate.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\MDEntity.cs" Link="ARQLib\ARQCore\MDEntities\MDEntity.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\Type.cs" Link="ARQLib\ARQCore\MDEntities\Type.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\ConsolidatingTIDSet.cs" Link="ARQLib\ARQMarket\ConsolidatingTIDSet.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\EQPricesMap.cs" Link="ARQLib\ARQMarket\EQPricesMap.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\FXRatesMap.cs" Link="ARQLib\ARQMarket\FXRatesMap.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\ManagedMarket.cs" Link="ARQLib\ARQMarket\ManagedMarket.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\Market.cs" Link="ARQLib\ARQMarket\Market.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\MarketReadLock.cs" Link="ARQLib\ARQMarket\MarketReadLock.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\MarketSnapshot.cs" Link="ARQLib\ARQMarket\MarketSnapshot.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\MarketWriteLock.cs" Link="ARQLib\ARQMarket\MarketWriteLock.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\MDTypes.cs" Link="ARQLib\ARQMarket\MDTypes.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\Name.cs" Link="ARQLib\ARQMarket\Name.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\Subscriber.cs" Link="ARQLib\ARQMarket\Subscriber.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\TIDSetItems.cs" Link="ARQLib\ARQMarket\TIDSetItems.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\VirtualSubscriber.cs" Link="ARQLib\ARQMarket\VirtualSubscriber.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Date.cs" Link="ARQLib\ARQUtils\ARQTime\Date.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\DateTime.cs" Link="ARQLib\ARQUtils\ARQTime\DateTime.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Day.cs" Link="ARQLib\ARQUtils\ARQTime\Day.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Days.cs" Link="ARQLib\ARQUtils\ARQTime\Days.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Hour.cs" Link="ARQLib\ARQUtils\ARQTime\Hour.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Hours.cs" Link="ARQLib\ARQUtils\ARQTime\Hours.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Microsecond.cs" Link="ARQLib\ARQUtils\ARQTime\Microsecond.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Microseconds.cs" Link="ARQLib\ARQUtils\ARQTime\Microseconds.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Millisecond.cs" Link="ARQLib\ARQUtils\ARQTime\Millisecond.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Milliseconds.cs" Link="ARQLib\ARQUtils\ARQTime\Milliseconds.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Minute.cs" Link="ARQLib\ARQUtils\ARQTime\Minute.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Minutes.cs" Link="ARQLib\ARQUtils\ARQTime\Minutes.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Month.cs" Link="ARQLib\ARQUtils\ARQTime\Month.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Second.cs" Link="ARQLib\ARQUtils\ARQTime\Second.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Seconds.cs" Link="ARQLib\ARQUtils\ARQTime\Seconds.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\TimeOfDay.cs" Link="ARQLib\ARQUtils\ARQTime\TimeOfDay.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\TimeZone.cs" Link="ARQLib\ARQUtils\ARQTime\TimeZone.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Weekday.cs" Link="ARQLib\ARQUtils\ARQTime\Weekday.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\Time\Year.cs" Link="ARQLib\ARQUtils\ARQTime\Year.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="src\ARQLib\ARQMarket\" />
-    <Folder Include="src\ARQLib\ARQUtils\" />
+    <Folder Include="ARQLib\ARQCore\MDEntities\" />
+    <Folder Include="ARQLib\ARQMarket\" />
+    <Folder Include="ARQLib\ARQUtils\ARQTime\" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.0.10" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.10" />
+  </ItemGroup>
+
 </Project>

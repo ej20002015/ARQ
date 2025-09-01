@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "ARQDesktop": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "PATH": "C:\\Development\\Projects\\ARQ\\.build\\bin\\Debug;%PATH%"
+      },
+      "nativeDebugging": true
+    }
+  }
+}

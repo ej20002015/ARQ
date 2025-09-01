@@ -7,6 +7,8 @@
 namespace ARQ
 {
 
+std::unordered_map<std::string, std::shared_ptr<RefDataSource>, TransparentStringHash, std::equal_to<>> RefDataSourceFactory::s_customSources;
+
 std::shared_ptr<RefDataSource> RefDataSourceFactory::create( const std::string_view dsh )
 {
 	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )

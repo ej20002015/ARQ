@@ -4,3 +4,7 @@
 # VSCode
 .vs
 .vscode
+
+# Visual Studio C# and .NET
+bin/
+obj/

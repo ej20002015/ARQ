@@ -49,7 +49,7 @@ enum class Type
     EQP,
 };
 
-inline std::string_view typeToStr( const Type type)
+inline std::string_view typeToStr( const Type type )
 {
     switch( type )
     {

@@ -7,6 +7,8 @@
 #include <ARQCore/logger.h>
 #include <ARQCore/mktdata_source.h>
 
+#include <vector>
+
 namespace ARQ
 {
 namespace Mkt
@@ -30,6 +32,24 @@ void Subscriber::setOnEQPriceUpdateFunc( OnEQPriceUpdateFunc&& onEQPriceUpdateFu
 {
     std::unique_lock<std::shared_mutex> ul( m_mut );
     m_onEQPriceUpdateFunc = std::move( onEQPriceUpdateFunc );
+}
+
+// -------------- VirtualSubscriber implementation --------------
+
+VirtualSubscriber::VirtualSubscriber( const std::string_view description )
+    : m_description( description )
+{
+	setOnMktObjUpdateFunc( [this] ( const MDEntities::Type type, const std::string_view ID ) {
+		this->onMktObjUpdate( type, ID.data() );
+	} );
+
+    setOnFXRateUpdateFunc( [this] ( const MDEntities::FXRate& updatedObj ) {
+        this->onFXRateUpdate( updatedObj );
+    } );
+
+    setOnEQPriceUpdateFunc( [this] ( const MDEntities::EQPrice& updatedObj ) {
+        this->onEQPriceUpdate( updatedObj );
+    } );
 }
 
 // -------------- ManagedMarket implementation --------------
@@ -63,7 +83,7 @@ void ManagedMarket::subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber
 	load( subList );
 }
 
-void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<ConsolidatingTIDSet>>& subList )
+void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<const ConsolidatingTIDSet>>& subList )
 {
 	std::unique_lock<std::shared_mutex> ul( m_subMut );
 
@@ -106,15 +126,16 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 						loadedObjs.emplace_back( std::move( *obj ) );
 				}
 
-				for( MDEntities::FXRate& loadedObj : loadedObjs )
 				{
 					// Use atomic check-then-set with proper locking
 					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::FXR } );
-					
-					std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRateUnsafe( loadedObj.ID );
-					const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
-					if( insertIntoMkt )
-						m_mkt.setFXRateUnsafe( std::move( loadedObj ) );
+					for( MDEntities::FXRate& loadedObj : loadedObjs )
+					{	
+						std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRateUnsafe( loadedObj.ID );
+						const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
+						if( insertIntoMkt ) // TODO: Also then run the sendMktUpdateToSubscribers callback
+							m_mkt.setFXRateUnsafe( std::move( loadedObj ) );
+					}
 				}
 
                 break;
@@ -131,15 +152,16 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 						loadedObjs.emplace_back( std::move( *obj ) );
 				}
 
-				for( MDEntities::EQPrice& loadedObj : loadedObjs )
 				{
 					// Use atomic check-then-set with proper locking
 					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::EQP } );
-					
-					std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPriceUnsafe( loadedObj.ID );
-					const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
-					if( insertIntoMkt )
-						m_mkt.setEQPriceUnsafe( std::move( loadedObj ) );
+					for( MDEntities::EQPrice& loadedObj : loadedObjs )
+					{	
+						std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPriceUnsafe( loadedObj.ID );
+						const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
+						if( insertIntoMkt ) // TODO: Also then run the sendMktUpdateToSubscribers callback
+							m_mkt.setEQPriceUnsafe( std::move( loadedObj ) );
+					}
 				}
 
                 break;
@@ -148,6 +170,11 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
                 ARQ_ASSERT( false );
 		}
 	}
+}
+
+MarketSnapshot ManagedMarket::snap() const
+{
+	return m_mkt.snap();
 }
 
 template<MDEntities::c_MDEntity T>

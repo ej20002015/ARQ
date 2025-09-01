@@ -1,0 +1,223 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:ARQDesktop.ViewModels"
+        x:DataType="vm:MainWindowViewModel"
+        x:Class="ARQDesktop.Views.MainWindow"
+        Title="{Binding Title}"
+        Width="1200"
+        Height="900"
+        WindowStartupLocation="CenterScreen"
+        Background="#1E1E1E">
+
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Modern Header -->
+    <Border Grid.Row="0" Padding="15"
+            BorderBrush="#404040" BorderThickness="0,0,0,1">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#3D3D3D" Offset="0"/>
+          <GradientStop Color="#2D2D30" Offset="1"/>
+        </LinearGradientBrush>
+      </Border.Background>
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Ellipse Grid.Column="0" Width="8" Height="8" Fill="#00FF00"
+                 Margin="0,0,10,0" VerticalAlignment="Center"/>
+        <TextBlock Grid.Column="1" Text="Real-Time FX Market Data"
+                   Foreground="#FFFFFF" FontSize="18" FontWeight="SemiBold"
+                   VerticalAlignment="Center"/>
+        <!--<TextBlock Grid.Column="2" Text="{Binding FXRates.Count, StringFormat='{0} Pairs'}"
+                   Foreground="#B0B0B0" FontSize="12"
+                   VerticalAlignment="Center"/>-->
+      </Grid>
+    </Border>
+
+    <!-- Enhanced DataGrid -->
+    <Border Grid.Row="1" Background="#252526" Margin="10" 
+            BorderBrush="#3F3F46" BorderThickness="1"
+            CornerRadius="8">
+      <DataGrid ItemsSource="{Binding FXRates}"
+                AutoGenerateColumns="False"
+                CanUserReorderColumns="True"
+                CanUserResizeColumns="True"
+                CanUserSortColumns="True"
+                GridLinesVisibility="Horizontal"
+                HeadersVisibility="Column"
+                Background="Transparent"
+                BorderThickness="0"
+                FontSize="13"
+                FontFamily="Consolas, 'Courier New', monospace"
+                RowHeight="32"
+                SelectionMode="Single"
+                IsReadOnly="True">
+
+        <DataGrid.Columns>
+          <!-- Currency Pair -->
+          <DataGridTemplateColumn Header="Currency Pair" Width="140">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal" Margin="8,0">
+                  <Ellipse Width="6" Height="6" Margin="0,0,8,0"
+                           VerticalAlignment="Center">
+                    <Ellipse.Fill>
+                      <SolidColorBrush Color="{Binding IsActive, Converter={x:Static vm:BooleanToColorConverter.Instance}}"/>
+                    </Ellipse.Fill>
+                  </Ellipse>
+                  <TextBlock Text="{Binding CurrencyPair}" 
+                             FontWeight="SemiBold" 
+                             Foreground="#FFFFFF"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Bid with color coding -->
+          <DataGridTemplateColumn Header="Bid" Width="90">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Bid, StringFormat=F4}" 
+                           Foreground="#FF6B6B" 
+                           FontWeight="Medium"
+                           TextAlignment="Right"
+                           Margin="0,0,8,0"
+                           VerticalAlignment="Center"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Ask with color coding -->
+          <DataGridTemplateColumn Header="Ask" Width="90">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Ask, StringFormat=F4}" 
+                           Foreground="#4ECDC4" 
+                           FontWeight="Medium"
+                           TextAlignment="Right"
+                           Margin="0,0,8,0"
+                           VerticalAlignment="Center"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Mid Price (highlighted) -->
+          <DataGridTemplateColumn Header="Mid Price" Width="100">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Border Background="#2D2D30" CornerRadius="4" Padding="8,4" Margin="4,2">
+                  <TextBlock Text="{Binding Mid, StringFormat=F4}" 
+                             Foreground="#FFEB3B" 
+                             FontWeight="Bold"
+                             TextAlignment="Center"
+                             VerticalAlignment="Center"/>
+                </Border>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Spread -->
+          <DataGridTemplateColumn Header="Spread" Width="80">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding Spread, StringFormat=F4}" 
+                           Foreground="#B0B0B0" 
+                           FontWeight="Medium"
+                           TextAlignment="Right"
+                           Margin="0,0,8,0"
+                           VerticalAlignment="Center"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Source -->
+          <DataGridTemplateColumn Header="Source" Width="120">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <Border Background="#1E3A8A" CornerRadius="12" Padding="8,2" Margin="4">
+                  <TextBlock Text="{Binding Source}" 
+                             Foreground="#FFFFFF" 
+                             FontSize="10"
+                             FontWeight="Medium"
+                             TextAlignment="Center"
+                             VerticalAlignment="Center"/>
+                </Border>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+
+          <!-- Last Updated -->
+          <DataGridTemplateColumn Header="Updated" Width="100">
+            <DataGridTemplateColumn.CellTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding LastUpdatedDisplay}" 
+                           Foreground="#9CA3AF" 
+                           FontSize="11"
+                           TextAlignment="Center"
+                           VerticalAlignment="Center"/>
+              </DataTemplate>
+            </DataGridTemplateColumn.CellTemplate>
+          </DataGridTemplateColumn>
+        </DataGrid.Columns>
+
+        <!-- Enhanced Styling -->
+        <DataGrid.Styles>
+          <!-- Row styling with pulse animation -->
+          <Style Selector="DataGridRow" x:DataType="vm:FXRateViewModel">
+            <Setter Property="Background" Value="{Binding BackgroundBrush}"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Margin" Value="4,1"/>
+          </Style>
+          
+          <!-- Hover effect -->
+          <Style Selector="DataGridRow:pointerover">
+            <Setter Property="Background" Value="#3A3A3C"/>
+          </Style>
+          
+          <!-- Header styling -->
+          <Style Selector="DataGridColumnHeader">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="BorderBrush" Value="#404040"/>
+            <Setter Property="BorderThickness" Value="0,0,1,1"/>
+          </Style>
+          
+          <!-- Grid lines -->
+          <Style Selector="DataGrid">
+            <Setter Property="HorizontalGridLinesBrush" Value="#404040"/>
+            <Setter Property="VerticalGridLinesBrush" Value="#404040"/>
+          </Style>
+        </DataGrid.Styles>
+      </DataGrid>
+    </Border>
+
+    <!-- Modern Status Bar -->
+    <Border Grid.Row="2" Padding="15,8"
+            BorderBrush="#404040" BorderThickness="0,1,0,0">
+      <Border.Background>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="#2D2D30" Offset="0"/>
+          <GradientStop Color="#1E1E1E" Offset="1"/>
+        </LinearGradientBrush>
+      </Border.Background>
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="15">
+          <Border Background="#16A085" CornerRadius="3" Padding="6,2">
+            <TextBlock Text="LIVE" Foreground="White" FontSize="10" FontWeight="Bold"/>
+          </Border>
+          <TextBlock Text="{Binding StatusText}" 
+                     Foreground="#B0B0B0" FontSize="11"
+                     VerticalAlignment="Center"/>
+        </StackPanel>
+        
+        <TextBlock Grid.Column="2" 
+                   Text="{Binding StringFormat='Last Update: {0:HH:mm:ss}'}" 
+                   Foreground="#9CA3AF" FontSize="10"
+                   VerticalAlignment="Center"/>
+      </Grid>
+    </Border>
+
+  </Grid>
+
+</Window>

@@ -23,7 +23,7 @@ public:
 	ARQCore_API static void delCustomSource( const std::string_view dsh );
 
 private:
-	static inline std::unordered_map<std::string, std::shared_ptr<MktDataSource>, TransparentStringHash, std::equal_to<>> s_customSources;
+	static std::unordered_map<std::string, std::shared_ptr<MktDataSource>, TransparentStringHash, std::equal_to<>> s_customSources;
 };
 
 class GlobalMktDataSource

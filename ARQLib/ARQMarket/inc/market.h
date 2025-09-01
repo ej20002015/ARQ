@@ -33,7 +33,7 @@ struct Name
 };
 
 template<MDEntities::c_MDEntity T>
-using MktObjMap = std::unordered_map<std::string, T, TransparentStringHash, std::equal_to<>>;
+using MktObjMap = std::unordered_map<std::string, T>;
 
 // Forward declarations
 class Market;
@@ -129,7 +129,7 @@ public:
     
     [[nodiscard]] std::optional<MDEntities::FXRate> getFXRateUnsafe( const std::string_view ID ) const
     {
-        const auto it = m_FXRates.find( ID );
+        const auto it = m_FXRates.find( ID.data() );
         if( it == m_FXRates.end() )
             return std::nullopt;
 
@@ -188,7 +188,7 @@ public:
     
     [[nodiscard]] std::optional<MDEntities::EQPrice> getEQPriceUnsafe( const std::string_view ID ) const
     {
-        const auto it = m_EQPrices.find( ID );
+        const auto it = m_EQPrices.find( ID.data() );
         if( it == m_EQPrices.end() )
             return std::nullopt;
 
@@ -254,6 +254,9 @@ private:
 class MarketSnapshot
 {
 public:
+    // Only a Market should create a MarketSnapshot
+	MarketSnapshot() = default;
+
     // --- Methods for FXRate (FXR) ---
 
     [[nodiscard]] std::optional<MDEntities::FXRate> getFXRate( const std::string_view ID ) const
@@ -279,14 +282,13 @@ public:
     }
 
 private:
-	// Only a Market can create a MarketSnapshot
-	MarketSnapshot() = default;
+    // Market has access to populate snapshot members
 	friend class Market;
 
 	template<MDEntities::c_MDEntity T>
 	[[nodiscard]] std::optional<T> get( const MktObjMap<T>& objMap, const std::string_view ID ) const
 	{
-		const auto it = objMap.find( ID );
+		const auto it = objMap.find( ID.data() );
 		if( it == objMap.end() )
 			return std::nullopt;
 
@@ -319,7 +321,8 @@ public:
 
 public:
     ConsolidatingTIDSet() = default;
-    ARQMarket_API ConsolidatingTIDSet( const std::initializer_list<Item> items );
+    ARQMarket_API ConsolidatingTIDSet( const std::initializer_list<Item>& items );
+    ARQMarket_API ConsolidatingTIDSet( const std::vector<Item>& items );
 
     ARQMarket_API void add( const Item& item );
     ARQMarket_API void del( const Item& item );

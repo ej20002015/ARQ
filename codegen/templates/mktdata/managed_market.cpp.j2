@@ -11,6 +11,8 @@
 #include <ARQCore/logger.h>
 #include <ARQCore/mktdata_source.h>
 
+#include <vector>
+
 namespace ARQ
 {
 namespace Mkt
@@ -32,6 +34,22 @@ void Subscriber::setOn{{ entity.name }}UpdateFunc( On{{ entity.name }}UpdateFunc
 }
 
 {% endfor %}
+// -------------- VirtualSubscriber implementation --------------
+
+VirtualSubscriber::VirtualSubscriber( const std::string_view description )
+    : m_description( description )
+{
+	setOnMktObjUpdateFunc( [this] ( const MDEntities::Type type, const std::string_view ID ) {
+		this->onMktObjUpdate( type, ID.data() );
+	} );
+	{% for entity in entities %}
+
+    setOn{{ entity.name }}UpdateFunc( [this] ( const MDEntities::{{ entity.name }}& updatedObj ) {
+        this->on{{ entity.name }}Update( updatedObj );
+    } );
+    {% endfor %}
+}
+
 // -------------- ManagedMarket implementation --------------
 
 static bool isMktObjXNewerThanY( const MDEntities::MDEntity& x, const MDEntities::MDEntity& y )
@@ -63,7 +81,7 @@ void ManagedMarket::subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber
 	load( subList );
 }
 
-void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<ConsolidatingTIDSet>>& subList )
+void ManagedMarket::unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<const ConsolidatingTIDSet>>& subList )
 {
 	std::unique_lock<std::shared_mutex> ul( m_subMut );
 
@@ -107,15 +125,16 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 						loadedObjs.emplace_back( std::move( *obj ) );
 				}
 
-				for( MDEntities::{{ entity.name }}& loadedObj : loadedObjs )
 				{
 					// Use atomic check-then-set with proper locking
 					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::{{ entity.type_string }} } );
-					
-					std::optional<MDEntities::{{ entity.name }}> objInMkt = m_mkt.get{{ entity.name }}Unsafe( loadedObj.ID );
-					const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
-					if( insertIntoMkt )
-						m_mkt.set{{ entity.name }}Unsafe( std::move( loadedObj ) );
+					for( MDEntities::{{ entity.name }}& loadedObj : loadedObjs )
+					{	
+						std::optional<MDEntities::{{ entity.name }}> objInMkt = m_mkt.get{{ entity.name }}Unsafe( loadedObj.ID );
+						const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
+						if( insertIntoMkt ) // TODO: Also then run the sendMktUpdateToSubscribers callback
+							m_mkt.set{{ entity.name }}Unsafe( std::move( loadedObj ) );
+					}
 				}
 
                 break;
@@ -125,6 +144,11 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
                 ARQ_ASSERT( false );
 		}
 	}
+}
+
+MarketSnapshot ManagedMarket::snap() const
+{
+	return m_mkt.snap();
 }
 
 template<MDEntities::c_MDEntity T>

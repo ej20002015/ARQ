@@ -5,6 +5,8 @@ VisualStudioVersion = 17.13.35919.96
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarketTestDemo", "MarketTestDemo.csproj", "{3414F1D8-CD43-4558-9F72-31668F6597B7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ARQDesktop", "..\ARQDesktop\ARQDesktop.csproj", "{D1B5AA88-88AF-407F-8CDE-4C5AC007F7D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{3414F1D8-CD43-4558-9F72-31668F6597B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3414F1D8-CD43-4558-9F72-31668F6597B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3414F1D8-CD43-4558-9F72-31668F6597B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D1B5AA88-88AF-407F-8CDE-4C5AC007F7D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1B5AA88-88AF-407F-8CDE-4C5AC007F7D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D1B5AA88-88AF-407F-8CDE-4C5AC007F7D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D1B5AA88-88AF-407F-8CDE-4C5AC007F7D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

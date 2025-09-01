@@ -108,7 +108,13 @@ const ConsolidatingTIDSet ConsolidatingTIDSet::ALL_TYPES = {
     { MDEntities::Type::EQP },
 };
 
-ConsolidatingTIDSet::ConsolidatingTIDSet( const std::initializer_list<Item> items )
+ConsolidatingTIDSet::ConsolidatingTIDSet( const std::initializer_list<Item>& items )
+{
+    for( const Item& item : items )
+        add( item );
+}
+
+ConsolidatingTIDSet::ConsolidatingTIDSet( const std::vector<Item>& items )
 {
     for( const Item& item : items )
         add( item );
