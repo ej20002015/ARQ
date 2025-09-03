@@ -7,6 +7,22 @@
 #include <ARQUtils/types.h>
 %}
 
+#ifdef SWIGPYTHON
+%rename(Time_Year) ARQ::Time::Year;
+%rename(Time_Day) ARQ::Time::Day;
+%rename(Time_Days) ARQ::Time::Days;
+%rename(Time_Hour) ARQ::Time::Hour;
+%rename(Time_Minute) ARQ::Time::Minute;
+%rename(Time_Second) ARQ::Time::Second;
+%rename(Time_Millisecond) ARQ::Time::Millisecond;
+%rename(Time_Microsecond) ARQ::Time::Microsecond;
+%rename(Time_Hours) ARQ::Time::Hours;
+%rename(Time_Minutes) ARQ::Time::Minutes;
+%rename(Time_Seconds) ARQ::Time::Seconds;
+%rename(Time_Milliseconds) ARQ::Time::Milliseconds;
+%rename(Time_Microseconds) ARQ::Time::Microseconds;
+#endif
+
 namespace ARQ
 {
 

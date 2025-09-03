@@ -9,7 +9,6 @@
 %}
 
 %include "market.i"
-%include "../exception.i"
 
 %include <std_string.i>
 %include <std_string_view.i>
@@ -22,6 +21,23 @@
 
 #ifdef SWIGPYTHON
 %include "../python/std_optional.i"
+#endif
+
+#ifdef SWIGPYTHON
+%rename(Mkt_Subscriber) ARQ::Mkt::Subscriber;
+%rename(Mkt_VirtualSubscriber) ARQ::Mkt::VirtualSubscriber;
+    %rename(on_mkt_obj_update) ARQ::Mkt::VirtualSubscriber::onMktObjUpdate;
+    %rename(on_fx_rate_update) onFXRateUpdate;
+    %rename(on_eq_price_update) onEQPriceUpdate;
+%rename(Mkt_ManagedMarket) ARQ::Mkt::ManagedMarket;
+    %rename(subscribe_and_load) ARQ::Mkt::ManagedMarket::subscribeAndLoad;
+    %rename(is_subscriber) ARQ::Mkt::ManagedMarket::isSubscriber;
+    %rename(get_fx_rate) getFXRate;
+    %rename(set_fx_rate) setFXRate;
+    %rename(on_fx_rate_update) onFXRateUpdate;
+    %rename(get_eq_price) getEQPrice;
+    %rename(set_eq_price) setEQPrice;
+    %rename(on_eq_price_update) onEQPriceUpdate;
 #endif
 
 %optional(ARQ::MDEntities::FXRate);
@@ -70,7 +86,7 @@ public:
     These will be accessed via proxy functions - see %extend block declared below
 
     void subscribe( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
-    void subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
+    void subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList ) throw( ARQ::ARQException );
     void unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<const ConsolidatingTIDSet>>& subscriptionList = std::nullopt );
 
     bool isSubscriber( const std::weak_ptr<Subscriber> subscriber ) const;

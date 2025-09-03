@@ -72,6 +72,8 @@ namespace ARQDesktop
                 _subscriber = new MktSubscriber("DesktopAppSubscriber", _mainViewModel);
                 _managedMkt.subscribe(_subscriber, ARQ.Mkt.ConsolidatingTIDSet.ALL_TYPES);
 
+                //_managedMkt.load(ARQ.Mkt.ConsolidatingTIDSet.ALL_TYPES);
+
                 // Start the market data updater on a background thread
                 Console.WriteLine("Starting background market data updates...");
                 _updater = new MktDataUpdater(_managedMkt);

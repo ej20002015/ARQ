@@ -38,6 +38,7 @@ concept c_RDEntity = std::is_base_of_v<RDEntity, T>;
 
 enum class Type
 {
+    _NOTSET_ = -1,
     CCY,
     USER,
 };

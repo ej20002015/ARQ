@@ -10,6 +10,19 @@
 #include <functional>
 #include <shared_mutex>
 
+class Foo
+{
+public:
+    virtual ~Foo() = default;
+    virtual int hello() = 0;
+};
+
+class Bar : public Foo
+{
+public:
+    virtual int hello() override { return 1; }
+};
+
 namespace ARQ
 {
 namespace Mkt
@@ -103,7 +116,7 @@ private:
     void sendMktUpdateToSubscribers( const T& updatedObj );
 
 private:
-    std::string_view m_dsh;
+    std::string m_dsh;
     Mkt::Name m_mktName;
 
     Market m_mkt;

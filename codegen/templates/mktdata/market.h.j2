@@ -248,6 +248,10 @@ public:
             : type( type )
             , id( id )
         {}
+        Item()
+            : type( MDEntities::Type::_NOTSET_ )
+            , id( std::nullopt )
+        {}
 
         bool operator ==( const Item& other ) const { return type == other.type && id == other.id; }
 

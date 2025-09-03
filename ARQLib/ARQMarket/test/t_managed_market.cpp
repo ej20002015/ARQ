@@ -148,8 +148,8 @@ TEST_F( ManagedMarketTest, BasicSubscriptionAndLoad )
 
     managedMarket->subscribeAndLoad( subscriber1, { MDEntities::Type::FXR } );
 
-    EXPECT_EQ( subscriber1->mktObjUpdateCount.load(), 0 ); // No updates yet, just loaded
-    EXPECT_EQ( subscriber1->fxRateUpdateCount.load(), 0 );
+	EXPECT_EQ( subscriber1->mktObjUpdateCount.load(), 1 ); // Load triggers an update
+    EXPECT_EQ( subscriber1->fxRateUpdateCount.load(), 1 );
 
     // Verify the data was loaded into the market
     auto retrievedRate = managedMarket->getFXRate( "EUR/USD" );

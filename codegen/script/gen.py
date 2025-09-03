@@ -207,8 +207,15 @@ class CodeGenerator:
         """Jinja2 filter to convert text to snake_case."""
         if not text:
             return text
-        # Insert underscore before uppercase letters (except at start)
-        text = re.sub(r'(?<!^)(?=[A-Z])', '_', text)
+        
+        # Handle sequences of consecutive uppercase letters followed by lowercase
+        # This converts "FXRate" to "FX_Rate" first
+        text = re.sub('([A-Z]+)([A-Z][a-z])', r'\1_\2', text)
+        
+        # Insert underscore before uppercase letters that follow lowercase letters
+        # This converts "FX_Rate" to "FX_rate" and handles cases like "myVariable"
+        text = re.sub('([a-z])([A-Z])', r'\1_\2', text)
+        
         return text.lower()
     
     def generate_for_entity_type(self, entity_type: str) -> None:

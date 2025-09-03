@@ -14,10 +14,64 @@
 %include <std_unordered_map.i>
 
 #ifdef SWIGCSHARP
+%nspacemove(ARQ::Mkt) std::vector<ARQ::MDEntities::Type>;
+%nspacemove(ARQ::Mkt) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
+
+%nspacemove(ARQ::Mkt) std::unordered_map<std::string, ARQ::MDEntities::FXRate>;
+%nspacemove(ARQ::Mkt) std::unordered_map<std::string, ARQ::MDEntities::EQPrice>;
+#endif
+
+#ifdef SWIGPYTHON
+%rename(Mkt_MDTypes) std::vector<ARQ::MDEntities::Type>;
+%rename(Mkt_TIDSetItems) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
+%rename(Mkt_FXRatesMap) std::unordered_map<std::string, ARQ::MDEntities::FXRate>;
+%rename(Mkt_EQPricesMap) std::unordered_map<std::string, ARQ::MDEntities::EQPrice>;
+%rename(Mkt_Name) ARQ::Mkt::Name;
+%rename(Mkt_MarketReadLock) ARQ::Mkt::MarketReadLock;
+%rename(Mkt_MarketWriteLock) ARQ::Mkt::MarketWriteLock;
+%rename(Mkt_Market) ARQ::Mkt::Market;
+    %rename(get_fx_rate) ARQ::Mkt::Market::getFXRate;
+    %rename(set_fx_rate) ARQ::Mkt::Market::setFXRate;
+    %rename(get_fx_rate_count) ARQ::Mkt::Market::getFXRateCount;
+    %rename(get_all_fx_rates) ARQ::Mkt::Market::getAllFXRates;
+    %rename(set_all_fx_rates) ARQ::Mkt::Market::setAllFXRates;
+    %rename(get_fx_rate_unsafe) ARQ::Mkt::Market::getFXRateUnsafe;
+    %rename(set_fx_rate_unsafe) ARQ::Mkt::Market::setFXRateUnsafe;
+    %rename(get_eq_price) ARQ::Mkt::Market::getEQPrice;
+    %rename(set_eq_price) ARQ::Mkt::Market::setEQPrice;
+    %rename(get_eq_price_count) ARQ::Mkt::Market::getEQPriceCount;
+    %rename(get_all_eq_prices) ARQ::Mkt::Market::getAllEQPrices;
+    %rename(set_all_eq_prices) ARQ::Mkt::Market::setAllEQPrices;
+    %rename(get_eq_price_unsafe) ARQ::Mkt::Market::getEQPriceUnsafe;
+    %rename(set_eq_price_unsafe) ARQ::Mkt::Market::setEQPriceUnsafe;
+    %rename(acquire_read_lock) ARQ::Mkt::Market::acquireReadLock;
+    %rename(acquire_write_lock) ARQ::Mkt::Market::acquireWriteLock;
+    %rename(acquire_read_lock_all) ARQ::Mkt::Market::acquireReadLockAll;
+    %rename(acquire_write_lock_all) ARQ::Mkt::Market::acquireWriteLockAll;
+%rename(Mkt_MarketSnapshot) ARQ::Mkt::MarketSnapshot;
+    %rename(get_fx_rate) ARQ::Mkt::MarketSnapshot::getFXRate;
+    %rename(get_all_fx_rates) ARQ::Mkt::MarketSnapshot::getAllFXRates;
+    %rename(get_eq_price) ARQ::Mkt::MarketSnapshot::getEQPrice;
+    %rename(get_all_eq_prices) ARQ::Mkt::MarketSnapshot::getAllEQPrices;
+%rename(Mkt_ConsolidatingTIDSet) ARQ::Mkt::ConsolidatingTIDSet;
+    %rename(Mkt_ConsolidatingTIDSet_Item) ARQ::Mkt::ConsolidatingTIDSet::Item;
+        %rename(is_match) ARQ::Mkt::ConsolidatingTIDSet::Item::isMatch;
+        %rename(__eq__) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
+    %rename(get_all) ARQ::Mkt::ConsolidatingTIDSet::Item::getAll;
+#endif
+
+namespace std
+{
+    %template(MDTypes) std::vector<ARQ::MDEntities::Type>;
+    %template(TIDSetItems) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
+    %template(FXRatesMap) std::unordered_map<std::string, ARQ::MDEntities::FXRate>;
+    %template(EQPricesMap) std::unordered_map<std::string, ARQ::MDEntities::EQPrice>;
+};
+
+#ifdef SWIGCSHARP
 #define SWIG_STD_OPTIONAL_USE_NULLABLE_REFERENCE_TYPES
 %include "../csharp/std_optional.i"
 #endif
-
 #ifdef SWIGPYTHON
 %include "../python/std_optional.i"
 #endif
@@ -26,27 +80,14 @@
 %rename(eq) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
 #endif
 
-#ifdef SWIGPYTHON
-%rename(__eq__) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
-#endif
-
+#ifdef SWIGCSHARP
 %optional_string();
+#endif
+#ifdef SWIGPYTHON
+%optional(std::string)
+#endif
 %optional(ARQ::MDEntities::FXRate);
 %optional(ARQ::MDEntities::EQPrice);
-
-%nspacemove(ARQ::Mkt) std::vector<ARQ::MDEntities::Type>;
-%nspacemove(ARQ::Mkt) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
-%nspacemove(ARQ::Mkt) std::unordered_map<std::string, ARQ::MDEntities::FXRate>;
-%nspacemove(ARQ::Mkt) std::unordered_map<std::string, ARQ::MDEntities::EQPrice>;
-
-namespace std
-{
-  %template(MDTypes) std::vector<ARQ::MDEntities::Type>;
-  %template(TIDSetItems) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
-
-  %template(FXRatesMap) std::unordered_map<std::string, ARQ::MDEntities::FXRate>;
-  %template(EQPricesMap) std::unordered_map<std::string, ARQ::MDEntities::EQPrice>;
-};
 
 // For MarketReadLock move only
 %typemap(out) ARQ::Mkt::MarketReadLock %{
@@ -57,7 +98,6 @@ namespace std
 %typemap(out) ARQ::Mkt::MarketWriteLock %{
   $result = new $1_ltype($1);
 %}
-
 
 namespace ARQ
 {
@@ -112,6 +152,17 @@ public:
     MarketWriteLock( const MarketWriteLock& ) = delete;
     MarketWriteLock( MarketWriteLock&& );
 };
+
+#ifdef SWIGPYTHON
+// Have to manually define these because SWIG python doesn't handle move only objects correctly
+%typemap(out) ARQ::Mkt::MarketReadLock {
+    $result = SWIG_NewPointerObj(new $1_ltype(std::move($1)), $1_descriptor, SWIG_POINTER_OWN);
+}
+
+%typemap(out) ARQ::Mkt::MarketWriteLock {
+    $result = SWIG_NewPointerObj(new $1_ltype(std::move($1)), $1_descriptor, SWIG_POINTER_OWN);
+}
+#endif
 
 class Market
 {
@@ -194,6 +245,7 @@ public:
     {
         Item( const MDEntities::Type type );
         Item( const MDEntities::Type type, std::string id );
+        Item();
         bool operator ==( const Item& other ) const;
 
         bool isMatch( const Item& other ) const;

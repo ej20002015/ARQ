@@ -20,6 +20,15 @@
 #include <ARQUtils/core.h>
 %}
 
+#ifdef SWIGPYTHON
+%rename(MDEntities_MDEntity) ARQ::MDEntities::MDEntity;
+%rename(MDEntities_Type) ARQ::MDEntities::Type;
+%rename(MDEntities_Type_to_str) ARQ::MDEntities::typeToStr;
+{% for entity in entities %}
+%rename(MDEntities_{{ entity.name }}) ARQ::MDEntities::{{ entity.name }};
+{% endfor %}
+#endif
+
 namespace ARQ
 {
 namespace MDEntities

@@ -45,6 +45,7 @@ concept c_MDEntity = std::is_base_of_v<MDEntity, T>;
 
 enum class Type
 {
+    _NOTSET_ = -1,
     FXR,
     EQP,
 };

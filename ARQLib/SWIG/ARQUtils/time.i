@@ -18,46 +18,88 @@
 #endif
 
 #ifdef SWIGPYTHON
-%rename(__sub__) ARQ::Time::Date::operator-;
-%rename(__eq__) ARQ::Time::Date::operator==;
-%rename(__sub__) ARQ::Time::DateTime::operator-;
-%rename(__eq__) ARQ::Time::DateTime::operator==;
+%rename(Time_TimeZone) ARQ::Time::TimeZone;
+%rename(Time_Month) ARQ::Time::Month;
+%rename(Time_Weekday) ARQ::Time::Weekday;
+%rename(Time_Date) ARQ::Time::Date;
+    %rename(now_utc) ARQ::Time::Date::nowUTC;
+    %rename(is_valid) ARQ::Time::Date::isValid;
+    %rename(is_set) ARQ::Time::Date::isSet;
+    %rename(add_years) ARQ::Time::Date::addYears;
+    %rename(sub_years) ARQ::Time::Date::subYears;
+    %rename(add_months) ARQ::Time::Date::addMonths;
+    %rename(sub_months) ARQ::Time::Date::subMonths;
+    %rename(add_days) ARQ::Time::Date::addDays;
+    %rename(sub_days) ARQ::Time::Date::subDays;
+    %rename(__sub__) ARQ::Time::Date::operator-;
+    %rename(__eq__) ARQ::Time::Date::operator==;
+%rename(Time_TimeOfDay) ARQ::Time::TimeOfDay;
+%rename(Time_DateTime) ARQ::Time::DateTime;
+    %rename(now_utc) ARQ::Time::DateTime::nowUTC;
+    %rename(is_set) ARQ::Time::DateTime::isSet;
+    %rename(time_of_day) ARQ::Time::DateTime::timeOfDay;
+    %rename(microseconds_past) ARQ::Time::DateTime::microsecondsPast;
+    %rename(microseconds_since_epoch) ARQ::Time::DateTime::microsecondsSinceEpoch;
+    %rename(add_years) ARQ::Time::DateTime::addYears;
+    %rename(sub_years) ARQ::Time::DateTime::subYears;
+    %rename(add_months) ARQ::Time::DateTime::addMonths;
+    %rename(sub_months) ARQ::Time::DateTime::subMonths;
+    %rename(add_days) ARQ::Time::DateTime::addDays;
+    %rename(sub_days) ARQ::Time::DateTime::subDays;
+    %rename(add_hours) ARQ::Time::DateTime::addHours;
+    %rename(sub_hours) ARQ::Time::DateTime::subHours;
+    %rename(add_minutes) ARQ::Time::DateTime::addMinutes;
+    %rename(sub_minutes) ARQ::Time::DateTime::subMinutes;
+    %rename(add_seconds) ARQ::Time::DateTime::addSeconds;
+    %rename(sub_seconds) ARQ::Time::DateTime::subSeconds;
+    %rename(add_milliseconds) ARQ::Time::DateTime::addMilliseconds;
+    %rename(sub_milliseconds) ARQ::Time::DateTime::subMilliseconds;
+    %rename(add_microseconds) ARQ::Time::DateTime::addMicroseconds;
+    %rename(sub_microseconds) ARQ::Time::DateTime::subMicroseconds;
+    %rename(__sub__) ARQ::Time::DateTime::operator-;
+    %rename(__eq__) ARQ::Time::DateTime::operator==;
+    %rename(fmt_ISO8601) ARQ::Time::DateTime::fmtISO8601;
 #endif
 
-namespace ARQ {
-namespace Time {
+namespace ARQ
+{
+namespace Time
+{
 
 // Expose the enums
-enum TimeZone {
+enum class TimeZone
+{
     UTC,
-    Local
+    Local,
 };
 
-enum Month {
+enum class Month
+{
     MTH_INV = 0,
-    Jan = 1,
-    Feb = 2,
-    Mar = 3,
-    Apr = 4,
-    May = 5,
-    Jun = 6,
-    Jul = 7,
-    Aug = 8,
-    Sep = 9,
-    Oct = 10,
-    Nov = 11,
-    Dec = 12
+    Jan,
+    Feb,
+    Mar,
+    Apr,
+    May,
+    Jun,
+    Jul,
+    Aug,
+    Sep,
+    Oct,
+    Nov,
+    Dec,
 };
 
-enum Weekday {
+enum class Weekday
+{
     WKD_INV = 0,
-    Mon = 1,
-    Tue = 2,
-    Wed = 3,
-    Thu = 4,
-    Fri = 5,
-    Sat = 6,
-    Sun = 7
+    Mon,
+    Tue,
+    Wed,
+    Thu,
+    Fri,
+    Sat,
+    Sun,
 };
 
 // Main Date class - only expose the methods we want

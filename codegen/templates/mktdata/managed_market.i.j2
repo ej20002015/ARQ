@@ -13,7 +13,6 @@
 %}
 
 %include "market.i"
-%include "../exception.i"
 
 %include <std_string.i>
 %include <std_string_view.i>
@@ -26,6 +25,23 @@
 
 #ifdef SWIGPYTHON
 %include "../python/std_optional.i"
+#endif
+
+#ifdef SWIGPYTHON
+%rename(Mkt_Subscriber) ARQ::Mkt::Subscriber;
+%rename(Mkt_VirtualSubscriber) ARQ::Mkt::VirtualSubscriber;
+    %rename(on_mkt_obj_update) ARQ::Mkt::VirtualSubscriber::onMktObjUpdate;
+    {% for entity in entities %}
+    %rename(on_{{ entity.name | snake_case }}_update) on{{ entity.name }}Update;
+    {% endfor %}
+%rename(Mkt_ManagedMarket) ARQ::Mkt::ManagedMarket;
+    %rename(subscribe_and_load) ARQ::Mkt::ManagedMarket::subscribeAndLoad;
+    %rename(is_subscriber) ARQ::Mkt::ManagedMarket::isSubscriber;
+    {% for entity in entities %}
+    %rename(get_{{ entity.name | snake_case }}) get{{ entity.name }};
+    %rename(set_{{ entity.name | snake_case }}) set{{ entity.name }};
+    %rename(on_{{ entity.name | snake_case }}_update) on{{ entity.name }}Update;
+    {% endfor %}
 #endif
 
 {% for entity in entities %}
@@ -76,7 +92,7 @@ public:
     These will be accessed via proxy functions - see %extend block declared below
 
     void subscribe( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
-    void subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList );
+    void subscribeAndLoad( const std::weak_ptr<Subscriber> subscriber, const ConsolidatingTIDSet& subscriptionList ) throw( ARQ::ARQException );
     void unsubscribe( const std::weak_ptr<Subscriber> subscriber, const std::optional<std::reference_wrapper<const ConsolidatingTIDSet>>& subscriptionList = std::nullopt );
 
     bool isSubscriber( const std::weak_ptr<Subscriber> subscriber ) const;

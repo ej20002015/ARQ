@@ -18,10 +18,62 @@
 %include <std_unordered_map.i>
 
 #ifdef SWIGCSHARP
+%nspacemove(ARQ::Mkt) std::vector<ARQ::MDEntities::Type>;
+%nspacemove(ARQ::Mkt) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
+
+{% for entity in entities %}
+%nspacemove(ARQ::Mkt) std::unordered_map<std::string, ARQ::MDEntities::{{ entity.name }}>;
+{% endfor %}
+#endif
+
+#ifdef SWIGPYTHON
+%rename(Mkt_MDTypes) std::vector<ARQ::MDEntities::Type>;
+%rename(Mkt_TIDSetItems) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
+{% for entity in entities %}
+%rename(Mkt_{{ entity.name_plural }}Map) std::unordered_map<std::string, ARQ::MDEntities::{{ entity.name }}>;
+{% endfor %}
+%rename(Mkt_Name) ARQ::Mkt::Name;
+%rename(Mkt_MarketReadLock) ARQ::Mkt::MarketReadLock;
+%rename(Mkt_MarketWriteLock) ARQ::Mkt::MarketWriteLock;
+%rename(Mkt_Market) ARQ::Mkt::Market;
+    {% for entity in entities %}
+    %rename(get_{{ entity.name | snake_case }}) ARQ::Mkt::Market::get{{ entity.name }};
+    %rename(set_{{ entity.name | snake_case }}) ARQ::Mkt::Market::set{{ entity.name }};
+    %rename(get_{{ entity.name | snake_case }}_count) ARQ::Mkt::Market::get{{ entity.name }}Count;
+    %rename(get_all_{{ entity.name_plural | snake_case }}) ARQ::Mkt::Market::getAll{{ entity.name_plural }};
+    %rename(set_all_{{ entity.name_plural | snake_case }}) ARQ::Mkt::Market::setAll{{ entity.name_plural }};
+    %rename(get_{{ entity.name | snake_case }}_unsafe) ARQ::Mkt::Market::get{{ entity.name }}Unsafe;
+    %rename(set_{{ entity.name | snake_case }}_unsafe) ARQ::Mkt::Market::set{{ entity.name }}Unsafe;
+    {% endfor %}
+    %rename(acquire_read_lock) ARQ::Mkt::Market::acquireReadLock;
+    %rename(acquire_write_lock) ARQ::Mkt::Market::acquireWriteLock;
+    %rename(acquire_read_lock_all) ARQ::Mkt::Market::acquireReadLockAll;
+    %rename(acquire_write_lock_all) ARQ::Mkt::Market::acquireWriteLockAll;
+%rename(Mkt_MarketSnapshot) ARQ::Mkt::MarketSnapshot;
+    {% for entity in entities %}
+    %rename(get_{{ entity.name | snake_case }}) ARQ::Mkt::MarketSnapshot::get{{ entity.name }};
+    %rename(get_all_{{ entity.name_plural | snake_case }}) ARQ::Mkt::MarketSnapshot::getAll{{ entity.name_plural }};
+    {% endfor %}
+%rename(Mkt_ConsolidatingTIDSet) ARQ::Mkt::ConsolidatingTIDSet;
+    %rename(Mkt_ConsolidatingTIDSet_Item) ARQ::Mkt::ConsolidatingTIDSet::Item;
+        %rename(is_match) ARQ::Mkt::ConsolidatingTIDSet::Item::isMatch;
+        %rename(__eq__) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
+    %rename(get_all) ARQ::Mkt::ConsolidatingTIDSet::Item::getAll;
+#endif
+
+namespace std
+{
+    %template(MDTypes) std::vector<ARQ::MDEntities::Type>;
+    %template(TIDSetItems) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
+    {% for entity in entities %}
+    %template({{ entity.name_plural }}Map) std::unordered_map<std::string, ARQ::MDEntities::{{ entity.name }}>;
+    {% endfor %}
+};
+
+#ifdef SWIGCSHARP
 #define SWIG_STD_OPTIONAL_USE_NULLABLE_REFERENCE_TYPES
 %include "../csharp/std_optional.i"
 #endif
-
 #ifdef SWIGPYTHON
 %include "../python/std_optional.i"
 #endif
@@ -30,30 +82,15 @@
 %rename(eq) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
 #endif
 
-#ifdef SWIGPYTHON
-%rename(__eq__) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
-#endif
-
+#ifdef SWIGCSHARP
 %optional_string();
+#endif
+#ifdef SWIGPYTHON
+%optional(std::string)
+#endif
 {% for entity in entities %}
 %optional(ARQ::MDEntities::{{ entity.name }});
 {% endfor %}
-
-%nspacemove(ARQ::Mkt) std::vector<ARQ::MDEntities::Type>;
-%nspacemove(ARQ::Mkt) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
-{% for entity in entities %}
-%nspacemove(ARQ::Mkt) std::unordered_map<std::string, ARQ::MDEntities::{{ entity.name }}>;
-{% endfor %}
-
-namespace std
-{
-  %template(MDTypes) std::vector<ARQ::MDEntities::Type>;
-  %template(TIDSetItems) std::vector<ARQ::Mkt::ConsolidatingTIDSet::Item>;
-
-  {% for entity in entities %}
-  %template({{ entity.name_plural }}Map) std::unordered_map<std::string, ARQ::MDEntities::{{ entity.name }}>;
-  {% endfor %}
-};
 
 // For MarketReadLock move only
 %typemap(out) ARQ::Mkt::MarketReadLock %{
@@ -64,7 +101,6 @@ namespace std
 %typemap(out) ARQ::Mkt::MarketWriteLock %{
   $result = new $1_ltype($1);
 %}
-
 
 namespace ARQ
 {
@@ -119,6 +155,17 @@ public:
     MarketWriteLock( const MarketWriteLock& ) = delete;
     MarketWriteLock( MarketWriteLock&& );
 };
+
+#ifdef SWIGPYTHON
+// Have to manually define these because SWIG python doesn't handle move only objects correctly
+%typemap(out) ARQ::Mkt::MarketReadLock {
+    $result = SWIG_NewPointerObj(new $1_ltype(std::move($1)), $1_descriptor, SWIG_POINTER_OWN);
+}
+
+%typemap(out) ARQ::Mkt::MarketWriteLock {
+    $result = SWIG_NewPointerObj(new $1_ltype(std::move($1)), $1_descriptor, SWIG_POINTER_OWN);
+}
+#endif
 
 class Market
 {
@@ -184,6 +231,7 @@ public:
     {
         Item( const MDEntities::Type type );
         Item( const MDEntities::Type type, std::string id );
+        Item();
         bool operator ==( const Item& other ) const;
 
         bool isMatch( const Item& other ) const;

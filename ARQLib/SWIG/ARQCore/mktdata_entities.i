@@ -16,6 +16,14 @@
 #include <ARQUtils/core.h>
 %}
 
+#ifdef SWIGPYTHON
+%rename(MDEntities_MDEntity) ARQ::MDEntities::MDEntity;
+%rename(MDEntities_Type) ARQ::MDEntities::Type;
+%rename(MDEntities_Type_to_str) ARQ::MDEntities::typeToStr;
+%rename(MDEntities_FXRate) ARQ::MDEntities::FXRate;
+%rename(MDEntities_EQPrice) ARQ::MDEntities::EQPrice;
+#endif
+
 namespace ARQ
 {
 namespace MDEntities

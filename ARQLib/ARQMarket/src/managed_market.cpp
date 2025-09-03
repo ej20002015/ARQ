@@ -126,16 +126,19 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 						loadedObjs.emplace_back( std::move( *obj ) );
 				}
 
-				{
-					// Use atomic check-then-set with proper locking
-					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::FXR } );
-					for( MDEntities::FXRate& loadedObj : loadedObjs )
-					{	
+				for( MDEntities::FXRate& loadedObj : loadedObjs )
+				{	
+					bool insertIntoMkt = false;
+					{
+						// Use atomic check-then-set with proper locking
+						auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::FXR } );
 						std::optional<MDEntities::FXRate> objInMkt = m_mkt.getFXRateUnsafe( loadedObj.ID );
-						const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
-						if( insertIntoMkt ) // TODO: Also then run the sendMktUpdateToSubscribers callback
-							m_mkt.setFXRateUnsafe( std::move( loadedObj ) );
+						insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
+						if( insertIntoMkt )
+							m_mkt.setFXRateUnsafe( loadedObj );
 					}
+					if( insertIntoMkt )
+						sendMktUpdateToSubscribers<MDEntities::FXRate>( std::move( loadedObj ) );
 				}
 
                 break;
@@ -152,16 +155,19 @@ void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 						loadedObjs.emplace_back( std::move( *obj ) );
 				}
 
-				{
-					// Use atomic check-then-set with proper locking
-					auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::EQP } );
-					for( MDEntities::EQPrice& loadedObj : loadedObjs )
-					{	
+				for( MDEntities::EQPrice& loadedObj : loadedObjs )
+				{	
+					bool insertIntoMkt = false;
+					{
+						// Use atomic check-then-set with proper locking
+						auto lock = m_mkt.acquireWriteLock( { MDEntities::Type::EQP } );
 						std::optional<MDEntities::EQPrice> objInMkt = m_mkt.getEQPriceUnsafe( loadedObj.ID );
-						const bool insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
-						if( insertIntoMkt ) // TODO: Also then run the sendMktUpdateToSubscribers callback
-							m_mkt.setEQPriceUnsafe( std::move( loadedObj ) );
+						insertIntoMkt = !objInMkt.has_value() || isMktObjXNewerThanY( loadedObj, *objInMkt );
+						if( insertIntoMkt )
+							m_mkt.setEQPriceUnsafe( loadedObj );
 					}
+					if( insertIntoMkt )
+						sendMktUpdateToSubscribers<MDEntities::EQPrice>( std::move( loadedObj ) );
 				}
 
                 break;
