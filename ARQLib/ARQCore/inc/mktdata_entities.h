@@ -66,26 +66,26 @@ template<c_MDEntity T>
 class Traits
 {
 public:
-    static consteval std::string_view const name()      { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
-    static consteval std::string_view const type()      { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
-    static consteval Type             const typeEnum()  { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return Type::FXR; }
-    static consteval std::string_view const tableName() { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const name()      { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const type()      { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr Type             const typeEnum()  { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return Type::FXR; }
+    static constexpr std::string_view const tableName() { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
 };
 
 struct MemberInfo
 {
     /// Name of the C++ member variable
-    const std::string_view name;
+    std::string_view name;
     /// Documentation string
-    const std::string_view comment;
+    std::string_view comment;
     /// The language agnostic type as a string
-    const std::string_view type;
+    std::string_view type;
     /// The C++ type as a string
-    const std::string_view cppType;
+    std::string_view cppType;
     /// The ClickHouse type as a string
-    const std::string_view clickhouseType;
+    std::string_view clickhouseType;
     /// The FlatBuffers type as a string
-    const std::string_view flatbufferType;
+    std::string_view flatbufferType;
 };
 
 /*
@@ -111,10 +111,10 @@ template<>
 class Traits<FXRate>
 {
 public:
-    static consteval std::string_view const name()      { return "FXRate"; }
-    static consteval std::string_view const type()      { return "FXR"; }
-    static consteval Type             const typeEnum()  { return Type::FXR; }
-    static consteval std::string_view const tableName() { return "FXRates"; }
+    static constexpr std::string_view const name()      { return "FXRate"; }
+    static constexpr std::string_view const type()      { return "FXR"; }
+    static constexpr Type             const typeEnum()  { return Type::FXR; }
+    static constexpr std::string_view const tableName() { return "FXRates"; }
 
     // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, 3> membersInfo =
@@ -146,7 +146,7 @@ public:
     };
 
     // A compile-time helper function to look up info for a specific member.
-    static consteval std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
+    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
     {
         for( const auto& info : membersInfo )
         {
@@ -180,10 +180,10 @@ template<>
 class Traits<EQPrice>
 {
 public:
-    static consteval std::string_view const name()      { return "EQPrice"; }
-    static consteval std::string_view const type()      { return "EQP"; }
-    static consteval Type             const typeEnum()  { return Type::EQP; }
-    static consteval std::string_view const tableName() { return "EQPrices"; }
+    static constexpr std::string_view const name()      { return "EQPrice"; }
+    static constexpr std::string_view const type()      { return "EQP"; }
+    static constexpr Type             const typeEnum()  { return Type::EQP; }
+    static constexpr std::string_view const tableName() { return "EQPrices"; }
 
     // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, 6> membersInfo =
@@ -239,7 +239,7 @@ public:
     };
 
     // A compile-time helper function to look up info for a specific member.
-    static consteval std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
+    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
     {
         for( const auto& info : membersInfo )
         {

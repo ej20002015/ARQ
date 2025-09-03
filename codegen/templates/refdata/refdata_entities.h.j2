@@ -65,27 +65,27 @@ template<c_RDEntity T>
 class Traits
 {
 public:
-    static consteval std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static consteval std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static consteval std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static consteval Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
-    static consteval std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
+    static constexpr std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
 };
 
 struct MemberInfo
 {
     /// Name of the C++ member variable
-    const std::string_view name;
+    std::string_view name;
     /// Documentation string
-    const std::string_view comment;
+    std::string_view comment;
     /// The language agnostic type as a string
-    const std::string_view type;
+    std::string_view type;
     /// The C++ type as a string
-    const std::string_view cppType;
+    std::string_view cppType;
     /// The ClickHouse type as a string
-    const std::string_view clickhouseType;
+    std::string_view clickhouseType;
     /// The FlatBuffers type as a string
-    const std::string_view flatbufferType;
+    std::string_view flatbufferType;
 };
 
 /*
@@ -113,11 +113,11 @@ template<>
 class Traits<{{ entity.name }}>
 {
 public:
-    static consteval std::string_view const name()      { return "{{ entity.name }}"; }
-    static consteval std::string_view const type()      { return "{{ entity.type_string }}"; }
-    static consteval Type             const typeEnum()  { return Type::{{ entity.type_string }}; }
-    static consteval std::string_view const tableName() { return "{{ entity.table_name }}"; }
-    static consteval std::string_view const key()       { return "{{ entity.key }}"; }
+    static constexpr std::string_view const name()      { return "{{ entity.name }}"; }
+    static constexpr std::string_view const type()      { return "{{ entity.type_string }}"; }
+    static constexpr Type             const typeEnum()  { return Type::{{ entity.type_string }}; }
+    static constexpr std::string_view const tableName() { return "{{ entity.table_name }}"; }
+    static constexpr std::string_view const key()       { return "{{ entity.key }}"; }
 
     using KeyType = {{ types[entity.key_type].cpp }};
 
@@ -139,7 +139,7 @@ public:
     {{ '}' }};
 
     // A compile-time helper function to look up info for a specific member.
-    static consteval std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
+    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
     {
         for( const auto& info : membersInfo )
         {

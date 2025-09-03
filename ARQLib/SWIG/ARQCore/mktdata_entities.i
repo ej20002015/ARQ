@@ -7,6 +7,7 @@
 %include <stdint.i>
 %include <std_string.i>
 %include <std_string_view.i>
+%include <std_vector.i>
 %include "../ARQUtils/time.i"
 
 %{
@@ -16,13 +17,45 @@
 #include <ARQUtils/core.h>
 %}
 
+#ifdef SWIGCSHARP
+%nspacemove(ARQ::MDEntities) std::vector<ARQ::MDEntities::MemberInfo>;
+#endif
+
 #ifdef SWIGPYTHON
 %rename(MDEntities_MDEntity) ARQ::MDEntities::MDEntity;
 %rename(MDEntities_Type) ARQ::MDEntities::Type;
 %rename(MDEntities_Type_to_str) ARQ::MDEntities::typeToStr;
+%rename(MDEntities_MemberInfo) ARQ::MDEntities::MemberInfo;
+    %rename(cpp_type) ARQ::MDEntities::MemberInfo::cppType;
+    %rename(clickhouse_type) ARQ::MDEntities::MemberInfo::clickhouseType;
+    %rename(flatbuffer_type) ARQ::MDEntities::MemberInfo::flatbufferType;
 %rename(MDEntities_FXRate) ARQ::MDEntities::FXRate;
+    %rename(type_enum) ARQ::MDEntities::FXRate::typeEnum;
+    %rename(table_name) ARQ::MDEntities::FXRate::tableName;
+    %rename(get_members_info) ARQ::MDEntities::FXRate::getMembersInfo;
+    %rename(get_member_info) ARQ::MDEntities::FXRate::getMemberInfo;
 %rename(MDEntities_EQPrice) ARQ::MDEntities::EQPrice;
+    %rename(type_enum) ARQ::MDEntities::EQPrice::typeEnum;
+    %rename(table_name) ARQ::MDEntities::EQPrice::tableName;
+    %rename(get_members_info) ARQ::MDEntities::EQPrice::getMembersInfo;
+    %rename(get_member_info) ARQ::MDEntities::EQPrice::getMemberInfo;
+%rename(MDEntities_MemberInfoVec) std::vector<ARQ::MDEntities::MemberInfo>;
 #endif
+
+namespace std
+{
+    %template(MemberInfoVec) std::vector<ARQ::MDEntities::MemberInfo>;
+};
+
+#ifdef SWIGCSHARP
+#define SWIG_STD_OPTIONAL_USE_NULLABLE_REFERENCE_TYPES
+%include "../csharp/std_optional.i"
+#endif
+#ifdef SWIGPYTHON
+%include "../python/std_optional.i"
+#endif
+
+%optional(ARQ::MDEntities::MemberInfo);
 
 namespace ARQ
 {
@@ -58,6 +91,21 @@ enum class Type
 
 std::string_view typeToStr( const Type type );
 
+struct MemberInfo
+{
+    /// Name of the C++ member variable
+    std::string_view name;
+    /// Documentation string
+    std::string_view comment;
+    /// The language agnostic type as a string
+    std::string_view type;
+    /// The C++ type as a string
+    std::string_view cppType;
+    /// The ClickHouse type as a string
+    std::string_view clickhouseType;
+    /// The FlatBuffers type as a string
+    std::string_view flatbufferType;
+};
 
 /*
 ********************************************
@@ -77,6 +125,28 @@ struct FXRate : public MDEntity
     double ask;
 };
 
+// Extend FXRate with SWIG-friendly static methods that wrap the constexpr Traits<FXRate>
+%extend FXRate
+{
+    static std::string_view name() { return ARQ::MDEntities::Traits<ARQ::MDEntities::FXRate>::name(); }
+    static std::string_view type() { return ARQ::MDEntities::Traits<ARQ::MDEntities::FXRate>::type(); }
+    static ARQ::MDEntities::Type typeEnum() { return ARQ::MDEntities::Traits<ARQ::MDEntities::FXRate>::typeEnum(); }
+    static std::string_view tableName() { return ARQ::MDEntities::Traits<ARQ::MDEntities::FXRate>::tableName(); }
+    static const std::vector<ARQ::MDEntities::MemberInfo>& getMembersInfo()
+    {
+        static std::vector<ARQ::MDEntities::MemberInfo> membersInfo;
+        if( membersInfo.empty() )
+        {
+            for( const auto& info : ARQ::MDEntities::Traits<ARQ::MDEntities::FXRate>::membersInfo )
+                membersInfo.push_back( info );
+        }
+        return membersInfo;
+    }
+    static std::optional<ARQ::MDEntities::MemberInfo> getMemberInfo( const std::string_view memberName )
+    {
+        return ARQ::MDEntities::Traits<ARQ::MDEntities::FXRate>::getMemberInfo( memberName );
+    }
+}
 
 
 /// Represents pricing information for an equity.
@@ -95,6 +165,30 @@ struct EQPrice : public MDEntity
     /// The cumulative volume for the current trading session.
     std::int64_t volume;
 };
+
+// Extend EQPrice with SWIG-friendly static methods that wrap the constexpr Traits<EQPrice>
+%extend EQPrice
+{
+    static std::string_view name() { return ARQ::MDEntities::Traits<ARQ::MDEntities::EQPrice>::name(); }
+    static std::string_view type() { return ARQ::MDEntities::Traits<ARQ::MDEntities::EQPrice>::type(); }
+    static ARQ::MDEntities::Type typeEnum() { return ARQ::MDEntities::Traits<ARQ::MDEntities::EQPrice>::typeEnum(); }
+    static std::string_view tableName() { return ARQ::MDEntities::Traits<ARQ::MDEntities::EQPrice>::tableName(); }
+    static const std::vector<ARQ::MDEntities::MemberInfo>& getMembersInfo()
+    {
+        static std::vector<ARQ::MDEntities::MemberInfo> membersInfo;
+        if( membersInfo.empty() )
+        {
+            for( const auto& info : ARQ::MDEntities::Traits<ARQ::MDEntities::EQPrice>::membersInfo )
+                membersInfo.push_back( info );
+        }
+        return membersInfo;
+    }
+    static std::optional<ARQ::MDEntities::MemberInfo> getMemberInfo( const std::string_view memberName )
+    {
+        return ARQ::MDEntities::Traits<ARQ::MDEntities::EQPrice>::getMemberInfo( memberName );
+    }
+}
+
 
 
 }

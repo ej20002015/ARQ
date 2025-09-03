@@ -14,6 +14,8 @@
     <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\EQPrice.cs" Link="ARQLib\ARQCore\MDEntities\EQPrice.cs" />
     <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\FXRate.cs" Link="ARQLib\ARQCore\MDEntities\FXRate.cs" />
     <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\MDEntity.cs" Link="ARQLib\ARQCore\MDEntities\MDEntity.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\MemberInfo.cs" Link="ARQLib\ARQCore\MDEntities\MemberInfo.cs" />
+    <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\MemberInfoVec.cs" Link="ARQLib\ARQCore\MDEntities\MemberInfoVec.cs" />
     <Compile Include="..\..\.build\bin\Debug\ARQ\MDEntities\Type.cs" Link="ARQLib\ARQCore\MDEntities\Type.cs" />
     <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\ConsolidatingTIDSet.cs" Link="ARQLib\ARQMarket\ConsolidatingTIDSet.cs" />
     <Compile Include="..\..\.build\bin\Debug\ARQ\Mkt\EQPricesMap.cs" Link="ARQLib\ARQMarket\EQPricesMap.cs" />

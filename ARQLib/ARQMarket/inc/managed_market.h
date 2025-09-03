@@ -10,19 +10,6 @@
 #include <functional>
 #include <shared_mutex>
 
-class Foo
-{
-public:
-    virtual ~Foo() = default;
-    virtual int hello() = 0;
-};
-
-class Bar : public Foo
-{
-public:
-    virtual int hello() override { return 1; }
-};
-
 namespace ARQ
 {
 namespace Mkt

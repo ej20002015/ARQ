@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using ARQ = ARQLib.ARQ;
 using ARQLib.Extensions;
 using ARQDesktop.ViewModels;
+using ARQLib.ARQ.MDEntities;
 
 namespace ARQDesktop
 {
@@ -61,8 +62,12 @@ namespace ARQDesktop
                 // Set up Ctrl+C handling and initialize market data
                 var cancellationTokenSource = new CancellationTokenSource();
 
-                // Initialize market data
-                _managedMkt = new ARQ.Mkt.ManagedMarket("ClickHouseDB", ARQ.Mkt.Name.LIVE);
+                var info = FXRate.getMembersInfo();
+                Console.WriteLine("Available FXRate members:");
+                foreach (var member in info)
+                {
+                    Console.WriteLine($"{member.type} : {member.name}");
+                }
 
                 // Create main window with view model FIRST
                 _mainViewModel = new MainWindowViewModel(_managedMkt);

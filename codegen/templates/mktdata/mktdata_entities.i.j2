@@ -11,6 +11,7 @@
 %include <stdint.i>
 %include <std_string.i>
 %include <std_string_view.i>
+%include <std_vector.i>
 %include "../ARQUtils/time.i"
 
 %{
@@ -20,14 +21,42 @@
 #include <ARQUtils/core.h>
 %}
 
+#ifdef SWIGCSHARP
+%nspacemove(ARQ::MDEntities) std::vector<ARQ::MDEntities::MemberInfo>;
+#endif
+
 #ifdef SWIGPYTHON
 %rename(MDEntities_MDEntity) ARQ::MDEntities::MDEntity;
 %rename(MDEntities_Type) ARQ::MDEntities::Type;
 %rename(MDEntities_Type_to_str) ARQ::MDEntities::typeToStr;
+%rename(MDEntities_MemberInfo) ARQ::MDEntities::MemberInfo;
+    %rename(cpp_type) ARQ::MDEntities::MemberInfo::cppType;
+    %rename(clickhouse_type) ARQ::MDEntities::MemberInfo::clickhouseType;
+    %rename(flatbuffer_type) ARQ::MDEntities::MemberInfo::flatbufferType;
 {% for entity in entities %}
 %rename(MDEntities_{{ entity.name }}) ARQ::MDEntities::{{ entity.name }};
+    %rename(type_enum) ARQ::MDEntities::{{ entity.name }}::typeEnum;
+    %rename(table_name) ARQ::MDEntities::{{ entity.name }}::tableName;
+    %rename(get_members_info) ARQ::MDEntities::{{ entity.name }}::getMembersInfo;
+    %rename(get_member_info) ARQ::MDEntities::{{ entity.name }}::getMemberInfo;
 {% endfor %}
+%rename(MDEntities_MemberInfoVec) std::vector<ARQ::MDEntities::MemberInfo>;
 #endif
+
+namespace std
+{
+    %template(MemberInfoVec) std::vector<ARQ::MDEntities::MemberInfo>;
+};
+
+#ifdef SWIGCSHARP
+#define SWIG_STD_OPTIONAL_USE_NULLABLE_REFERENCE_TYPES
+%include "../csharp/std_optional.i"
+#endif
+#ifdef SWIGPYTHON
+%include "../python/std_optional.i"
+#endif
+
+%optional(ARQ::MDEntities::MemberInfo);
 
 namespace ARQ
 {
@@ -64,32 +93,21 @@ enum class Type
 
 std::string_view typeToStr( const Type type );
 
-{# // Traits class to get compile-time metadata about an entity
-template<c_MDEntity T>
-class Traits
-{
-public:
-    static consteval std::string_view const name()      { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
-    static consteval std::string_view const type()      { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
-    static consteval Type             const typeEnum()  { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return Type::FXR; }
-    static consteval std::string_view const tableName() { static_assert( false, "Missing MDEntities::Traits specialization for this type" ); return ""; }
-};
-
 struct MemberInfo
 {
     /// Name of the C++ member variable
-    const std::string_view name;
+    std::string_view name;
     /// Documentation string
-    const std::string_view comment;
+    std::string_view comment;
     /// The language agnostic type as a string
-    const std::string_view type;
+    std::string_view type;
     /// The C++ type as a string
-    const std::string_view cppType;
+    std::string_view cppType;
     /// The ClickHouse type as a string
-    const std::string_view clickhouseType;
+    std::string_view clickhouseType;
     /// The FlatBuffers type as a string
-    const std::string_view flatbufferType;
-}; #}
+    std::string_view flatbufferType;
+};
 
 /*
 ********************************************
@@ -111,46 +129,31 @@ struct {{ entity.name }} : public MDEntity
     {% endfor %}
 };
 
-{# // Traits specialization for {{ entity.name }}
-template<>
-class Traits<{{ entity.name }}>
+// Extend {{ entity.name }} with SWIG-friendly static methods that wrap the constexpr Traits<{{ entity.name }}>
+%extend {{ entity.name }}
 {
-public:
-    static consteval std::string_view const name()      { return "{{ entity.name }}"; }
-    static consteval std::string_view const type()      { return "{{ entity.type_string }}"; }
-    static consteval Type             const typeEnum()  { return Type::{{ entity.type_string }}; }
-    static consteval std::string_view const tableName() { return "{{ entity.table_name }}"; }
-
-    // A compile-time array holding metadata for all members.
-    static constexpr std::array<MemberInfo, {{ entity.members | length }}> membersInfo =
-    {{ '{' }}
-        {% for member in entity.members %}
-        MemberInfo {
-            /*name            = */ "{{ member.name }}",
-            /*comment         = */ "{{ member.comment | default('') }}",
-            /*type            = */ "{{ member.type }}",
-            /*cpp_type        = */ "{{ types[member.type].cpp }}",
-            /*clickhouse_type = */ "{{ types[member.type].clickhouse }}",
-            /*flatbuffer_type = */ "{{ types[member.type].flatbuffer }}"
-        }{% if not loop.last %},
-        {% endif %}
-        {% endfor %}
-    
-    {{ '}' }};
-
-    // A compile-time helper function to look up info for a specific member.
-    static consteval std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
+    static std::string_view name() { return ARQ::MDEntities::Traits<ARQ::MDEntities::{{ entity.name }}>::name(); }
+    static std::string_view type() { return ARQ::MDEntities::Traits<ARQ::MDEntities::{{ entity.name }}>::type(); }
+    static ARQ::MDEntities::Type typeEnum() { return ARQ::MDEntities::Traits<ARQ::MDEntities::{{ entity.name }}>::typeEnum(); }
+    static std::string_view tableName() { return ARQ::MDEntities::Traits<ARQ::MDEntities::{{ entity.name }}>::tableName(); }
+    static const std::vector<ARQ::MDEntities::MemberInfo>& getMembersInfo()
     {
-        for( const auto& info : membersInfo )
+        static std::vector<ARQ::MDEntities::MemberInfo> membersInfo;
+        if( membersInfo.empty() )
         {
-            if( info.name == memberName )
-                return info;
+            for( const auto& info : ARQ::MDEntities::Traits<ARQ::MDEntities::{{ entity.name }}>::membersInfo )
+                membersInfo.push_back( info );
         }
-        return std::nullopt;
+        return membersInfo;
     }
-}; #}
+    static std::optional<ARQ::MDEntities::MemberInfo> getMemberInfo( const std::string_view memberName )
+    {
+        return ARQ::MDEntities::Traits<ARQ::MDEntities::{{ entity.name }}>::getMemberInfo( memberName );
+    }
+}
 
 {% endfor %}
+
 }
 }
 

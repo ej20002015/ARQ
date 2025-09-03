@@ -41,6 +41,9 @@
 // You may want to define it to 'public' so the internal class is accessible from outside the assembly it's defined in. See the documentation of the SWIG_CSBODY_PROXY macro for more information.
 // Defining this macro will affect all optional arithmetic types defined in the module.
 
+#ifndef csharp_std_optional
+#define csharp_std_optional
+
 #if defined(SWIG_STD_OPTIONAL_USE_NULLABLE_REFERENCE_TYPES)
 %define SWIG_STD_OPTIONAL_NULLABLE_TYPE "?" %enddef
 #else
@@ -328,4 +331,6 @@ namespace std {
   %optional_arithmetic(double, OptDouble)
 
   %optional_string()
+#endif
+
 #endif

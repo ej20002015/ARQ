@@ -59,11 +59,11 @@ template<c_RDEntity T>
 class Traits
 {
 public:
-    static consteval std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static consteval std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static consteval std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static consteval Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
-    static consteval std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    static constexpr Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
+    static constexpr std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
 };
 
 struct MemberInfo
@@ -107,11 +107,11 @@ template<>
 class Traits<Currency>
 {
 public:
-    static consteval std::string_view const name()      { return "Currency"; }
-    static consteval std::string_view const type()      { return "CCY"; }
-    static consteval Type             const typeEnum()  { return Type::CCY; }
-    static consteval std::string_view const tableName() { return "Currencies"; }
-    static consteval std::string_view const key()       { return "ccyID"; }
+    static constexpr std::string_view const name()      { return "Currency"; }
+    static constexpr std::string_view const type()      { return "CCY"; }
+    static constexpr Type             const typeEnum()  { return Type::CCY; }
+    static constexpr std::string_view const tableName() { return "Currencies"; }
+    static constexpr std::string_view const key()       { return "ccyID"; }
 
     using KeyType = std::string;
 
@@ -153,7 +153,7 @@ public:
     };
 
     // A compile-time helper function to look up info for a specific member.
-    static consteval std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
+    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
     {
         for( const auto& info : membersInfo )
         {
@@ -183,11 +183,11 @@ template<>
 class Traits<User>
 {
 public:
-    static consteval std::string_view const name()      { return "User"; }
-    static consteval std::string_view const type()      { return "USER"; }
-    static consteval Type             const typeEnum()  { return Type::USER; }
-    static consteval std::string_view const tableName() { return "Users"; }
-    static consteval std::string_view const key()       { return "userID"; }
+    static constexpr std::string_view const name()      { return "User"; }
+    static constexpr std::string_view const type()      { return "USER"; }
+    static constexpr Type             const typeEnum()  { return Type::USER; }
+    static constexpr std::string_view const tableName() { return "Users"; }
+    static constexpr std::string_view const key()       { return "userID"; }
 
     using KeyType = std::string;
 
@@ -229,7 +229,7 @@ public:
     };
 
     // A compile-time helper function to look up info for a specific member.
-    static consteval std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
+    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
     {
         for( const auto& info : membersInfo )
         {

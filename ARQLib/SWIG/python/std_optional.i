@@ -16,6 +16,9 @@
 // This macro ensures that common types such as int, double, and std::string are automatically recognized and handled by SWIG when generating bindings.
 // 
 
+#ifndef python_std_optional
+#define python_std_optional
+
 %{
     #include <optional>
 %}
@@ -163,4 +166,6 @@ namespace std {
   %optional(double)
 
   %optional(std::string)
+#endif
+
 #endif

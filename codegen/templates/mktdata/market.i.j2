@@ -61,6 +61,10 @@
     %rename(get_all) ARQ::Mkt::ConsolidatingTIDSet::Item::getAll;
 #endif
 
+#ifdef SWIGCSHARP
+%rename(eq) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
+#endif
+
 namespace std
 {
     %template(MDTypes) std::vector<ARQ::MDEntities::Type>;
@@ -76,10 +80,6 @@ namespace std
 #endif
 #ifdef SWIGPYTHON
 %include "../python/std_optional.i"
-#endif
-
-#ifdef SWIGCSHARP
-%rename(eq) ARQ::Mkt::ConsolidatingTIDSet::Item::operator==;
 #endif
 
 #ifdef SWIGCSHARP
