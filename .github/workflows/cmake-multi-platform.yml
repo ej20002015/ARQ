@@ -66,6 +66,10 @@ jobs:
         Invoke-WebRequest -UserAgent "Wget" -Uri https://sourceforge.net/projects/swig/files/swigwin/swigwin-${{ env.swig_version }}/swigwin-${{ env.swig_version }}.zip/download -OutFile $env:USERPROFILE'\Downloads\SWIG${{ env.swig_version }}.zip'
         Expand-Archive $env:USERPROFILE'\Downloads\SWIG${{ env.swig_version }}.zip' D:\a\Dependencies\swig
         D:\a\Dependencies\swig\swigwin-${{ env.swig_version }}\swig.exe -version
+
+        # Set environment variables for later steps (using forward slashes for bash compatibility)
+        echo "SWIG_EXECUTABLE=D:/a/Dependencies/swig/swigwin-${{ env.swig_version }}/swig.exe" >> $env:GITHUB_ENV
+        echo "SWIG_DIR=D:/a/Dependencies/swig/swigwin-${{ env.swig_version }}/Lib" >> $env:GITHUB_ENV
       
     - name: Install SWIG (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -99,7 +103,7 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         ${{ matrix.os == 'ubuntu-latest' && '-G "Ninja Multi-Config"' || '' }}
-        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE=D:\a\Dependencies\swig\swigwin-${{ env.swig_version }}\swig.exe -DSWIG_DIR=D:\a\Dependencies\swig\swigwin-${{ env.swig_version }}\Lib' || '' }}
+        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE="${{ env.SWIG_EXECUTABLE }}" -DSWIG_DIR="${{ env.SWIG_DIR }}"' || '' }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
