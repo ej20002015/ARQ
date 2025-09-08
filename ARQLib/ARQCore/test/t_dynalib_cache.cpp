@@ -5,5 +5,5 @@ using namespace ARQ;
 
 TEST( DynaLibCacheTests, LoadARQClickhouse )
 {
-    EXPECT_NO_THROW( auto t = DynaLibCache::inst().get( "ARQClickhouse" ) );
+    EXPECT_NO_THROW( const auto& t = DynaLibCache::inst().get( "ARQClickHouse" ) );
 }
