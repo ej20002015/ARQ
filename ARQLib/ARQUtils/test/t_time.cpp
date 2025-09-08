@@ -638,10 +638,10 @@ TEST( DateTimeTest, IndividualTimeComponents )
 TEST( DateTimeTest, StaticMembers )
 {
     EXPECT_TRUE( DateTime::MIN().isSet() );
-    EXPECT_EQ( DateTime::MIN().date(), Date::MIN() );
+    EXPECT_EQ( DateTime::MIN().date(), Date( Year( 1900 ), Month::Jan, Day( 01 ) ) );
 
     EXPECT_TRUE( DateTime::MAX().isSet() );
-    EXPECT_EQ( DateTime::MAX().date(), Date::MAX() );
+    EXPECT_EQ( DateTime::MAX().date(), Date( Year( 2200 ), Month::Dec, Day( 31 ) ) );
     EXPECT_EQ( DateTime::MAX().hour(), Hour( 23 ) );
     EXPECT_EQ( DateTime::MAX().minute(), Minute( 59 ) );
     EXPECT_EQ( DateTime::MAX().second(), Second( 59 ) );

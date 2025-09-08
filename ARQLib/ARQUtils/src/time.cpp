@@ -382,15 +382,18 @@ std::string DateTime::fmtISO8601() const
 	return std::format( "{:%FT%TZ}", std::chrono::floor<std::chrono::microseconds>( tp() ) );
 }
 
+// NOTE: DateTime range is much smaller than that of Date (std::chrono::year_month_day).
+// This is due to Linux std::chrono::system_clock::time_point having a restricted range.
+
 const DateTime& DateTime::MIN()
 {
-	static const DateTime MIN( Date::MIN() );
+	static const DateTime MIN( Date( Year( 1900 ), Month::Jan, Day( 01 ) ) );
 	return MIN;
 }
 
 const DateTime& DateTime::MAX()
 {
-	static const DateTime MAX( Date::MAX(), TimeOfDay{
+	static const DateTime MAX( Date( Year( 2200 ), Month::Dec, Day( 31 ) ), TimeOfDay{
 		.hour = Hour( 23 ),
 		.minute = Minute( 59 ),
 		.second = Second( 59 ),
