@@ -61,6 +61,7 @@ jobs:
       run: |
         Invoke-WebRequest -UserAgent "Wget" -Uri https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.1/swigwin-4.3.1.zip/download -OutFile $env:USERPROFILE'\Downloads\SWIG4.3.1.zip'
         Expand-Archive $env:USERPROFILE'\Downloads\SWIG4.3.1.zip' D:\a\Dependencies\swig
+        $env:SWIG_EXECUTABLE = "D:\a\Dependencies\swig\swigwin-4.3.1\swig.exe"
 
     - name: Set up Java
       uses: actions/setup-java@v3
@@ -74,6 +75,7 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         ${{ matrix.os == 'ubuntu-latest' && '-G "Ninja Multi-Config"' || '' }}  # Use Ninja Multi-Config for Linux
+        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE="${{ $env:SWIG_EXECUTABLE }}"' || '' }}  # Specify SWIG exe on Windows
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
