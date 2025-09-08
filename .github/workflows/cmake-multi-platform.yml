@@ -70,7 +70,7 @@ jobs:
         # Set environment variables for later steps (using forward slashes for bash compatibility)
         echo "SWIG_EXECUTABLE=D:/a/Dependencies/swig/swigwin-${{ env.swig_version }}/swig.exe" >> $env:GITHUB_ENV
         echo "SWIG_DIR=D:/a/Dependencies/swig/swigwin-${{ env.swig_version }}/Lib" >> $env:GITHUB_ENV
-      
+
     - name: Install SWIG (Linux)
       if: matrix.os == 'ubuntu-latest'
       shell: bash
@@ -96,14 +96,26 @@ jobs:
         java-version: '21.0.6'
         distribution: 'oracle'
 
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+    - name: Configure CMake (Windows)
+      if: matrix.os == 'windows-latest'
+      env:
+        PATH: ${{ env.PATH }}
       shell: bash
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        ${{ matrix.os == 'ubuntu-latest' && '-G "Ninja Multi-Config"' || '' }}
-        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE="${{ env.SWIG_EXECUTABLE }}" -DSWIG_DIR="${{ env.SWIG_DIR }}"' || '' }}
+        -DSWIG_EXECUTABLE="${{ env.SWIG_EXECUTABLE }}"
+        -DSWIG_DIR="${{ env.SWIG_DIR }}"
+        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -S ${{ github.workspace }}
+
+    - name: Configure CMake (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: >
+        cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -G "Ninja Multi-Config"
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
