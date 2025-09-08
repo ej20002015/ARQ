@@ -1,4 +1,4 @@
-find_package(SWIG REQUIRED)
+find_package(SWIG 4.3.1 REQUIRED)
 include(UseSWIG)
 
 set(SWIG_MAIN_FILE "ARQ.i")
