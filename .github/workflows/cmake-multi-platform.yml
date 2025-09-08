@@ -76,7 +76,7 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         ${{ matrix.os == 'ubuntu-latest' && '-G "Ninja Multi-Config"' || '' }}  # Use Ninja Multi-Config for Linux
-        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE="$env:SWIG_EXECUTABLE"' || '' }}  # Specify SWIG exe on Windows
+        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE=D:\a\Dependencies\swig\swigwin-4.3.1\swig.exe' || '' }}  # Specify SWIG exe on Windows
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
