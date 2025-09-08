@@ -12,6 +12,8 @@
 #include <map>
 #include <functional>
 #include <optional>
+#include <shared_mutex>
+#include <mutex>
 
 namespace ARQ
 {

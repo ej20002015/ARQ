@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <shared_mutex>
 #include <array>
+#include <mutex>
 
 namespace ARQ
 {

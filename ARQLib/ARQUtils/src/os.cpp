@@ -11,6 +11,7 @@
 	#include <unistd.h>
 	#include <sys/types.h>
 	#include <pthread.h>
+	#include <dlfcn.h>
 #endif
 
 #include <filesystem>
@@ -187,7 +188,7 @@ void DynaLib::load( const std::string_view name )
 	if( !dl )
 		throw ARQException( std::format( "Could not load dynalib {0}: {1}", m_name, getLastError() ) );
 
-	m_nativeHandle = handle;
+	m_nativeHandle = dl;
 
 	#endif
 }
@@ -263,7 +264,7 @@ std::string DynaLib::getLastError() const
 
 	const char* errCStr = dlerror();
 	if( errCStr )
-		errStr = errCStr;
+		errMsg = errCStr;
 
 	#endif
 

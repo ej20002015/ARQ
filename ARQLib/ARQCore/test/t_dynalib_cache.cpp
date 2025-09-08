@@ -1,6 +1,8 @@
 #include <ARQCore/dynalib_cache.h>
 #include <gtest/gtest.h>
 
+#include <iostream>
+
 using namespace ARQ;
 
 TEST( DynaLibCacheTests, LoadARQClickhouse )

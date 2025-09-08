@@ -19,6 +19,11 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Linux with default to prepending with prefix "lib" - don't want that
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
+# For non-install builds, set the RPATH so executables can find local .so files.
+# $ORIGIN is a special linker variable that means "the directory of the executable".
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH "$ORIGIN")
+
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
