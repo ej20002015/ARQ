@@ -44,6 +44,9 @@ jobs:
           - os: ubuntu-latest
             c_compiler: cl
 
+    env:
+      swig_version: 4.3.1
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -56,12 +59,32 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/.build" >> "$GITHUB_OUTPUT"
 
-    - name: Install Dependencies
+    - name: Install SWIG (Windows)
       if: matrix.os == 'windows-latest'
+      shell: pwsh
       run: |
-        Invoke-WebRequest -UserAgent "Wget" -Uri https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.1/swigwin-4.3.1.zip/download -OutFile $env:USERPROFILE'\Downloads\SWIG4.3.1.zip'
-        Expand-Archive $env:USERPROFILE'\Downloads\SWIG4.3.1.zip' D:\a\Dependencies\swig
-        D:\a\Dependencies\swig\swigwin-4.3.1\swig.exe -version
+        Invoke-WebRequest -UserAgent "Wget" -Uri https://sourceforge.net/projects/swig/files/swigwin/swigwin-${{ env.swig_version }}/swigwin-${{ env.swig_version }}.zip/download -OutFile $env:USERPROFILE'\Downloads\SWIG${{ env.swig_version }}.zip'
+        Expand-Archive $env:USERPROFILE'\Downloads\SWIG${{ env.swig_version }}.zip' D:\a\Dependencies\swig
+        D:\a\Dependencies\swig\swigwin-${{ env.swig_version }}\swig.exe -version
+      
+    - name: Install SWIG (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
+        
+        mkdir -p ~/downloads && cd ~/downloads
+        wget http://downloads.sourceforge.net/project/swig/swig/swig-${{ env.swig_version }}/swig-${{ env.swig_version }}.tar.gz
+        tar xfz swig-${{ env.swig_version }}.tar.gz
+        rm swig-${{ env.swig_version }}.tar.gz
+        cd swig-${{ env.swig_version }}
+        ./configure
+        make -j 4 && sudo make install
+        cd .. && rm -rf swig-${{ env.swig_version }}
+        
+        # Verify installation
+        swig -version
 
     - name: Set up Java
       uses: actions/setup-java@v3
@@ -75,7 +98,7 @@ jobs:
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         ${{ matrix.os == 'ubuntu-latest' && '-G "Ninja Multi-Config"' || '' }}
-        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE=D:\a\Dependencies\swig\swigwin-4.3.1\swig.exe -DSWIG_DIR=D:\a\Dependencies\swig\swigwin-4.3.1\Lib' || '' }}
+        ${{ matrix.os == 'windows-latest' && '-DSWIG_EXECUTABLE=D:\a\Dependencies\swig\swigwin-${{ env.swig_version }}\swig.exe -DSWIG_DIR=D:\a\Dependencies\swig\swigwin-${{ env.swig_version }}\Lib' || '' }}
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
