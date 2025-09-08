@@ -127,8 +127,8 @@ public:
 	};
 
 public:
-	ARQUtils_API static const Date MIN;
-	ARQUtils_API static const Date MAX;
+	ARQUtils_API static const Date& MIN();
+	ARQUtils_API static const Date& MAX();
 
 private:
 	static constexpr auto NOT_SET_STR = "DATE_NOT_SET";
@@ -254,8 +254,8 @@ public:
 	};
 
 public:
-	ARQUtils_API static const DateTime MIN;
-	ARQUtils_API static const DateTime MAX;
+	ARQUtils_API static const DateTime& MIN();
+	ARQUtils_API static const DateTime& MAX();
 
 private:
 	static constexpr auto NOT_SET_STR = "DATETIME_NOT_SET";

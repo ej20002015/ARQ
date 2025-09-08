@@ -139,8 +139,8 @@ public:
     bool operator==( const Date& other ) const noexcept;
 
     // Static members
-    static const Date MIN;
-    static const Date MAX;
+    static const Date& MIN();
+	static const Date& MAX();
 };
 
 struct TimeOfDay
@@ -206,8 +206,8 @@ public:
 	std::string fmtISO8601() const;
 
     // Static members
-	static const DateTime MIN;
-	static const DateTime MAX;
+	static const DateTime& MIN();
+	static const DateTime& MAX();
 };
 
 }

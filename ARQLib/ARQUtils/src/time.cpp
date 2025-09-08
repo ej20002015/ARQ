@@ -164,8 +164,17 @@ std::ostream& operator<<( std::ostream& os, const Date& date )
 	return os;
 }
 
-const Date Date::MIN( Year( 0 ), Jan, Day( 1 ) );
-const Date Date::MAX( Year( 9999 ), Dec, Day( 31 ) );
+const Date& Date::MIN()
+{
+	static const Date MIN( Year( 0 ), Jan, Day( 1 ) );
+	return MIN;
+}
+
+const Date& Date::MAX()
+{
+	static const Date MAX( Year( 9999 ), Dec, Day( 31 ) );
+	return MAX;
+}
 
 /*
 * ------------------------- DateTime class implementation -------------------------
@@ -373,15 +382,25 @@ std::string DateTime::fmtISO8601() const
 	return std::format( "{:%FT%TZ}", std::chrono::floor<std::chrono::microseconds>( tp() ) );
 }
 
-const DateTime DateTime::MIN( Date::MIN );
-const DateTime DateTime::MAX( Date::MAX, TimeOfDay{
-	.hour             = Hour( 23 ),
-	.minute           = Minute( 59 ),
-	.second           = Second( 59 ),
-	.millisecond      = Millisecond( 999 ),
-	.microsecond      = Microsecond( 999 ),
-	.microsecondsPast = Microseconds( 999'999 )
-} );
+const DateTime& DateTime::MIN()
+{
+	static const DateTime MIN( Date::MIN() );
+	return MIN;
+}
+
+const DateTime& DateTime::MAX()
+{
+	static const DateTime MAX( Date::MAX(), TimeOfDay{
+		.hour = Hour( 23 ),
+		.minute = Minute( 59 ),
+		.second = Second( 59 ),
+		.millisecond = Millisecond( 999 ),
+		.microsecond = Microsecond( 999 ),
+		.microsecondsPast = Microseconds( 999'999 )
+	} );
+
+	return MAX;
+}
 
 }
 
