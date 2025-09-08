@@ -56,6 +56,12 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/.build" >> "$GITHUB_OUTPUT"
 
+    - name: Install Dependencies
+      if: matrix.os == 'windows-latest'
+      run: |
+        Invoke-WebRequest -UserAgent "Wget" -Uri https://sourceforge.net/projects/swig/files/swigwin/swigwin-4.3.1/swigwin-4.3.1.zip/download -OutFile $env:USERPROFILE'\Downloads\SWIG4.3.1.zip'
+        Expand-Archive $env:USERPROFILE'\Downloads\SWIG4.3.1.zip' D:\a\Dependencies\swig
+
     - name: Set up Java
       uses: actions/setup-java@v3
       with:
