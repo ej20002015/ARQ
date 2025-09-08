@@ -98,7 +98,7 @@ jobs:
 
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
-      shell: bash
+      shell: pwsh
       run: >
         cmake -B ${{ steps.strings.outputs.build-output-dir }}
         -DSWIG_EXECUTABLE="${{ env.SWIG_EXECUTABLE }}"
@@ -106,7 +106,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -S "${{ github.workspace }}"
+        -S ${{ github.workspace }}
 
     - name: Configure CMake (Linux)
       if: matrix.os == 'ubuntu-latest'
