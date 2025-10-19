@@ -23,9 +23,10 @@ std::unique_ptr<clickhouse::Client> CHConnPool::getConn( const std::string_view 
 		Log( Module::CLICKHOUSE ).info( "Creating new ClickHouse connection for dsh [{}]", dsh );
 
 		const DataSourceConfig config = DataSourceConfigManager::inst().get( dsh );
+		const DataSourceConfig::ConnProps connProps = config.connPropsMap.at( "Main" );
 		clickhouse::ClientOptions opt = {
-			.host = config.hostname,
-			.port = config.port
+			.host = connProps.hostname,
+			.port = connProps.port
 		};
 
 		auto newConn = std::make_unique<clickhouse::Client>( opt );

@@ -25,9 +25,10 @@ public:
 
     {% for entity in entities %}
     // --- Methods for {{ entity.name }} ({{ entity.type_string }}) ---
-    [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::{{ entity.name }}> fetchLatest{{ entity.name_plural }}() override;
+    [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::{{ entity.name }}> fetch{{ entity.name_plural }}() override;
+    [[nodiscard]] ARQClickHouse_API std::optional<RDEntities::{{ entity.name }}> fetch{{ entity.name }}( const RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType& {{ entity.key }} ) override;
     [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( const Time::DateTime asof ) override;
-    ARQClickHouse_API void insert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data ) override;
+    ARQClickHouse_API void upsert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data ) override;
 
     {% endfor %}
 private:

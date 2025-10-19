@@ -27,6 +27,11 @@ std::string_view DataSourceType::toStr( const DataSourceType::Enum type )
 	return TYPE_STRINGS[static_cast<size_t>( type )];
 }
 
+DataSourceConfigManager& DataSourceConfigManager::inst()
+{
+	static DataSourceConfigManager inst;
+	return inst;
+}
 
 const DataSourceConfig& DataSourceConfigManager::get( const std::string_view dsh )
 {
@@ -118,7 +123,7 @@ void DataSourceConfigManager::parseConfig( const std::string_view tomlCfg )
 	if( !dataSourcesTbl )
 		throw ARQException( "No [data_sources] table found in data source configuration toml" );
 
-	for( const auto [key, val] : *dataSourcesTbl )
+	for( const auto& [key, val] : *dataSourcesTbl )
 	{
 		std::string dsh = std::string( key.str() );
 		toml::table* sourceTable = val.as_table();
@@ -133,23 +138,48 @@ void DataSourceConfigManager::parseConfig( const std::string_view tomlCfg )
 		{
 			DataSourceConfig cfg;
 			cfg.dsh = dsh;
-
-			// Required fields
-
 			cfg.type = DataSourceType::fromStr( getRequiredTomlValue<std::string>( *sourceTable, "type" ) );
 
-			cfg.hostname = getRequiredTomlValue<std::string>( *sourceTable, "hostname" );
+			const toml::node* connPropsNode = sourceTable->get( "conn_props" );
+			if( !connPropsNode )
+			{
+				Log( Module::CORE ).error( "Entry '{}' in [data_sources] is missing required key 'conn_props'. Skipping", dsh );
+				continue;
+			}
 
-			int64_t portI64 = getRequiredTomlValue<int64_t>( *sourceTable, "port" );
-			if( portI64 <= 0 || portI64 > 65535 )
-				throw ARQException( std::format( "Invalid port number {} (must be 1-65535)", portI64 ) );
-			cfg.port = static_cast<uint16_t>( portI64 );
+			// Parse conn_props subtable
 
-			// Optional fields
+			const toml::table* connPropsTable = connPropsNode->as_table();
+			if( !connPropsTable )
+			{
+				Log( Module::CORE ).error( "Entry '{}' in [data_sources] has 'conn_props' key but it's not a table. Skipping", dsh );
+				continue;
+			}
 
-			cfg.username = getOptionalTomlValue<std::string>( *sourceTable, "username" );
-			cfg.password = getOptionalTomlValue<std::string>( *sourceTable, "password" );
-			cfg.dbName   = getOptionalTomlValue<std::string>( *sourceTable, "dbName" );
+			for( const auto& [key, val] : *connPropsTable )
+			{
+				const std::string connPropsName = std::string( key.str() );
+				DataSourceConfig::ConnProps connProps;
+
+				const toml::table* const connPropsEntry = val.as_table();
+				if( !connPropsEntry )
+					throw ARQException( std::format( "Entry '{}' in [conn_props] table for dsh '{}' is not a table.", connPropsName, dsh ) );
+
+				connProps.hostname = getRequiredTomlValue<std::string>( *connPropsEntry, "hostname" );
+
+				int64_t portI64 = getRequiredTomlValue<int64_t>( *connPropsEntry, "port" );
+				if( portI64 <= 0 || portI64 > 65535 )
+					throw ARQException( std::format( "Invalid port number {} (must be 1-65535)", portI64 ) );
+				connProps.port = static_cast<uint16_t>( portI64 );
+
+				// Optional fields
+
+				connProps.username = getOptionalTomlValue<std::string>( *connPropsEntry, "username" );
+				connProps.password = getOptionalTomlValue<std::string>( *connPropsEntry, "password" );
+				connProps.dbName = getOptionalTomlValue<std::string>( *connPropsEntry, "dbName" );
+
+				cfg.connPropsMap[connPropsName] = connProps;
+			}
 
 			// Insert into map
 

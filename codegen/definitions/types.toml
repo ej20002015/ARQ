@@ -5,33 +5,40 @@
 cpp = "std::string"
 clickhouse = "String"
 flatbuffer = "string"
+protobuf = "string"
 
 [types.double]
 cpp = "double"
 clickhouse = "Float64"
 flatbuffer = "double"
+protobuf = "double"
 
 [types.datetime]
 cpp = "Time::DateTime"
 clickhouse = "DateTime64(6)"
 flatbuffer = "ulong" # Representing nanoseconds since epoch
+protobuf = "uint64" # Representing nanoseconds since epoch
 
 [types.bool]
 cpp = "bool"
 clickhouse = "UInt8" # ClickHouse often uses UInt8 for booleans
 flatbuffer = "bool"
+protobuf = "bool"
 
 [types.uint8]
 cpp = "uint8_t"
 clickhouse = "UInt8"
 flatbuffer = "ubyte"
+protobuf = "uint32" # Protobuf does not have uint8, using uint32
 
 [types.int32]
 cpp = "int32_t"
 clickhouse = "Int32"
 flatbuffer = "int"
+protobuf = "int32"
 
 [types.int64]
 cpp = "std::int64_t"
 clickhouse = "Int64"
 flatbuffer = "long"
+protobuf = "int64"

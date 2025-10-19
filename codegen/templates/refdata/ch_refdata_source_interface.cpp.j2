@@ -18,13 +18,12 @@
 namespace ARQ
 {
 
-
 {% for entity in entities %}
 // --- Implementation for {{ entity.name }} ---
 
-std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity.name_plural }}()
+static std::vector<RDEntities::{{ entity.name }}> internalFetch{{ entity.name_plural }}( const std::string_view dsh, const std::optional<std::string_view> {{ entity.key }} = std::nullopt )
 {
-    CHConn conn( m_dsh );
+    CHConn conn( dsh );
 
     std::vector<RDEntities::{{ entity.name }}> results;
 
@@ -40,15 +39,25 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
             {% endfor %}
             argMax(_IsActive, _LastUpdatedTs) AS max_IsActive,
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
-            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
+            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy,
+            argMax(_Version, _LastUpdatedTs) AS max_Version
 		FROM RefData.{{ entity.table_name }}
+        {}
         GROUP BY {{ entity.key | capitalise_first }}
 		HAVING max_IsActive = 1;
 	)";
 
+    std::string whereClause;
+    if( {{ entity.key }}.has_value() )
+        {% if types[entity.key_type].clickhouse == "String" %}
+        whereClause = std::format( "WHERE {{ entity.key | capitalise_first }} = '{}'", {{ entity.key }}.value() );
+        {% else %}
+        whereClause = std::format( "WHERE {{ entity.key | capitalise_first }} = {}", {{ entity.key }}.value() );
+        {% endif %}
+
     try
     {
-        conn.client().Select( SELECT_STMT, [&] ( const clickhouse::Block& block )
+        conn.client().Select( std::format( SELECT_STMT, whereClause ), [&] ( const clickhouse::Block& block )
         {
             if( block.GetRowCount() == 0 )
                 return; // End of data
@@ -59,6 +68,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
             auto col_isActive = block[{{ entity.members | length }}]->As<clickhouse::ColumnUInt8>();
             auto col_lastUpdatedTs = block[{{ entity.members | length + 1 }}]->As<clickhouse::ColumnDateTime64>();
             auto col_lastUpdatedBy = block[{{ entity.members | length + 2 }}]->As<clickhouse::ColumnString>();
+            auto col_Version = block[{{ entity.members | length + 3 }}]->As<clickhouse::ColumnUInt32>();
 
             results.reserve( results.size() + block.GetRowCount() );
             for( size_t i = 0; i < block.GetRowCount(); ++i )
@@ -74,6 +84,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
                 obj._isActive = col_isActive->At( i );
                 obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
+                obj._version = col_Version->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -88,6 +99,17 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
     return results;
 }
 
+std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetch{{ entity.name_plural }}()
+{
+    return internalFetch{{ entity.name_plural }}( m_dsh );
+}
+
+std::optional<RDEntities::{{ entity.name }}> CHRefDataSource::fetch{{ entity.name }}( const RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType& {{ entity.key }} )
+{
+    auto result = internalFetch{{ entity.name_plural }}( m_dsh, {{ entity.key }} );
+    return result.empty() ? std::nullopt : std::make_optional( std::move( result.front() ) );
+}
+
 // TODO: Need to implement fetchAsOf{{ entity.name_plural }} in a similar manner
 // TODO: Need to create some audit load capability
 
@@ -96,7 +118,7 @@ std::vector<RDEntities::{{ entity.name }}> CHRefDataSource::fetchLatest{{ entity
     return std::vector<RDEntities::{{ entity.name }}>();
 }
 
-void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data )
+void CHRefDataSource::upsert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data )
 {
     CHConn conn( m_dsh );
 
@@ -114,6 +136,7 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
         // col_lastUpdatedTs is set to current time in ClickHouse, so we don't need to set it here
         auto col_lastUpdatedBy = std::make_shared<clickhouse::ColumnString>(); // TODO: Maybe set this to the current user?
+        auto col_Version = std::make_shared<clickhouse::ColumnUInt32>();
 
         for( const auto& obj : data )
         {
@@ -126,6 +149,7 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
             {% endfor %}
             col_isActive->Append( obj._isActive );
             col_lastUpdatedBy->Append( obj._lastUpdatedBy );
+            col_Version->Append( obj._version );
         }
 
         clickhouse::Block block;
@@ -134,6 +158,7 @@ void CHRefDataSource::insert{{ entity.name_plural }}( const std::vector<RDEntiti
         {% endfor %}
         block.AppendColumn( "_IsActive", col_isActive );
         block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
+        block.AppendColumn( "_Version", col_Version );
 
         conn.client().Insert( "RefData.{{ entity.table_name }}", block );
     }

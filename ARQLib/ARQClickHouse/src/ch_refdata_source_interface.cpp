@@ -14,12 +14,11 @@
 namespace ARQ
 {
 
-
 // --- Implementation for Currency ---
 
-std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
+static std::vector<RDEntities::Currency> internalFetchCurrencies( const std::string_view dsh, const std::optional<std::string_view> ccyID = std::nullopt )
 {
-    CHConn conn( m_dsh );
+    CHConn conn( dsh );
 
     std::vector<RDEntities::Currency> results;
 
@@ -33,15 +32,21 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
             argMax(SettlementDays, _LastUpdatedTs) AS max_SettlementDays,
             argMax(_IsActive, _LastUpdatedTs) AS max_IsActive,
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
-            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
+            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy,
+            argMax(_Version, _LastUpdatedTs) AS max_Version
 		FROM RefData.Currencies
+        {}
         GROUP BY CcyID
 		HAVING max_IsActive = 1;
 	)";
 
+    std::string whereClause;
+    if( ccyID.has_value() )
+        whereClause = std::format( "WHERE CcyID = '{}'", ccyID.value() );
+
     try
     {
-        conn.client().Select( SELECT_STMT, [&] ( const clickhouse::Block& block )
+        conn.client().Select( std::format( SELECT_STMT, whereClause ), [&] ( const clickhouse::Block& block )
         {
             if( block.GetRowCount() == 0 )
                 return; // End of data
@@ -53,6 +58,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
             auto col_isActive = block[4]->As<clickhouse::ColumnUInt8>();
             auto col_lastUpdatedTs = block[5]->As<clickhouse::ColumnDateTime64>();
             auto col_lastUpdatedBy = block[6]->As<clickhouse::ColumnString>();
+            auto col_Version = block[7]->As<clickhouse::ColumnUInt32>();
 
             results.reserve( results.size() + block.GetRowCount() );
             for( size_t i = 0; i < block.GetRowCount(); ++i )
@@ -65,6 +71,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
                 obj._isActive = col_isActive->At( i );
                 obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
+                obj._version = col_Version->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -79,6 +86,17 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
     return results;
 }
 
+std::vector<RDEntities::Currency> CHRefDataSource::fetchCurrencies()
+{
+    return internalFetchCurrencies( m_dsh );
+}
+
+std::optional<RDEntities::Currency> CHRefDataSource::fetchCurrency( const RDEntities::Traits<RDEntities::Currency>::KeyType& ccyID )
+{
+    auto result = internalFetchCurrencies( m_dsh, ccyID );
+    return result.empty() ? std::nullopt : std::make_optional( std::move( result.front() ) );
+}
+
 // TODO: Need to implement fetchAsOfCurrencies in a similar manner
 // TODO: Need to create some audit load capability
 
@@ -87,7 +105,7 @@ std::vector<RDEntities::Currency> CHRefDataSource::fetchLatestCurrencies()
     return std::vector<RDEntities::Currency>();
 }
 
-void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>& data )
+void CHRefDataSource::upsertCurrencies( const std::vector<RDEntities::Currency>& data )
 {
     CHConn conn( m_dsh );
 
@@ -102,6 +120,7 @@ void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>&
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
         // col_lastUpdatedTs is set to current time in ClickHouse, so we don't need to set it here
         auto col_lastUpdatedBy = std::make_shared<clickhouse::ColumnString>(); // TODO: Maybe set this to the current user?
+        auto col_Version = std::make_shared<clickhouse::ColumnUInt32>();
 
         for( const auto& obj : data )
         {
@@ -111,6 +130,7 @@ void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>&
             col_settlementDays->Append( obj.settlementDays );
             col_isActive->Append( obj._isActive );
             col_lastUpdatedBy->Append( obj._lastUpdatedBy );
+            col_Version->Append( obj._version );
         }
 
         clickhouse::Block block;
@@ -120,6 +140,7 @@ void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>&
         block.AppendColumn( "SettlementDays", col_settlementDays );
         block.AppendColumn( "_IsActive", col_isActive );
         block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
+        block.AppendColumn( "_Version", col_Version );
 
         conn.client().Insert( "RefData.Currencies", block );
     }
@@ -133,9 +154,9 @@ void CHRefDataSource::insertCurrencies( const std::vector<RDEntities::Currency>&
 
 // --- Implementation for User ---
 
-std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
+static std::vector<RDEntities::User> internalFetchUsers( const std::string_view dsh, const std::optional<std::string_view> userID = std::nullopt )
 {
-    CHConn conn( m_dsh );
+    CHConn conn( dsh );
 
     std::vector<RDEntities::User> results;
 
@@ -149,15 +170,21 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
             argMax(TradingDesk, _LastUpdatedTs) AS max_TradingDesk,
             argMax(_IsActive, _LastUpdatedTs) AS max_IsActive,
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
-            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy
+            argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy,
+            argMax(_Version, _LastUpdatedTs) AS max_Version
 		FROM RefData.Users
+        {}
         GROUP BY UserID
 		HAVING max_IsActive = 1;
 	)";
 
+    std::string whereClause;
+    if( userID.has_value() )
+        whereClause = std::format( "WHERE UserID = '{}'", userID.value() );
+
     try
     {
-        conn.client().Select( SELECT_STMT, [&] ( const clickhouse::Block& block )
+        conn.client().Select( std::format( SELECT_STMT, whereClause ), [&] ( const clickhouse::Block& block )
         {
             if( block.GetRowCount() == 0 )
                 return; // End of data
@@ -169,6 +196,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
             auto col_isActive = block[4]->As<clickhouse::ColumnUInt8>();
             auto col_lastUpdatedTs = block[5]->As<clickhouse::ColumnDateTime64>();
             auto col_lastUpdatedBy = block[6]->As<clickhouse::ColumnString>();
+            auto col_Version = block[7]->As<clickhouse::ColumnUInt32>();
 
             results.reserve( results.size() + block.GetRowCount() );
             for( size_t i = 0; i < block.GetRowCount(); ++i )
@@ -181,6 +209,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
                 obj._isActive = col_isActive->At( i );
                 obj._lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj._lastUpdatedBy = col_lastUpdatedBy->At( i );
+                obj._version = col_Version->At( i );
                 results.push_back( std::move( obj ) );
             }
         } );
@@ -195,6 +224,17 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
     return results;
 }
 
+std::vector<RDEntities::User> CHRefDataSource::fetchUsers()
+{
+    return internalFetchUsers( m_dsh );
+}
+
+std::optional<RDEntities::User> CHRefDataSource::fetchUser( const RDEntities::Traits<RDEntities::User>::KeyType& userID )
+{
+    auto result = internalFetchUsers( m_dsh, userID );
+    return result.empty() ? std::nullopt : std::make_optional( std::move( result.front() ) );
+}
+
 // TODO: Need to implement fetchAsOfUsers in a similar manner
 // TODO: Need to create some audit load capability
 
@@ -203,7 +243,7 @@ std::vector<RDEntities::User> CHRefDataSource::fetchLatestUsers()
     return std::vector<RDEntities::User>();
 }
 
-void CHRefDataSource::insertUsers( const std::vector<RDEntities::User>& data )
+void CHRefDataSource::upsertUsers( const std::vector<RDEntities::User>& data )
 {
     CHConn conn( m_dsh );
 
@@ -218,6 +258,7 @@ void CHRefDataSource::insertUsers( const std::vector<RDEntities::User>& data )
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
         // col_lastUpdatedTs is set to current time in ClickHouse, so we don't need to set it here
         auto col_lastUpdatedBy = std::make_shared<clickhouse::ColumnString>(); // TODO: Maybe set this to the current user?
+        auto col_Version = std::make_shared<clickhouse::ColumnUInt32>();
 
         for( const auto& obj : data )
         {
@@ -227,6 +268,7 @@ void CHRefDataSource::insertUsers( const std::vector<RDEntities::User>& data )
             col_tradingDesk->Append( obj.tradingDesk );
             col_isActive->Append( obj._isActive );
             col_lastUpdatedBy->Append( obj._lastUpdatedBy );
+            col_Version->Append( obj._version );
         }
 
         clickhouse::Block block;
@@ -236,6 +278,7 @@ void CHRefDataSource::insertUsers( const std::vector<RDEntities::User>& data )
         block.AppendColumn( "TradingDesk", col_tradingDesk );
         block.AppendColumn( "_IsActive", col_isActive );
         block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
+        block.AppendColumn( "_Version", col_Version );
 
         conn.client().Insert( "RefData.Users", block );
     }

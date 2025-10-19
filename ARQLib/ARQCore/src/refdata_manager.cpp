@@ -27,7 +27,7 @@ void RefDataManager::reloadCurrencies()
     Log( Module::REFDATA ).debug( "RefDataManager: Reloading {} data", RDEntities::Traits<RDEntities::Currency>::name() );
 
     std::map<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency> newData;
-    auto objs = m_rdSource->fetchLatestCurrencies();
+    auto objs = m_rdSource->fetchCurrencies();
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.ccyID, std::move( obj ) );
 
@@ -50,7 +50,7 @@ void RefDataManager::loadInitiallyCurrencies()
 	Log( Module::REFDATA ).debug( "RefDataManager: Doing initial load of {} data", RDEntities::Traits<RDEntities::Currency>::name() );
 
     std::map<RDEntities::Traits<RDEntities::Currency>::KeyType, RDEntities::Currency> newData;
-    auto objs = m_rdSource->fetchLatestCurrencies();
+    auto objs = m_rdSource->fetchCurrencies();
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.ccyID, std::move( obj ) );
 
@@ -83,7 +83,7 @@ void RefDataManager::insertCurrencies( const std::vector<RDEntities::Currency>& 
         }
     }
 
-    m_rdSource->insertCurrencies( data );
+    m_rdSource->upsertCurrencies( data );
 
     Log( Module::REFDATA ).info( "RefDataManager: Inserted {} data, count: {}", RDEntities::Traits<RDEntities::Currency>::name(), data.size() );
 
@@ -117,7 +117,7 @@ void RefDataManager::reloadUsers()
     Log( Module::REFDATA ).debug( "RefDataManager: Reloading {} data", RDEntities::Traits<RDEntities::User>::name() );
 
     std::map<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User> newData;
-    auto objs = m_rdSource->fetchLatestUsers();
+    auto objs = m_rdSource->fetchUsers();
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.userID, std::move( obj ) );
 
@@ -140,7 +140,7 @@ void RefDataManager::loadInitiallyUsers()
 	Log( Module::REFDATA ).debug( "RefDataManager: Doing initial load of {} data", RDEntities::Traits<RDEntities::User>::name() );
 
     std::map<RDEntities::Traits<RDEntities::User>::KeyType, RDEntities::User> newData;
-    auto objs = m_rdSource->fetchLatestUsers();
+    auto objs = m_rdSource->fetchUsers();
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.userID, std::move( obj ) );
 
@@ -173,7 +173,7 @@ void RefDataManager::insertUsers( const std::vector<RDEntities::User>& data, con
         }
     }
 
-    m_rdSource->insertUsers( data );
+    m_rdSource->upsertUsers( data );
 
     Log( Module::REFDATA ).info( "RefDataManager: Inserted {} data, count: {}", RDEntities::Traits<RDEntities::User>::name(), data.size() );
 

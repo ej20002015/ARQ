@@ -18,14 +18,16 @@ public:
 	virtual ~MockRefDataSource() = default;
 
     // --- Mock Methods for Currency (CCY) ---
-    MOCK_METHOD( std::vector<RDEntities::Currency>, fetchLatestCurrencies, (), ( override ) );
+    MOCK_METHOD( std::vector<RDEntities::Currency>, fetchCurrencies, (), ( override ) );
+    MOCK_METHOD( std::optional<RDEntities::Currency>, fetchCurrency, ( const RDEntities::Traits<RDEntities::Currency>::KeyType& ccyID ), ( override ) );
     MOCK_METHOD( std::vector<RDEntities::Currency>, fetchAsOfCurrencies, ( const Time::DateTime asof ), ( override ) );
-    MOCK_METHOD( void, insertCurrencies, ( const std::vector<RDEntities::Currency>& data ), ( override ) );
+    MOCK_METHOD( void, upsertCurrencies, ( const std::vector<RDEntities::Currency>& data ), ( override ) );
 
     // --- Mock Methods for User (USER) ---
-    MOCK_METHOD( std::vector<RDEntities::User>, fetchLatestUsers, (), ( override ) );
+    MOCK_METHOD( std::vector<RDEntities::User>, fetchUsers, (), ( override ) );
+    MOCK_METHOD( std::optional<RDEntities::User>, fetchUser, ( const RDEntities::Traits<RDEntities::User>::KeyType& userID ), ( override ) );
     MOCK_METHOD( std::vector<RDEntities::User>, fetchAsOfUsers, ( const Time::DateTime asof ), ( override ) );
-    MOCK_METHOD( void, insertUsers, ( const std::vector<RDEntities::User>& data ), ( override ) );
+    MOCK_METHOD( void, upsertUsers, ( const std::vector<RDEntities::User>& data ), ( override ) );
 
 };
 

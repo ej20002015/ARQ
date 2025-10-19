@@ -22,7 +22,7 @@ namespace ARQ
 enum class LogLevel
 {
 	CRITICAL,
-	ERROR,
+	ERRO,
 	WARN,
 	INFO,
 	DEBUG,
@@ -31,7 +31,7 @@ enum class LogLevel
 	_SIZE
 };
 
-static constexpr const char* const LOG_LEVEL_STRS[static_cast<size_t>( LogLevel::_SIZE )] = { "CRITICAL", "ERROR", "WARN", "INFO", "DEBUG", "TRACE" };
+static constexpr const char* const LOG_LEVEL_STRS[static_cast<size_t>( LogLevel::_SIZE )] = { "CRITICAL", "ERRO", "WARN", "INFO", "DEBUG", "TRACE" };
 
 static constexpr auto DEFAULT_LOGGER_NAME = "ARQLib";
 
@@ -45,7 +45,7 @@ struct LoggerConfig
 	LogLevel consoleLoggerLevel = LogLevel::INFO;
 	LogLevel fileLoggerLevel    = LogLevel::DEBUG;
 
-	LogLevel flushLevel         = LogLevel::ERROR;
+	LogLevel flushLevel         = LogLevel::ERRO;
 
 	std::filesystem::path fileLoggerDir = Sys::logDir();
 
@@ -127,7 +127,7 @@ public:
 	void error( const std::format_string<Args...> fmt, Args&&... args )
 	{
 		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::ERROR, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+			s_globalLogger->log( LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void warn( const std::format_string<Args...> fmt, Args&&... args )
@@ -164,7 +164,7 @@ public:
 	void error( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
 		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::ERROR, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+			s_globalLogger->logException( exception, LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void warn( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )

@@ -20,14 +20,16 @@ public:
 	virtual ~CHRefDataSource() = default;
 
     // --- Methods for Currency (CCY) ---
-    [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::Currency> fetchLatestCurrencies() override;
+    [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::Currency> fetchCurrencies() override;
+    [[nodiscard]] ARQClickHouse_API std::optional<RDEntities::Currency> fetchCurrency( const RDEntities::Traits<RDEntities::Currency>::KeyType& ccyID ) override;
     [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::Currency> fetchAsOfCurrencies( const Time::DateTime asof ) override;
-    ARQClickHouse_API void insertCurrencies( const std::vector<RDEntities::Currency>& data ) override;
+    ARQClickHouse_API void upsertCurrencies( const std::vector<RDEntities::Currency>& data ) override;
 
     // --- Methods for User (USER) ---
-    [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::User> fetchLatestUsers() override;
+    [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::User> fetchUsers() override;
+    [[nodiscard]] ARQClickHouse_API std::optional<RDEntities::User> fetchUser( const RDEntities::Traits<RDEntities::User>::KeyType& userID ) override;
     [[nodiscard]] ARQClickHouse_API std::vector<RDEntities::User> fetchAsOfUsers( const Time::DateTime asof ) override;
-    ARQClickHouse_API void insertUsers( const std::vector<RDEntities::User>& data ) override;
+    ARQClickHouse_API void upsertUsers( const std::vector<RDEntities::User>& data ) override;
 
 private:
     std::string m_dsh;

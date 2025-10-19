@@ -42,7 +42,7 @@ TEST_F( RefDataManagerTests, InitiallyHasNoData )
 TEST_F( RefDataManagerTests, FirstGetTriggersInitialLoad )
 {
     // Expect that the first call to Currencies() will trigger a fetch.
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{} ) );
 
     auto cache = manager->Currencies(); // This should trigger the load
@@ -54,7 +54,7 @@ TEST_F( RefDataManagerTests, SecondGetDoesNotTriggerLoad )
 {
     // After the first load, subsequent gets should not hit the database.
     // We set the expectation for the first call only.
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{} ) )
         .RetiresOnSaturation(); // This expectation is only valid once
 
@@ -68,7 +68,7 @@ TEST_F( RefDataManagerTests, ReloadFetchesNewData )
     // Setup initial data
     Currency initialCcy;
     initialCcy.ccyID = "USD";
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ initialCcy } ) );
 
     auto initialCache = manager->Currencies();
@@ -77,7 +77,7 @@ TEST_F( RefDataManagerTests, ReloadFetchesNewData )
     // Setup data for the reload
     Currency reloadedCcy;
     reloadedCcy.ccyID = "EUR"; // New data
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ reloadedCcy } ) );
 
     // Act
@@ -95,9 +95,9 @@ TEST_F( RefDataManagerTests, InsertHappyPath )
     ccyToInsert.ccyID = "JPY";
 
     // Expect the insert method on the source to be called.
-    EXPECT_CALL( *mockSource, insertCurrencies( _ ) ).Times( 1 );
+    EXPECT_CALL( *mockSource, upsertCurrencies( _ ) ).Times( 1 );
     // Expect a reload to happen after the insert.
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() ).Times( 1 );
+    EXPECT_CALL( *mockSource, fetchCurrencies() ).Times( 1 );
 
     ASSERT_NO_THROW( manager->insertCurrency( ccyToInsert, RefDataManager::StaleCheck::NONE ) );
 }
@@ -110,7 +110,7 @@ TEST_F( RefDataManagerTests, InsertStaleRecordThrowsWithCacheCheck )
     Currency cachedCcy;
     cachedCcy.ccyID = "USD";
     cachedCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 ); // Newer timestamp
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ cachedCcy } ) );
     auto cachePtr = manager->Currencies(); // Trigger initial load
 
@@ -123,7 +123,7 @@ TEST_F( RefDataManagerTests, InsertStaleRecordThrowsWithCacheCheck )
     // Expect an exception because the stale check is active by default.
     EXPECT_THROW( manager->insertCurrency( staleCcy ), ARQException );
     // Expect that the data source's insert method is NEVER called.
-    EXPECT_CALL( *mockSource, insertCurrencies( _ ) ).Times( 0 );
+    EXPECT_CALL( *mockSource, upsertCurrencies( _ ) ).Times( 0 );
 }
 
 TEST_F( RefDataManagerTests, InsertStaleRecordSucceedsWithNoCheck )
@@ -134,7 +134,7 @@ TEST_F( RefDataManagerTests, InsertStaleRecordSucceedsWithNoCheck )
     Currency cachedCcy;
     cachedCcy.ccyID = "USD";
     cachedCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ cachedCcy } ) );
     auto cachePtr = manager->Currencies();
 
@@ -145,9 +145,9 @@ TEST_F( RefDataManagerTests, InsertStaleRecordSucceedsWithNoCheck )
 
     // 3. Assert
     // Expect no exception, and expect insert to be called because check is NONE.
-    EXPECT_CALL( *mockSource, insertCurrencies( _ ) ).Times( 1 );
+    EXPECT_CALL( *mockSource, upsertCurrencies( _ ) ).Times( 1 );
     // The post-insert reload will also happen
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() ).Times( 1 );
+    EXPECT_CALL( *mockSource, fetchCurrencies() ).Times( 1 );
 
     ASSERT_NO_THROW( manager->insertCurrency( staleCcy, RefDataManager::StaleCheck::NONE ) );
 }
@@ -162,7 +162,7 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
     Currency cachedCcy;
     cachedCcy.ccyID = "USD";
     cachedCcy._lastUpdatedTs = baseTs + Time::Seconds( 50 );
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ cachedCcy } ) );
     auto cachePtr = manager->Currencies();
 
@@ -171,7 +171,7 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
     dbFresherCcy.ccyID = "USD";
     dbFresherCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
     // This is the expectation for the forced reload inside insert()
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ dbFresherCcy } ) );
 
     // 3. Try to insert something that is stale compared to the DB version
@@ -183,7 +183,7 @@ TEST_F( RefDataManagerTests, InsertWithDbStaleCheckForcesReload )
     // Expect an exception because the forced reload will find the 100s timestamp.
     EXPECT_THROW( manager->insertCurrency( itemToInsert, RefDataManager::StaleCheck::USING_DB ), ARQException );
     // Expect insert never to be called.
-    EXPECT_CALL( *mockSource, insertCurrencies( _ ) ).Times( 0 );
+    EXPECT_CALL( *mockSource, upsertCurrencies( _ ) ).Times( 0 );
 }
 
 TEST_F( RefDataManagerTests, GetReturnsReferenceToDataInSnapshot )
@@ -193,7 +193,7 @@ TEST_F( RefDataManagerTests, GetReturnsReferenceToDataInSnapshot )
     Currency ccy;
     ccy.ccyID = "USD";
     ccy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ ccy } ) );
 
     // 1. Get a handle to the cache. This is a shared_ptr to the RefDataCache.
@@ -213,7 +213,7 @@ TEST_F( RefDataManagerTests, GetReturnsReferenceToDataInSnapshot )
     Currency newCcy;
     newCcy.ccyID = "EUR";
     newCcy._lastUpdatedTs = baseTs + Time::Seconds( 100 );
-    EXPECT_CALL( *mockSource, fetchLatestCurrencies() )
+    EXPECT_CALL( *mockSource, fetchCurrencies() )
         .WillOnce( Return( std::vector<Currency>{ newCcy } ) );
 
     manager->reloadCurrencies();

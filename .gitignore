@@ -8,3 +8,6 @@
 # Visual Studio C# and .NET
 bin/
 obj/
+
+# Codegen
+codegen/script/.codegen_cache.json

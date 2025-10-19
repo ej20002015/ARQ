@@ -395,6 +395,14 @@ TEST( DateTimeTest, MicrosecondsConstruction )
     EXPECT_EQ( dateTime.microsecondsSinceEpoch(), us );
 }
 
+TEST( DateTimeTest, NowEpochEquality )
+{
+    DateTime dateTime = DateTime::nowUTC();
+    DateTime otherDateTime( dateTime.microsecondsSinceEpoch() );
+
+    EXPECT_EQ( dateTime, otherDateTime );
+}
+
 TEST( DateTimeTest, TimePointConstruction )
 {
     auto tp = std::chrono::system_clock::now();

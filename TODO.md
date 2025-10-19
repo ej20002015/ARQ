@@ -1,3 +1,14 @@
+- Create RefDataGatekeeper gRPC service
+  - Make client side first
+  - Will need to integrate Kafka
+  - Set up kafka co-partitioning
+  - Use snapshotting technique and just keep all version data in-memory
+- Create RefDataViewManager
+- Create subscription bit
+- Do all the same for mkt data
+
+- Add an library initialisation function
+- Equality operators for entities + other helpers (e.g. toString())
 - Integration testing for ARQClickHouse?
 - Add stack trace library
 - Add event logging of some description

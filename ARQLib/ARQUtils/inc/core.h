@@ -32,15 +32,16 @@ struct Empty
 
 enum class Module
 {
-	REFDATA,
 	CORE,
-	CLICKHOUSE,
+	REFDATA,
 	MKT,
+	CLICKHOUSE,
+	GRPC,
 
 	_SIZE
 };
 
-static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "REFDATA", "CORE", "CLICKHOUSE", "MKT" };
+static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "CORE", "REFDATA", "MKT", "CLICKHOUSE", "GRPC" };
 
 // Commonly used concepts
 

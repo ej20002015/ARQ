@@ -19,7 +19,7 @@ spdlog::level::level_enum ARQLevelToSpdlog( const LogLevel level )
 	switch( level )
 	{
 		case LogLevel::CRITICAL: return spdlog::level::critical; break;
-		case LogLevel::ERROR:    return spdlog::level::err;      break;
+		case LogLevel::ERRO:     return spdlog::level::err;      break;
 		case LogLevel::WARN:     return spdlog::level::warn;     break;
 		case LogLevel::INFO:     return spdlog::level::info;     break;
 		case LogLevel::DEBUG:    return spdlog::level::debug;    break;

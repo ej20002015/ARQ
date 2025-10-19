@@ -23,9 +23,10 @@ public:
 
     {% for entity in entities %}
     // --- Mock Methods for {{ entity.name }} ({{ entity.type_string }}) ---
-    MOCK_METHOD( std::vector<RDEntities::{{ entity.name }}>, fetchLatest{{ entity.name_plural }}, (), ( override ) );
+    MOCK_METHOD( std::vector<RDEntities::{{ entity.name }}>, fetch{{ entity.name_plural }}, (), ( override ) );
+    MOCK_METHOD( std::optional<RDEntities::{{ entity.name }}>, fetch{{ entity.name }}, ( const RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType& {{ entity.key }} ), ( override ) );
     MOCK_METHOD( std::vector<RDEntities::{{ entity.name }}>, fetchAsOf{{ entity.name_plural }}, ( const Time::DateTime asof ), ( override ) );
-    MOCK_METHOD( void, insert{{ entity.name_plural }}, ( const std::vector<RDEntities::{{ entity.name }}>& data ), ( override ) );
+    MOCK_METHOD( void, upsert{{ entity.name_plural }}, ( const std::vector<RDEntities::{{ entity.name }}>& data ), ( override ) );
 
     {% endfor %}
 };

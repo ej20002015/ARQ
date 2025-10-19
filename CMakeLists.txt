@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.23)
 message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
 
 # Project name
-project(ARQLib)
+project(ARQ)
 
 # Set the C++ standard
 set(CMAKE_CXX_STANDARD 20)
@@ -29,8 +29,50 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-# gtest setup
+set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) # hack to prevent CTest added targets
+
 include(FetchContent)
+
+# Download pre-built binaries / packages from ARQ_dependencies repo
+
+set(PACKAGES_DIR ${CMAKE_BINARY_DIR}/packages)
+
+function(add_prebuilt_dependency NAME URL)
+    message(STATUS "Downloading pre-built dependency: ${NAME}")
+
+    FetchContent_Declare(
+        ${NAME}
+        URL ${URL}
+        SOURCE_DIR "${PACKAGES_DIR}/${NAME}"
+        DOWNLOAD_EXTRACT_TIMESTAMP true # Stamp extracted files with download time rather than original time
+    )
+
+    # This performs the download and extraction.
+    FetchContent_MakeAvailable(${NAME})
+    message(STATUS "Downloaded and extracted ${NAME} to location: ${${NAME}_SOURCE_DIR}")
+
+    # Set directory of extracted package variable in the PARENT_SCOPE, so the main script can access it.
+    set(FETCHCONTENT_EXTRACTED_DIR_${NAME} ${${NAME}_SOURCE_DIR} PARENT_SCOPE)
+endfunction()
+
+if(WIN32)
+    add_prebuilt_dependency(grpc_v1.74.1_debug "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Debug.zip")
+    add_prebuilt_dependency(grpc_v1.74.1_release "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Release.zip")
+else()
+    add_prebuilt_dependency(grpc_v1.74.1_debug "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-linux-Debug.tar.gz")
+    add_prebuilt_dependency(grpc_v1.74.1_release "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-linux-Release.tar.gz")
+endif()
+
+add_prebuilt_dependency(grpc_v1.74.1_debug "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Debug.${ARCHIVE_FILE_EXT}")
+add_prebuilt_dependency(grpc_v1.74.1_release "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Release.${ARCHIVE_FILE_EXT}")
+
+# Add cmake package directories
+list(APPEND CMAKE_PREFIX_PATH
+    ${FETCHCONTENT_EXTRACTED_DIR_grpc_v1.74.1_debug}
+    ${FETCHCONTENT_EXTRACTED_DIR_grpc_v1.74.1_release}
+)
+
+# gtest setup
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
@@ -205,10 +247,14 @@ function(ARQ_define_dynalib_bench DYNALIB_NAME)
 endfunction()
 
 function(ARQ_define_tools_exe EXE_NAME)
-    ARQ_define_exe(${EXE_NAME} "tools/${EXE_NAME}")
+    ARQ_define_exe(${EXE_NAME} "tools/${EXE_NAME}" "tools")
 endfunction()
 
-function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR)
+function(ARQ_define_services_exe EXE_NAME SUB_FOLDER)
+    ARQ_define_exe(${EXE_NAME} "services/${SUB_FOLDER}/${EXE_NAME}" "services/${SUB_FOLDER}")
+endfunction()
+
+function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
     file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/*.cpp")
     file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/*.h")
 
@@ -216,7 +262,7 @@ function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR)
                    ${SOURCES}
                    ${HEADERS})
 
-    set_target_properties(${EXE_NAME} PROPERTIES FOLDER "tools")
+    set_target_properties(${EXE_NAME} PROPERTIES FOLDER ${FOLDER_NAME})
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
 endfunction()
 
@@ -251,8 +297,11 @@ function(append_link_libraries TARGET)
     endforeach()
 
     # Set the updated list of linked libraries back to the target
-    target_link_libraries(${TARGET} PRIVATE ${CURRENT_LIBRARIES})
+    target_link_libraries(${TARGET} PUBLIC ${CURRENT_LIBRARIES})
 endfunction()
+
+# Create protobuf/grpc files
+add_subdirectory(proto)
 
 # Aeron set up (TODO: Move to it's own ARQAeron project)
 
@@ -283,11 +332,12 @@ add_custom_target(copy_aeron_dll ALL
 set_target_properties(copy_aeron_dll PROPERTIES FOLDER "custom_targets")
 
 # ClickHouse setup
-
 set(CMAKE_FOLDER "vendor/clickhouse-cpp")
 if(UNIX)
     set(BUILD_SHARED_LIBS ON CACHE BOOL "On linux build clickhouse as a shared lib" FORCE)
 endif()
+# set(DEBUG_DEPENDENCIES OFF CACHE BOOL "Don't Print debug info about clickhouse-cpp dependencies" FORCE)
+set(WITH_SYSTEM_ABSEIL ON CACHE BOOL "Use system abseil" FORCE)
 add_subdirectory(vendor/clickhouse-cpp)
 unset(CMAKE_FOLDER)
 if(UNIX)
@@ -298,7 +348,6 @@ set(CLICKHOUSE_CPP_CONTRIB_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp/c
 set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
 
 # Flatbuffers setup
-
 set(CMAKE_FOLDER "vendor/flatbuffers")
 set(FLATBUFFERS_BUILD_SHAREDLIB ON CACHE BOOL "Build flatbuffers as shared library" FORCE)
 set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "Don't build static flatbuffers library" FORCE)
@@ -337,7 +386,12 @@ add_subdirectory(ARQLib/ARQMarket)
 add_subdirectory(ARQLib/ARQSolace)
 add_subdirectory(ARQLib/ARQMessaging)
 add_subdirectory(ARQLib/ARQClickHouse)
+add_subdirectory(ARQLib/ARQGrpc)
 add_subdirectory(ARQLib/ARQSerialisation)
+
+# Add services subdirectories
+add_subdirectory(services/RefData/RefDataReader)
+add_subdirectory(services/RefData/RefDataGatekeeper)
 
 # Add tools subdirectories
 add_subdirectory(tools/aeron_publisher)

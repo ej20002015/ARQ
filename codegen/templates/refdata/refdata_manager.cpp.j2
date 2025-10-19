@@ -32,7 +32,7 @@ void RefDataManager::reload{{ entity.name_plural }}()
     Log( Module::REFDATA ).debug( "RefDataManager: Reloading {} data", RDEntities::Traits<RDEntities::{{ entity.name }}>::name() );
 
     std::map<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}> newData;
-    auto objs = m_rdSource->fetchLatest{{ entity.name_plural }}();
+    auto objs = m_rdSource->fetch{{ entity.name_plural }}();
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.{{ entity.key}}, std::move( obj ) );
 
@@ -55,7 +55,7 @@ void RefDataManager::loadInitially{{ entity.name_plural }}()
 	Log( Module::REFDATA ).debug( "RefDataManager: Doing initial load of {} data", RDEntities::Traits<RDEntities::{{ entity.name }}>::name() );
 
     std::map<RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType, RDEntities::{{ entity.name }}> newData;
-    auto objs = m_rdSource->fetchLatest{{ entity.name_plural }}();
+    auto objs = m_rdSource->fetch{{ entity.name_plural }}();
     for( auto&& obj : std::move( objs ) )
         newData.emplace( obj.{{ entity.key}}, std::move( obj ) );
 
@@ -88,7 +88,7 @@ void RefDataManager::insert{{ entity.name_plural }}( const std::vector<RDEntitie
         }
     }
 
-    m_rdSource->insert{{ entity.name_plural }}( data );
+    m_rdSource->upsert{{ entity.name_plural }}( data );
 
     Log( Module::REFDATA ).info( "RefDataManager: Inserted {} data, count: {}", RDEntities::Traits<RDEntities::{{ entity.name }}>::name(), data.size() );
 

@@ -14,6 +14,8 @@ import sys
 from pathlib import Path
 import re
 from typing import List, Dict, Optional, Tuple, Any
+import json
+import time
 
 
 class CodeGenerationError(Exception):
@@ -112,6 +114,10 @@ class CodeGenerator:
         self.types_data = {}
         self.entities_by_type: Dict[str, List[EntityDefinition]] = {}
         self.jinja_env = None
+        # cache file to track template mtimes so we only regenerate changed outputs
+        self.cache_file = Path(__file__).parent.resolve() / '.codegen_cache.json'
+        self._cache: Dict[str, Any] = {}
+        self._load_cache()
     
     def get_available_entity_types(self) -> List[str]:
         """Get a list of available entity types from the definitions directory."""
@@ -187,6 +193,7 @@ class CodeGenerator:
         # Add custom filters
         self.jinja_env.filters['capitalise_first'] = self._capitalise_first_filter
         self.jinja_env.filters['pascal_case'] = self._pascal_case_filter
+        self.jinja_env.filters['camel_case'] = self._camel_case_filter
         self.jinja_env.filters['snake_case'] = self._snake_case_filter
     
     def _capitalise_first_filter(self, text: str) -> str:
@@ -202,6 +209,13 @@ class CodeGenerator:
         # Split on underscores, spaces, or hyphens and capitalize each word
         words = re.split(r'[_\s-]+', text)
         return ''.join(word.capitalize() for word in words if word)
+    
+    def _camel_case_filter(self, text: str) -> str:
+        """Jinja2 filter to convert text to (lower)camelCase."""
+        if not text:
+            return text
+        pascal_case = self._pascal_case_filter(text)
+        return pascal_case[0].lower() + pascal_case[1:] if pascal_case else pascal_case
     
     def _snake_case_filter(self, text: str) -> str:
         """Jinja2 filter to convert text to snake_case."""
@@ -262,17 +276,38 @@ class CodeGenerator:
             if not metadata.is_valid:
                 print(f"  - Skipping {relative_template_path} (no 'output_path' defined in metadata)")
                 return
-            
+            # decide whether to regenerate based on template mtime and cache
+            try:
+                template_mtime = template_path.stat().st_mtime
+            except OSError:
+                template_mtime = time.time()
+
+            cache_entry = self._cache.get(relative_template_path, {})
+            cached_mtime = cache_entry.get('mtime', 0)
+
+            output_path = self.output_dir / metadata.output_path
+
+            if template_mtime <= cached_mtime and output_path.exists():
+                print(f"  (-) Skipping {relative_template_path} (template unchanged, output exists)")
+                return
+
             template = self.jinja_env.get_template(relative_template_path)
             output_content = template.render(data_model)
-            
+
             # Write the output file
-            output_path = self.output_dir / metadata.output_path
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            
-            print(f"  -> Writing {output_path}")
+
+            print(f"  (+) Writing {output_path}")
             with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(output_content)
+
+            # update cache for this template
+            self._cache[relative_template_path] = {
+                'mtime': template_mtime,
+                'output_path': metadata.output_path,
+                'written_at': time.time()
+            }
+            self._save_cache()
                 
         except Exception as e:
             raise CodeGenerationError(f"Failed to process template {template_path}: {e}")
@@ -290,6 +325,27 @@ class CodeGenerator:
                 self.generate_for_entity_type(entity_type)
         
         print("\nCode generation complete.")
+
+    def _load_cache(self) -> None:
+        """Load the template mtime cache from disk (silent if missing)."""
+        try:
+            if self.cache_file.exists():
+                with open(self.cache_file, 'r', encoding='utf-8') as f:
+                    self._cache = json.load(f)
+            else:
+                self._cache = {}
+        except Exception as e:
+            raise CodeGenerationError(f"Failed to read cache file {self.cache_file}: {e}")
+
+    def _save_cache(self) -> None:
+        """Persist the template mtime cache to disk."""
+        try:
+            # ensure output dir exists before writing cache
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            with open(self.cache_file, 'w', encoding='utf-8') as f:
+                json.dump(self._cache, f, indent=2)
+        except Exception as e:
+            raise CodeGenerationError(f"Failed to write cache file {self.cache_file}: {e}")
 
 
 def main():

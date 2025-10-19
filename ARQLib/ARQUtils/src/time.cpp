@@ -215,7 +215,7 @@ DateTime::DateTime( const std::chrono::system_clock::time_point tp )
 
 DateTime DateTime::nowUTC()
 {
-	return DateTime( std::chrono::system_clock::now() );
+	return DateTime( floor<std::chrono::microseconds>( std::chrono::system_clock::now() ) );
 }
 
 Date DateTime::date() const noexcept

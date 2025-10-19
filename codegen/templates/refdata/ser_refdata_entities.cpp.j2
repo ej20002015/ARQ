@@ -23,6 +23,7 @@ RDEntities::{{ entity.name }} deserialise{{ entity.name }}( const fbs::{{entity.
 		payload.isActive(),
         Time::DateTime(),
 		"",
+        0,
         {% for member in entity.members %}
         {% if types[member.type].flatbuffer == "string" %}
         payload.{{ member.name }}()->c_str(){% if not loop.last %},{% endif %}

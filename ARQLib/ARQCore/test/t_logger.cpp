@@ -183,7 +183,7 @@ TEST_F( LoggerTest, LogLevels )
     EXPECT_EQ( jsonLogs[1]["level"], "DEBUG" );
     EXPECT_EQ( jsonLogs[2]["level"], "INFO" );
     EXPECT_EQ( jsonLogs[3]["level"], "WARN" );
-    EXPECT_EQ( jsonLogs[4]["level"], "ERROR" );
+    EXPECT_EQ( jsonLogs[4]["level"], "ERRO" );
     EXPECT_EQ( jsonLogs[5]["level"], "CRITICAL" );
 }
 
@@ -322,7 +322,7 @@ TEST_F( LoggerTest, ExceptionLogging )
     ASSERT_FALSE( logJSON.is_null() );
 
     // Check standard fields
-    EXPECT_EQ( logJSON["level"], "ERROR" );
+    EXPECT_EQ( logJSON["level"], "ERRO" );
     EXPECT_EQ( logJSON["message"], logMsg );
 
     // Check exception field

@@ -1,0 +1,16 @@
+[data_sources]
+
+[data_sources.ClickHouseDB]
+type = "ClickHouse"
+[data_sources.ClickHouseDB.conn_props.Main]
+hostname = "localhost"
+port = 9000
+
+[data_sources.RefData_gRPC]
+type = "gRPC"
+[data_sources.RefData_gRPC.conn_props.RefDataGatekeeper]
+hostname = "localhost"
+port = 50052
+[data_sources.RefData_gRPC.conn_props.RefDataReader]
+hostname = "localhost"
+port = 50051

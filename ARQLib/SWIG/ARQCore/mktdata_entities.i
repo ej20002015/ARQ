@@ -190,7 +190,6 @@ struct EQPrice : public MDEntity
 }
 
 
-
 }
 }
 

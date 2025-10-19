@@ -31,6 +31,7 @@ struct RDEntity
     bool _isActive = true;
     Time::DateTime _lastUpdatedTs;
     std::string _lastUpdatedBy;
+    uint32_t _version = 0;
 };
 
 template<typename T>
@@ -69,17 +70,17 @@ public:
 struct MemberInfo
 {
     /// Name of the C++ member variable
-    const std::string_view name;
+    std::string_view name;
     /// Documentation string
-    const std::string_view comment;
+    std::string_view comment;
     /// The language agnostic type as a string
-    const std::string_view type;
+    std::string_view type;
     /// The C++ type as a string
-    const std::string_view cppType;
+    std::string_view cppType;
     /// The ClickHouse type as a string
-    const std::string_view clickhouseType;
+    std::string_view clickhouseType;
     /// The FlatBuffers type as a string
-    const std::string_view flatbufferType;
+    std::string_view flatbufferType;
 };
 
 /*
@@ -114,6 +115,8 @@ public:
     static constexpr std::string_view const key()       { return "ccyID"; }
 
     using KeyType = std::string;
+
+    static KeyType getKeyVal( const Currency& entity ) { return entity.ccyID; }
 
     // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, 4> membersInfo =
@@ -190,6 +193,8 @@ public:
     static constexpr std::string_view const key()       { return "userID"; }
 
     using KeyType = std::string;
+
+    static KeyType getKeyVal( const User& entity ) { return entity.userID; }
 
     // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, 4> membersInfo =

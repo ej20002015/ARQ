@@ -1,4 +1,5 @@
 #pragma once
+#include <ARQCore/dll.h>
 
 #include <ARQUtils/hashers.h>
 
@@ -20,6 +21,7 @@ public:
 	enum Enum
 	{
 		ClickHouse,
+		gRPC,
 
 		_SIZE
 	};
@@ -28,7 +30,7 @@ public:
 	static std::string_view toStr( const Enum type );
 
 private:
-	static constexpr const std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE )> TYPE_STRINGS = { "ClickHouse" };
+	static constexpr const std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE )> TYPE_STRINGS = { "ClickHouse", "gRPC" };
 };
 
 struct DataSourceConfig
@@ -37,30 +39,32 @@ struct DataSourceConfig
 
 	DataSourceType::Enum type;
 
-	std::string hostname;
-	uint16_t port;
+	struct ConnProps
+	{
 
-	std::optional<std::string> username;
-	std::optional<std::string> password;
-	std::optional<std::string> dbName;
+		std::string hostname;
+		uint16_t port;
+
+		std::optional<std::string> username;
+		std::optional<std::string> password;
+		std::optional<std::string> dbName;
+	};
+
+	std::unordered_map<std::string, ConnProps> connPropsMap;
 };
 
 class DataSourceConfigManager
 {
 public:
-	DataSourceConfigManager() = default; // Can create other instances for testing
+	ARQCore_API DataSourceConfigManager() = default; // Can create other instances for testing
 	DataSourceConfigManager( const DataSourceConfigManager& ) = delete;
 	DataSourceConfigManager& operator=( const DataSourceConfigManager& ) = delete;
 
-	static DataSourceConfigManager& inst()
-	{
-		static DataSourceConfigManager inst;
-		return inst;
-	}
+	ARQCore_API static DataSourceConfigManager& inst();
 
-	const DataSourceConfig& get( const std::string_view handle );
+	ARQCore_API const DataSourceConfig& get( const std::string_view handle );
 
-	void load( const std::optional<std::string_view> tomlCfg = std::nullopt );
+	ARQCore_API void load( const std::optional<std::string_view> tomlCfg = std::nullopt );
 
 private:
 	void iLoad( const std::optional<std::string_view> tomlCfg = std::nullopt );
