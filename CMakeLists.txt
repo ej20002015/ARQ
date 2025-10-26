@@ -11,6 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
     add_compile_options("/Zc:__cplusplus")
+    option(ENABLE_VCPKG OFF)
 endif()
 
 # Allow for folders in the IDE
@@ -40,37 +41,46 @@ set(PACKAGES_DIR ${CMAKE_BINARY_DIR}/packages)
 function(add_prebuilt_dependency NAME URL)
     message(STATUS "Downloading pre-built dependency: ${NAME}")
 
+    set(LOCAL_SOURCE_DIR "${PACKAGES_DIR}/${NAME}")
+
     FetchContent_Declare(
         ${NAME}
         URL ${URL}
-        SOURCE_DIR "${PACKAGES_DIR}/${NAME}"
+        SOURCE_DIR "${LOCAL_SOURCE_DIR}"
         DOWNLOAD_EXTRACT_TIMESTAMP true # Stamp extracted files with download time rather than original time
     )
 
     # This performs the download and extraction.
     FetchContent_MakeAvailable(${NAME})
-    message(STATUS "Downloaded and extracted ${NAME} to location: ${${NAME}_SOURCE_DIR}")
+    message(STATUS "Downloaded and extracted ${NAME} to location: ${LOCAL_SOURCE_DIR}")
 
     # Set directory of extracted package variable in the PARENT_SCOPE, so the main script can access it.
-    set(FETCHCONTENT_EXTRACTED_DIR_${NAME} ${${NAME}_SOURCE_DIR} PARENT_SCOPE)
+    set(FETCHCONTENT_EXTRACTED_DIR_${NAME} ${LOCAL_SOURCE_DIR} PARENT_SCOPE)
 endfunction()
 
-if(WIN32)
-    add_prebuilt_dependency(grpc_v1.74.1_debug "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Debug.zip")
-    add_prebuilt_dependency(grpc_v1.74.1_release "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Release.zip")
-else()
-    add_prebuilt_dependency(grpc_v1.74.1_debug "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-linux-Debug.tar.gz")
-    add_prebuilt_dependency(grpc_v1.74.1_release "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-linux-Release.tar.gz")
-endif()
+set(ARQ_Dependencies_download_path "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha")
 
-add_prebuilt_dependency(grpc_v1.74.1_debug "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Debug.${ARCHIVE_FILE_EXT}")
-add_prebuilt_dependency(grpc_v1.74.1_release "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha/grpc-v1.74.1-windows-Release.${ARCHIVE_FILE_EXT}")
+if(WIN32)
+    add_prebuilt_dependency(grpc_v1.74.1_debug "${ARQ_Dependencies_download_path}/grpc-v1.74.1-windows-Debug.zip")
+    add_prebuilt_dependency(grpc_v1.74.1_release "${ARQ_Dependencies_download_path}/grpc-v1.74.1-windows-Release.zip")
+    add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-windows-x64.zip")
+    add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-windows-x64.zip")
+else()
+    add_prebuilt_dependency(grpc_v1.74.1_debug "${ARQ_Dependencies_download_path}/grpc-v1.74.1-linux-Debug.tar.gz")
+    add_prebuilt_dependency(grpc_v1.74.1_release "${ARQ_Dependencies_download_path}/grpc-v1.74.1-linux-Release.tar.gz")
+    add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-linux-x64.tar.gz")
+    add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-linux-x64.tar.gz")
+endif()
 
 # Add cmake package directories
 list(APPEND CMAKE_PREFIX_PATH
     ${FETCHCONTENT_EXTRACTED_DIR_grpc_v1.74.1_debug}
     ${FETCHCONTENT_EXTRACTED_DIR_grpc_v1.74.1_release}
 )
+
+# Include cmake standard files for non-packaged pre-built binaries
+include("${FETCHCONTENT_EXTRACTED_DIR_librdkafka_v2.12.0}/cmake/librdkafka.cmake")
+include("${FETCHCONTENT_EXTRACTED_DIR_SWIG_4.3.1}/cmake/SWIG.cmake")
 
 # gtest setup
 FetchContent_Declare(
@@ -396,6 +406,7 @@ add_subdirectory(services/RefData/RefDataGatekeeper)
 # Add tools subdirectories
 add_subdirectory(tools/aeron_publisher)
 add_subdirectory(tools/aeron_subscriber)
+add_subdirectory(tools/kafka_example)
 
 # Add SWIG wrappers
 add_subdirectory(ARQLib/SWIG)
