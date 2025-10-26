@@ -59,25 +59,6 @@ jobs:
       run: |
         echo "build-output-dir=${{ github.workspace }}/.build" >> "$GITHUB_OUTPUT"
 
-    - name: Install SWIG (Linux)
-      if: matrix.os == 'ubuntu-latest'
-      shell: bash
-      run: |
-        sudo apt-get update
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libpcre2-dev
-        
-        mkdir -p ~/downloads && cd ~/downloads
-        wget http://downloads.sourceforge.net/project/swig/swig/swig-${{ env.swig_version }}/swig-${{ env.swig_version }}.tar.gz
-        tar xfz swig-${{ env.swig_version }}.tar.gz
-        rm swig-${{ env.swig_version }}.tar.gz
-        cd swig-${{ env.swig_version }}
-        ./configure
-        make -j 4 && sudo make install
-        cd .. && rm -rf swig-${{ env.swig_version }}
-        
-        # Verify installation
-        swig -version
-
     - name: Set up Java
       uses: actions/setup-java@v3
       with:

@@ -1,4 +1,4 @@
 ARQ_define_tools_exe(kafka_example)
 
 target_link_libraries(kafka_example PRIVATE rdkafka::rdkafkacpp)
-librdkafka_setup_runtime(kafka_example)
+librdkafkacpp_setup_runtime(kafka_example)
