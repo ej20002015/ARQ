@@ -56,7 +56,7 @@ VirtualSubscriber::VirtualSubscriber( const std::string_view description )
 
 static bool isMktObjXNewerThanY( const MDEntities::MDEntity& x, const MDEntities::MDEntity& y )
 {
-	return x.asofTs > y.asofTs || ( x.asofTs == y.asofTs && x._lastUpdatedTs > y._lastUpdatedTs );
+	return x.asofTs >= y.asofTs || ( x.asofTs == y.asofTs && x._lastUpdatedTs >= y._lastUpdatedTs );
 }
 
 static std::string getSubscriberName( const std::weak_ptr<Subscriber> subscriber )
@@ -186,40 +186,48 @@ MarketSnapshot ManagedMarket::snap() const
 template<MDEntities::c_MDEntity T>
 void ManagedMarket::sendMktUpdateToSubscribers( const T& updatedObj )
 {
-	std::shared_lock<std::shared_mutex> sl( m_subMut );
-
 	// Any subscribers that no longer exist should be removed
 	std::vector<std::weak_ptr<Subscriber>> subsToRemove;
 
-	for( const auto& [subscriber, interestedIn] : m_subscriptions )
 	{
-		if( interestedIn.contains( { MDEntities::Traits<T>::typeEnum(), updatedObj.ID } ) )
+		std::shared_lock<std::shared_mutex> sl( m_subMut );
+
+		for( const auto& [subscriber, interestedIn] : m_subscriptions )
 		{
-			if( auto subSharedPtr = subscriber.lock() )
+			auto subSharedPtr = subscriber.lock();
+			if( !subSharedPtr )
 			{
-                std::shared_lock<std::shared_mutex> subLock( subSharedPtr->m_mut );
+				subsToRemove.push_back( subscriber );
+				continue;
+			}
+
+			if( interestedIn.contains( { MDEntities::Traits<T>::typeEnum(), updatedObj.ID } ) )
+			{
+				std::shared_lock<std::shared_mutex> subLock( subSharedPtr->m_mut );
 
 				if( subSharedPtr->m_onMktObjUpdateFunc )
 					subSharedPtr->m_onMktObjUpdateFunc( MDEntities::Traits<T>::typeEnum(), updatedObj.ID );
 
-                if constexpr( std::is_same_v<T, MDEntities::FXRate> )
+				if constexpr( std::is_same_v<T, MDEntities::FXRate> )
 				{
 					if( subSharedPtr->m_onFXRateUpdateFunc )
 						subSharedPtr->m_onFXRateUpdateFunc( updatedObj );
 				}
-                if constexpr( std::is_same_v<T, MDEntities::EQPrice> )
+				if constexpr( std::is_same_v<T, MDEntities::EQPrice> )
 				{
 					if( subSharedPtr->m_onEQPriceUpdateFunc )
 						subSharedPtr->m_onEQPriceUpdateFunc( updatedObj );
 				}
 			}
-			else
-				subsToRemove.push_back( subscriber );
 		}
 	}
 
-	for( const auto subToRemove : subsToRemove )
-		m_subscriptions.erase( subToRemove );
+	if( subsToRemove.size() )
+	{
+		std::unique_lock<std::shared_mutex> ul( m_subMut );
+		for( const auto subToRemove : subsToRemove )
+			m_subscriptions.erase( subToRemove ); // May have already been removed by another thread but that's fine - just won't do anything 
+	}
 }
 
 void ManagedMarket::onFXRateUpdate( const MDEntities::FXRate& updatedObj )

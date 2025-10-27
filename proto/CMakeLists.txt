@@ -43,4 +43,6 @@ target_link_libraries(proto-lib
     grpc_interface
 )
 
+set_target_properties(proto-lib PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 set(PROTO_GRPC_LINK_LIB "proto-lib" PARENT_SCOPE)

@@ -11,3 +11,6 @@ obj/
 
 # Codegen
 codegen/script/.codegen_cache.json
+
+# Python
+.venv
