@@ -1,10 +1,10 @@
-find_package(Protobuf CONFIG REQUIRED)
-find_package(gRPC CONFIG REQUIRED)
-
 file(GLOB PROTO_FILES "*.proto")
 
 set(PROTO_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto_gen/proto_gen")
 set(PROTO_IMPORT_DIRS ".")
+
+get_target_property(PROTOC_EXE_PATH gRPC::protoc IMPORTED_LOCATION)
+message(STATUS "Protoc exe path: ${PROTOC_EXE_PATH}")
 
 # Generate protobuf C++ sources
 protobuf_generate(
@@ -12,7 +12,8 @@ protobuf_generate(
     OUT_VAR PROTO_SRCS
     PROTOC_OUT_DIR "${PROTO_BINARY_DIR}"
     IMPORT_DIRS ${PROTO_IMPORT_DIRS}
-    PROTOS ${PROTO_FILES})
+    PROTOS ${PROTO_FILES}
+    PROTOC_EXE ${PROTOC_EXE_PATH})
 
 # Generate gRPC C++ sources
 protobuf_generate(
@@ -22,7 +23,8 @@ protobuf_generate(
     PROTOC_OUT_DIR "${PROTO_BINARY_DIR}"
     IMPORT_DIRS ${PROTO_IMPORT_DIRS}
     PLUGIN "protoc-gen-grpc=$<TARGET_FILE:gRPC::grpc_cpp_plugin>"
-    PROTOS ${PROTO_FILES})
+    PROTOS ${PROTO_FILES}
+    PROTOC_EXE ${PROTOC_EXE_PATH})
 
 # Bundle everything into one static library
 add_library(proto-lib STATIC
@@ -38,8 +40,7 @@ target_include_directories(proto-lib PUBLIC
 # Hide Protobuf/gRPC dependencies inside proto-lib
 target_link_libraries(proto-lib
     PUBLIC
-    protobuf::libprotobuf
-    gRPC::grpc++
+    grpc_interface
 )
 
 set(PROTO_GRPC_LINK_LIB "proto-lib" PARENT_SCOPE)

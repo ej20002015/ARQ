@@ -1,4 +1,3 @@
-- Add Swig to ARQ_Dependencies
 - Create RefDataGatekeeper gRPC service
   - Make client side first
   - Will need to integrate Kafka

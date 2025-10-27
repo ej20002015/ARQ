@@ -61,26 +61,19 @@ endfunction()
 set(ARQ_Dependencies_download_path "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha")
 
 if(WIN32)
-    add_prebuilt_dependency(grpc_v1.74.1_debug "${ARQ_Dependencies_download_path}/grpc-v1.74.1-windows-Debug.zip")
-    add_prebuilt_dependency(grpc_v1.74.1_release "${ARQ_Dependencies_download_path}/grpc-v1.74.1-windows-Release.zip")
     add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-windows-x64.zip")
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-windows-x64.zip")
+    add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-windows-x64.zip")
 else()
-    add_prebuilt_dependency(grpc_v1.74.1_debug "${ARQ_Dependencies_download_path}/grpc-v1.74.1-linux-Debug.tar.gz")
-    add_prebuilt_dependency(grpc_v1.74.1_release "${ARQ_Dependencies_download_path}/grpc-v1.74.1-linux-Release.tar.gz")
     add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-linux-x64.tar.gz")
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-linux-x64.tar.gz")
+    add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-windows-x64.tar.gz")
 endif()
 
-# Add cmake package directories
-list(APPEND CMAKE_PREFIX_PATH
-    ${FETCHCONTENT_EXTRACTED_DIR_grpc_v1.74.1_debug}
-    ${FETCHCONTENT_EXTRACTED_DIR_grpc_v1.74.1_release}
-)
-
-# Include cmake standard files for non-packaged pre-built binaries
+# Include cmake standard files that define cmake targets and functions for pre-built binaries
 include("${FETCHCONTENT_EXTRACTED_DIR_librdkafka_v2.12.0}/cmake/librdkafka.cmake")
 include("${FETCHCONTENT_EXTRACTED_DIR_SWIG_4.3.1}/cmake/SWIG.cmake")
+include("${FETCHCONTENT_EXTRACTED_DIR_grpc-v1.76.0}/cmake/grpc.cmake")
 
 # gtest setup
 FetchContent_Declare(
@@ -346,8 +339,6 @@ set(CMAKE_FOLDER "vendor/clickhouse-cpp")
 if(UNIX)
     set(BUILD_SHARED_LIBS ON CACHE BOOL "On linux build clickhouse as a shared lib" FORCE)
 endif()
-# set(DEBUG_DEPENDENCIES OFF CACHE BOOL "Don't Print debug info about clickhouse-cpp dependencies" FORCE)
-set(WITH_SYSTEM_ABSEIL ON CACHE BOOL "Use system abseil" FORCE)
 add_subdirectory(vendor/clickhouse-cpp)
 unset(CMAKE_FOLDER)
 if(UNIX)
@@ -370,8 +361,6 @@ set(FLATBUFFERS_LINK_LIB "flatbuffers_shared")
 
 # spdlog setup
 set(CMAKE_FOLDER "vendor/spdlog")
-set(SPDLOG_BUILD_SHARED ON CACHE BOOL "Build spdlog as shared library" FORCE)
-set(SPDLOG_BUILD_PIC ON CACHE BOOL "Use PIC when building spdlog as shared library" FORCE)
 set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog" FORCE)
 add_subdirectory(vendor/spdlog)
 set(SPDLOG_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/spdlog/include")
