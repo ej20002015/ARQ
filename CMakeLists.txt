@@ -61,19 +61,28 @@ endfunction()
 set(ARQ_Dependencies_download_path "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha")
 
 if(WIN32)
+    add_prebuilt_dependency(openssl-v3.6.0 "${ARQ_Dependencies_download_path}/openssl-v3.6.0-windows-x64.zip")
+    add_prebuilt_dependency(zlib-v1.3.1 "${ARQ_Dependencies_download_path}/zlib-v1.3.1-windows-x64.zip")
     add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-windows-x64.zip")
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-windows-x64.zip")
     add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-windows-x64.zip")
+    add_prebuilt_dependency(natsc-v3.11.0 "${ARQ_Dependencies_download_path}/nats.c-v3.11.0-windows-x64.zip")
 else()
+    add_prebuilt_dependency(openssl-v3.6.0 "${ARQ_Dependencies_download_path}/openssl-v3.6.0-linux-x64.tar.gz")
+    add_prebuilt_dependency(zlib-v1.3.1 "${ARQ_Dependencies_download_path}/zlib-v1.3.1-linux-x64.tar.gz")
     add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-linux-x64.tar.gz")
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-linux-x64.tar.gz")
     add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-windows-x64.tar.gz")
+    add_prebuilt_dependency(natsc-v3.11.0 "${ARQ_Dependencies_download_path}/nats.c-v3.11.0-linux-x64.tar.gz")
 endif()
 
 # Include cmake standard files that define cmake targets and functions for pre-built binaries
+include("${FETCHCONTENT_EXTRACTED_DIR_openssl-v3.6.0}/cmake/openssl.cmake")
+include("${FETCHCONTENT_EXTRACTED_DIR_zlib-v1.3.1}/cmake/zlib.cmake")
 include("${FETCHCONTENT_EXTRACTED_DIR_librdkafka_v2.12.0}/cmake/librdkafka.cmake")
 include("${FETCHCONTENT_EXTRACTED_DIR_SWIG_4.3.1}/cmake/SWIG.cmake")
 include("${FETCHCONTENT_EXTRACTED_DIR_grpc-v1.76.0}/cmake/grpc.cmake")
+include("${FETCHCONTENT_EXTRACTED_DIR_natsc-v3.11.0}/cmake/nats.c.cmake")
 
 # gtest setup
 FetchContent_Declare(
@@ -396,6 +405,8 @@ add_subdirectory(services/RefData/RefDataGatekeeper)
 add_subdirectory(tools/aeron_publisher)
 add_subdirectory(tools/aeron_subscriber)
 add_subdirectory(tools/kafka_example)
+add_subdirectory(tools/nats_publisher)
+add_subdirectory(tools/nats_subscriber)
 
 # Add SWIG wrappers
 add_subdirectory(ARQLib/SWIG)
