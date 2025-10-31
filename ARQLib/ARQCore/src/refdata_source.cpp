@@ -19,7 +19,7 @@ std::shared_ptr<RefDataSource> RefDataSourceFactory::create( const std::string_v
 	std::string dynaLibName;
 	switch( dsc.type )
 	{
-		case DataSourceType::ClickHouse: dynaLibName = "ARQClickhouse"; break;
+		case DataSourceType::ClickHouse: dynaLibName = "ARQClickHouse"; break;
 		case DataSourceType::gRPC:       dynaLibName = "ARQGrpc";       break;
 		default:
 			ARQ_ASSERT( false );

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS RefData.Currencies
     `SettlementDays` UInt8 COMMENT 'Standard number of days for spot settlement (commonly 2).',
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
     `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
-    `_LastUpdatedBy` String COMMENT 'User or system that last updated this record'
+    `_LastUpdatedBy` String COMMENT 'User or system that last updated this record',
     `_Version` UInt32 DEFAULT 0 COMMENT 'Version number for optimistic concurrency control'
 )
 ENGINE = MergeTree

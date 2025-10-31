@@ -23,7 +23,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 # For non-install builds, set the RPATH so executables can find local .so files.
 # $ORIGIN is a special linker variable that means "the directory of the executable".
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-set(CMAKE_INSTALL_RPATH "$ORIGIN")
+set(CMAKE_INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib")
 
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -72,7 +72,7 @@ else()
     add_prebuilt_dependency(zlib-v1.3.1 "${ARQ_Dependencies_download_path}/zlib-v1.3.1-linux-x64.tar.gz")
     add_prebuilt_dependency(librdkafka_v2.12.0 "${ARQ_Dependencies_download_path}/librdkafka-v2.12.0-linux-x64.tar.gz")
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-linux-x64.tar.gz")
-    add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-windows-x64.tar.gz")
+    add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-linux-x64.tar.gz")
     add_prebuilt_dependency(natsc-v3.11.0 "${ARQ_Dependencies_download_path}/nats.c-v3.11.0-linux-x64.tar.gz")
 endif()
 

@@ -118,6 +118,7 @@ protected:
         rate.mid = ( bid + ask ) / 2.0;
         rate.source = source;
         rate.asofTs = Time::DateTime::nowUTC();
+        rate._lastUpdatedTs = Time::DateTime::nowUTC();
         return rate;
     }
 
@@ -128,6 +129,7 @@ protected:
         eqPrice.last = price;
         eqPrice.source = source;
         eqPrice.asofTs = Time::DateTime::nowUTC();
+        eqPrice._lastUpdatedTs = Time::DateTime::nowUTC();
         return eqPrice;
     }
 
@@ -373,6 +375,7 @@ TEST_F( ManagedMarketTest, ConcurrentOperations )
         fut.wait_for( std::chrono::seconds( 1 ) );
 
     EXPECT_EQ( updatesCompleted.load(), numUpdates );
+    EXPECT_EQ( subscriber1->receivedMktObjUpdates.size(), numUpdates);
     EXPECT_EQ( subscriber1->mktObjUpdateCount.load(), numUpdates );
 }
 
@@ -440,16 +443,8 @@ TEST_F( ManagedMarketTest, ExpiredSubscriberCleanup )
     auto fxRate = createFXRate( "EUR/USD", 1.05, 1.06 );
     auto eqPrice = createEQPrice( "AAPL", 150.0 );
     
-    // This should clean up expired FXR subscriber
+    // This should clean up both expired subscribers
     managedMarket->onFXRateUpdate( fxRate );
-    
-    // Verify the expired FXR subscriber was cleaned up
-    EXPECT_FALSE( managedMarket->isSubscriber( expiredSubscriber1Weak ) );
-    // But the EQP subscriber should still be there (not cleaned up yet)
-    EXPECT_TRUE( managedMarket->isSubscriber( expiredSubscriber2Weak ) );
-    
-    // This should clean up expired EQP subscriber  
-    managedMarket->onEQPriceUpdate( eqPrice );
     
     // Verify both expired subscribers are now cleaned up
     EXPECT_FALSE( managedMarket->isSubscriber( expiredSubscriber1Weak ) );

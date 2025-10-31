@@ -175,6 +175,8 @@ TEST_F( LoggerTest, LogLevels )
     Log( Module::CORE ).error( "Error message." );       // Should log
     Log( Module::CORE ).critical( "Critical message." ); // Should log
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Async logger so wait here
+
     auto jsonLogs = getAllLogJson( "LogLevels" );
     // Expected: trace, debug, info1, warn, error, critical
     ASSERT_EQ( jsonLogs.size(), 6 );
