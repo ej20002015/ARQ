@@ -12,7 +12,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
 
         shell  = import ./nix/shell.nix { inherit pkgs; };
-        arq = import ./nix/package.nix { inherit pkgs; };
+        arq = import ./nix/arq.nix { inherit pkgs; };
         docker = import ./nix/docker.nix { inherit pkgs arq; };
       in {
         devShells.default = shell;
