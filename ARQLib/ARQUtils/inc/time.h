@@ -15,6 +15,8 @@ namespace ARQ
 namespace Time
 {
 
+uint64_t unixTimestampMillis() noexcept;
+
 template<typename Dur>
 concept c_Duration = requires {
 	typename Dur::rep;

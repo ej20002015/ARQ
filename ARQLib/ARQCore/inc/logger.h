@@ -42,7 +42,7 @@ struct LoggerConfig
 	bool disableConsoleLogger = false;
 	bool disableFileLogger    = false;
 
-	LogLevel consoleLoggerLevel = LogLevel::INFO;
+	LogLevel consoleLoggerLevel = LogLevel::DEBUG;
 	LogLevel fileLoggerLevel    = LogLevel::DEBUG;
 
 	LogLevel flushLevel         = LogLevel::ERRO;

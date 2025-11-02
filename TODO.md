@@ -8,6 +8,7 @@
 - Do all the same for mkt data
 
 - Add an library initialisation function
+  - Have logger live in utils, but in core you can access the global logger instance
 - Equality operators for entities + other helpers (e.g. toString())
 - Integration testing for ARQClickHouse?
 - Add stack trace library
