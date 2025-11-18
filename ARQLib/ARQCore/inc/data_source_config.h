@@ -22,6 +22,7 @@ public:
 	{
 		ClickHouse,
 		gRPC,
+		NATS,
 
 		_SIZE
 	};
@@ -30,7 +31,7 @@ public:
 	static std::string_view toStr( const Enum type );
 
 private:
-	static constexpr const std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE )> TYPE_STRINGS = { "ClickHouse", "gRPC" };
+	static constexpr const std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE )> TYPE_STRINGS = { "ClickHouse", "gRPC", "NATS" };
 };
 
 struct DataSourceConfig
@@ -62,7 +63,7 @@ public:
 
 	ARQCore_API static DataSourceConfigManager& inst();
 
-	ARQCore_API const DataSourceConfig& get( const std::string_view handle );
+	ARQCore_API const DataSourceConfig& get( const std::string_view dsh );
 
 	ARQCore_API void load( const std::optional<std::string_view> tomlCfg = std::nullopt );
 

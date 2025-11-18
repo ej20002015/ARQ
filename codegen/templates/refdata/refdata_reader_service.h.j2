@@ -22,11 +22,11 @@ namespace RefData
 class RefDataReaderServiceImpl final : public RefDataReader::Service
 {
 public:
-    RefDataReaderServiceImpl( std::shared_ptr<RefDataSource> rdSource )
+    RefDataReaderServiceImpl( std::shared_ptr<IRefDataSource> rdSource )
         : m_rdSource( std::move( rdSource ) )
     {
         if( !m_rdSource )
-            throw ARQException( "RefDataReaderServiceImpl requires a valid RefDataSource instance" );
+            throw ARQException( "RefDataReaderServiceImpl requires a valid IRefDataSource instance" );
     }
 
     {% for entity in entities %}
@@ -37,7 +37,7 @@ public:
     {% endfor %}
 private:
     // For now, just read from the one data source (TODO: Have tiered data sources)
-    std::shared_ptr<RefDataSource> m_rdSource;
+    std::shared_ptr<IRefDataSource> m_rdSource;
 };
 
 }

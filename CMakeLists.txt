@@ -395,6 +395,8 @@ add_subdirectory(ARQLib/ARQMessaging)
 add_subdirectory(ARQLib/ARQClickHouse)
 add_subdirectory(ARQLib/ARQGrpc)
 add_subdirectory(ARQLib/ARQSerialisation)
+add_subdirectory(ARQLib/ARQProtobuf)
+add_subdirectory(ARQLib/ARQNats)
 
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataReader)

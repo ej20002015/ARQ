@@ -12,10 +12,10 @@
 namespace ARQ
 {
 
-class MktDataSource
+class IMktDataSource
 {
 public:
-	virtual ~MktDataSource() = default;
+	virtual ~IMktDataSource() = default;
 
     // --- Methods for FXRate (FXR) ---
     [[nodiscard]] ARQCore_API virtual std::vector<MDEntities::FXRate> fetchFXRates( const std::string_view mktName ) = 0;

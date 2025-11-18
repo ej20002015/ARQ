@@ -1,4 +1,4 @@
-file(GLOB PROTO_FILES "*.proto")
+file(GLOB_RECURSE PROTO_FILES "*.proto")
 
 set(PROTO_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto_gen/proto_gen")
 set(PROTO_IMPORT_DIRS ".")

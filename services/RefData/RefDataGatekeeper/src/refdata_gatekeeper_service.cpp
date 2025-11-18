@@ -118,7 +118,7 @@ struct CurrencyUpsertTraits
     static RDEntities::Traits<RDEntity>::KeyType getKey( const ItemType& reqItem )     { return reqItem.currency().ccy_id(); }
     static PayloadType                           getPayload( const ItemType& reqItem ) { return reqItem.currency(); }
 
-    static void rdSourceUpsert( std::shared_ptr<RefDataSource>& rdSource, std::vector<RDEntity>&& entities ) { rdSource->upsertCurrencies( std::move( entities ) ); }
+    static void rdSourceUpsert( std::shared_ptr<IRefDataSource>& rdSource, std::vector<RDEntity>&& entities ) { rdSource->upsertCurrencies( std::move( entities ) ); }
 };
 
 grpc::Status RefDataGatekeeperServiceImpl::UpsertCurrencies( grpc::ServerContext* context, const UpsertCurrenciesRequest* request, UpsertCurrenciesResponse* response )
@@ -150,7 +150,7 @@ struct UserUpsertTraits
     static RDEntities::Traits<RDEntity>::KeyType getKey( const ItemType& reqItem )     { return reqItem.user().user_id(); }
     static PayloadType                           getPayload( const ItemType& reqItem ) { return reqItem.user(); }
 
-    static void rdSourceUpsert( std::shared_ptr<RefDataSource>& rdSource, std::vector<RDEntity>&& entities ) { rdSource->upsertUsers( std::move( entities ) ); }
+    static void rdSourceUpsert( std::shared_ptr<IRefDataSource>& rdSource, std::vector<RDEntity>&& entities ) { rdSource->upsertUsers( std::move( entities ) ); }
 };
 
 grpc::Status RefDataGatekeeperServiceImpl::UpsertUsers( grpc::ServerContext* context, const UpsertUsersRequest* request, UpsertUsersResponse* response )

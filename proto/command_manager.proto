@@ -1,0 +1,11 @@
+syntax = "proto3";
+package ARQ.Proto;
+
+import "id.proto";
+
+message RefDataCommandResponse
+{
+    ARQ.Proto.ID.UUID corr_id = 1;
+    int32 status = 2;
+    optional string message = 3;
+}

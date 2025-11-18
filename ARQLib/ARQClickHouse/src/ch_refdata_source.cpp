@@ -5,7 +5,7 @@
 namespace ARQ
 {
 
-extern "C" RefDataSource* createRefDataSource( const std::string_view dsh )
+extern "C" IRefDataSource* createRefDataSource( const std::string_view dsh )
 {
 	return new CHRefDataSource( dsh );
 }

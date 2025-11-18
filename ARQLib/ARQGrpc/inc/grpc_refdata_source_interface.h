@@ -11,7 +11,7 @@
 namespace ARQ
 {
 
-class GrpcRefDataSource : public RefDataSource
+class GrpcRefDataSource : public IRefDataSource
 {
 public:
     GrpcRefDataSource( const std::string_view dsh )

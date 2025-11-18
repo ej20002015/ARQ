@@ -92,7 +92,7 @@ private:
     void loadInitiallyUsers();
 
 private:
-    std::shared_ptr<RefDataSource> m_rdSource;
+    std::shared_ptr<IRefDataSource> m_rdSource;
     mutable std::shared_mutex m_mut;
 
     std::shared_ptr<RefDataCache<RDEntities::Currency>> m_Currencies;

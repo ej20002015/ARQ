@@ -11,7 +11,7 @@
 namespace ARQ
 {
 
-class MockMktDataSource : public MktDataSource
+class MockMktDataSource : public IMktDataSource
 {
 public:
 	virtual ~MockMktDataSource() = default;

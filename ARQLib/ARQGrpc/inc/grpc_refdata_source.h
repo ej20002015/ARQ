@@ -6,6 +6,6 @@
 namespace ARQ
 {
 
-extern "C" ARQGrpc_API RefDataSource* createRefDataSource( const std::string_view dsh );
+extern "C" ARQGrpc_API IRefDataSource* createRefDataSource( const std::string_view dsh );
 
 }

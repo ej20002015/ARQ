@@ -66,5 +66,11 @@ std::string uuidToStr( const UUID& uuid )
 	return std::string( strBuf, STR_LEN );
 }
 
+std::ostream& operator<<( std::ostream& os, const UUID& uuid )
+{
+	os << uuid.toString();
+	return os;
+}
+
 }
 }

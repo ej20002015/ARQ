@@ -261,9 +261,9 @@ public:
 /*
 TODO: Figure out loading/saving entire market data from/to a source.
 
-ARQMarket_API std::shared_ptr<Market> load( const Context& ctx, const std::shared_ptr<MktDataSource>& source = nullptr );
-ARQMarket_API void save( const std::shared_ptr<Market> mkt, const Context& ctx, const std::shared_ptr<MktDataSource>& source = nullptr );
-ARQMarket_API void save( const MarketSnapshot& mktSnapshot, const Context& ctx, const std::shared_ptr<MktDataSource>& source = nullptr );
+ARQMarket_API std::shared_ptr<Market> load( const Context& ctx, const std::shared_ptr<IMktDataSource>& source = nullptr );
+ARQMarket_API void save( const std::shared_ptr<Market> mkt, const Context& ctx, const std::shared_ptr<IMktDataSource>& source = nullptr );
+ARQMarket_API void save( const MarketSnapshot& mktSnapshot, const Context& ctx, const std::shared_ptr<IMktDataSource>& source = nullptr );
 */
 
 }

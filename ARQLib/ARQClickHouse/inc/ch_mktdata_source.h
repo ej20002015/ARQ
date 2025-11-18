@@ -6,6 +6,6 @@
 namespace ARQ
 {
 
-extern "C" ARQClickHouse_API MktDataSource* createMktDataSource( const std::string_view dsh );
+extern "C" ARQClickHouse_API IMktDataSource* createMktDataSource( const std::string_view dsh );
 
 }

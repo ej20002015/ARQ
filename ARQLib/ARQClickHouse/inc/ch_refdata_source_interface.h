@@ -11,7 +11,7 @@
 namespace ARQ
 {
 
-class CHRefDataSource : public RefDataSource
+class CHRefDataSource : public IRefDataSource
 {
 public:
     CHRefDataSource( const std::string_view dsh )

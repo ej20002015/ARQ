@@ -123,7 +123,7 @@ struct {{ entity.name }}UpsertTraits
     static RDEntities::Traits<RDEntity>::KeyType getKey( const ItemType& reqItem )     { return reqItem.{{ entity.name | snake_case }}().{{ entity.key | snake_case }}(); }
     static PayloadType                           getPayload( const ItemType& reqItem ) { return reqItem.{{ entity.name | snake_case }}(); }
 
-    static void rdSourceUpsert( std::shared_ptr<RefDataSource>& rdSource, std::vector<RDEntity>&& entities ) { rdSource->upsert{{ entity.name_plural }}( std::move( entities ) ); }
+    static void rdSourceUpsert( std::shared_ptr<IRefDataSource>& rdSource, std::vector<RDEntity>&& entities ) { rdSource->upsert{{ entity.name_plural }}( std::move( entities ) ); }
 };
 
 grpc::Status RefDataGatekeeperServiceImpl::Upsert{{ entity.name_plural }}( grpc::ServerContext* context, const Upsert{{ entity.name_plural }}Request* request, Upsert{{ entity.name_plural }}Response* response )

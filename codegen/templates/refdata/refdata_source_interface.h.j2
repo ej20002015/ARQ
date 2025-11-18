@@ -17,10 +17,10 @@
 namespace ARQ
 {
 
-class RefDataSource
+class IRefDataSource
 {
 public:
-	virtual ~RefDataSource() = default;
+	virtual ~IRefDataSource() = default;
 
     {# Loop through each entity and create the required pure virtual methods #}
     {% for entity in entities %}

@@ -1,24 +1,31 @@
 #include <ARQCore/refdata_command_manager.h>
 
+#include <ARQCore/messaging_service.h>
+
 #include <ARQUtils/enum.h>
 #include <ARQCore/logger.h>
 
 namespace ARQ
 {
 
-void RefDataCommandManager::init()
+void RefDataCommandManager::init( const Config& config )
 {
-	// Nothing to do atm but will have stuff in a bit
+	m_config = config;
+	m_messagingService = MessagingServiceFactory::create( m_config.messagingServiceDSH );
+	m_subTopicPattern = SUB_TOPIC_PFX + ID::getSessionID().toString();
+	m_subHandler = std::make_shared<SubHandler>( this );
 }
 
 void RefDataCommandManager::start()
 {
+	m_subscription = m_messagingService->subscribe( m_subTopicPattern, m_subHandler );
 	m_running.store( true );
 	m_commandCheckerThread = std::thread( &RefDataCommandManager::checkInFlightCommands, this );
 }
 
 void RefDataCommandManager::stop()
 {
+	m_subscription->blockOnDrainAndUnsubscribe();
 	m_running.store( false );
 	if( m_commandCheckerThread.joinable() )
 		m_commandCheckerThread.join();
@@ -35,7 +42,7 @@ ID::UUID RefDataCommandManager::upsertCurrencies( const std::vector<RDEntities::
 	Time::DateTime now = Time::DateTime::nowUTC();
 	ID::UUID corrID = ID::UUID::create();
 
-	// TODO: ACtually send to kafka broker
+	// TODO: Actually send to kafka broker
 
 	InFlightCommand command = {
 		.callback = callback,
@@ -52,7 +59,6 @@ ID::UUID RefDataCommandManager::upsertCurrencies( const std::vector<RDEntities::
 	return corrID;
 }
 
-// TODO: Set up nats callback that invokes this
 void RefDataCommandManager::checkInFlightCommands()
 {
 	if( m_running )
@@ -77,7 +83,7 @@ void RefDataCommandManager::checkInFlightCommands()
 			}
 		}
 
-		std::this_thread::sleep_for( m_checkerInterval );
+		std::this_thread::sleep_for( m_config.checkerInterval );
 	}
 }
 
@@ -148,6 +154,40 @@ void RefDataCommandManager::onCommandResponse( const RefDataCommandResponse& res
 	}
 	else
 		Log( Module::REFDATA ).error( "RefDataCommandManager: Received response for unknown command with CorrID={} - ignoring", resp.corrID );
+}
+
+void RefDataCommandManager::SubHandler::onMsg( Message&& msg )
+{
+	Log( Module::REFDATA ).debug( "RefDataCommandManager: Received response message on topic {}", msg.topic );
+
+	RefDataCommandResponse resp;
+
+	try
+	{
+		resp = m_owner.m_config.serialiser->deserialise<RefDataCommandResponse>( msg.data );
+	}
+	catch( const ARQException& e )
+	{
+		Log( Module::REFDATA ).error( e, "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object", msg.topic );
+		return;
+	}
+	catch( const std::exception& e )
+	{
+		Log( Module::REFDATA ).error( "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object - what: ", msg.topic, e.what() );
+		return;
+	}
+	catch( ... )
+	{
+		Log( Module::REFDATA ).error( "RefDataCommandManager: Unknown exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object", msg.topic );
+		return;
+	}
+
+	m_owner.onCommandResponse( resp );
+}
+
+void RefDataCommandManager::SubHandler::onEvent( SubscriptionEvent&& event )
+{
+	// TODO
 }
 
 }

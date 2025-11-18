@@ -32,11 +32,7 @@ struct UUID
     std::string toString() const { return uuidToStr( *this ); }
 };
 
-std::ostream& operator<<( std::ostream& os, const UUID& uuid )
-{
-    os << uuid.toString();
-    return os;
-}
+std::ostream& operator<<( std::ostream& os, const UUID& uuid );
 
 }
 }

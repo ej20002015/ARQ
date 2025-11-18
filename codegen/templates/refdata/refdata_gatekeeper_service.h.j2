@@ -40,7 +40,7 @@ private:
 
 private:
     // For now, write directly to a data source instead of writing to a kafka log
-    std::shared_ptr<RefDataSource> m_rdSource = RefDataSourceFactory::create( "ClickHouseDB" );
+    std::shared_ptr<IRefDataSource> m_rdSource = RefDataSourceFactory::create( "ClickHouseDB" );
     std::shared_ptr<VersionManager> m_verMgr;
 };
 

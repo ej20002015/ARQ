@@ -18,7 +18,7 @@ void VersionManagerImpl::init()
     m_entityVers.try_emplace( "User" );
 
     // TEMP: For now we just load latest versions from ClickHouse DB
-    std::shared_ptr<RefDataSource> rdSource = RefDataSourceFactory::create( "ClickHouseDB" );
+    std::shared_ptr<IRefDataSource> rdSource = RefDataSourceFactory::create( "ClickHouseDB" );
     const std::vector<RDEntities::Currency> currencies = rdSource->fetchCurrencies();
     for( const RDEntities::Currency& currency : currencies )
         setVerUnsafe( "Currency", currency.ccyID, currency._version );

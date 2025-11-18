@@ -13,7 +13,7 @@ int main()
     try
     {
         std::string server_address = std::format( "0.0.0.0:{}", 50051 );
-        std::shared_ptr<ARQ::RefDataSource> chRDSource = ARQ::RefDataSourceFactory::create( "ClickHouseDB" );
+        std::shared_ptr<ARQ::IRefDataSource> chRDSource = ARQ::RefDataSourceFactory::create( "ClickHouseDB" );
         ARQ::Grpc::RefData::RefDataReaderServiceImpl service( std::move( chRDSource ) );
 
         grpc::EnableDefaultHealthCheckService( true );

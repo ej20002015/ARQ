@@ -16,10 +16,10 @@
 namespace ARQ
 {
 
-class MktDataSource
+class IMktDataSource
 {
 public:
-	virtual ~MktDataSource() = default;
+	virtual ~IMktDataSource() = default;
 
     {# Loop through each entity and create the required pure virtual methods #}
     {% for entity in entities %}

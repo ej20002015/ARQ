@@ -5,7 +5,7 @@
 namespace ARQ
 {
 
-extern "C" MktDataSource* createMktDataSource( const std::string_view dsh )
+extern "C" IMktDataSource* createMktDataSource( const std::string_view dsh )
 {
 	return new CHMktDataSource( dsh );
 }

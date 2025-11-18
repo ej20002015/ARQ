@@ -7,9 +7,9 @@
 namespace ARQ
 {
 
-std::unordered_map<std::string, std::shared_ptr<RefDataSource>, TransparentStringHash, std::equal_to<>> RefDataSourceFactory::s_customSources;
+std::unordered_map<std::string, std::shared_ptr<IRefDataSource>, TransparentStringHash, std::equal_to<>> RefDataSourceFactory::s_customSources;
 
-std::shared_ptr<RefDataSource> RefDataSourceFactory::create( const std::string_view dsh )
+std::shared_ptr<IRefDataSource> RefDataSourceFactory::create( const std::string_view dsh )
 {
 	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
 		return it->second;
@@ -25,13 +25,13 @@ std::shared_ptr<RefDataSource> RefDataSourceFactory::create( const std::string_v
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName ); // TODO: Log when dll is being loaded for the first time?
+	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
-	const auto createFunc = lib.getFunc<RefDataSourceCreateFunc>( "createRefDataSource" ); // TODO: Need to cache the loaded functions?
-	return std::shared_ptr<RefDataSource>( createFunc( dsc.dsh ) );
+	const auto createFunc = lib.getFunc<RefDataSourceCreateFunc>( "createRefDataSource" );
+	return std::shared_ptr<IRefDataSource>( createFunc( dsc.dsh ) );
 }
 
-void RefDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<RefDataSource>& source )
+void RefDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<IRefDataSource>& source )
 {
 	s_customSources.emplace( dsh, source );
 }
@@ -40,9 +40,11 @@ void RefDataSourceFactory::delCustomSource( const std::string_view dsh )
 {
 	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
 		s_customSources.erase( it );
+	else
+		throw ARQException( std::format( "Cannot find custom refdata source with dsh={} to delete", dsh ) );
 }
 
-std::shared_ptr<RefDataSource> GlobalRefDataSource::get()
+std::shared_ptr<IRefDataSource> GlobalRefDataSource::get()
 {
 	std::shared_lock<std::shared_mutex> sl( s_mut );
 	if( !s_globalSourceCreator )

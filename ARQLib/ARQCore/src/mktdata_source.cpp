@@ -7,9 +7,9 @@
 namespace ARQ
 {
 
-std::unordered_map<std::string, std::shared_ptr<MktDataSource>, TransparentStringHash, std::equal_to<>> MktDataSourceFactory::s_customSources;
+std::unordered_map<std::string, std::shared_ptr<IMktDataSource>, TransparentStringHash, std::equal_to<>> MktDataSourceFactory::s_customSources;
 
-std::shared_ptr<MktDataSource> MktDataSourceFactory::create( const std::string_view dsh )
+std::shared_ptr<IMktDataSource> MktDataSourceFactory::create( const std::string_view dsh )
 {
 	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
 		return it->second;
@@ -27,10 +27,10 @@ std::shared_ptr<MktDataSource> MktDataSourceFactory::create( const std::string_v
 	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName ); // TODO: Log when dll is being loaded for the first time?
 
 	const auto createFunc = lib.getFunc<MktDataSourceCreateFunc>( "createMktDataSource" ); // TODO: Need to cache the loaded functions?
-	return std::shared_ptr<MktDataSource>( createFunc( dsc.dsh ) );
+	return std::shared_ptr<IMktDataSource>( createFunc( dsc.dsh ) );
 }
 
-void MktDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<MktDataSource>& source )
+void MktDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<IMktDataSource>& source )
 {
 	s_customSources.emplace( dsh , source );
 }
@@ -41,7 +41,7 @@ void MktDataSourceFactory::delCustomSource( const std::string_view dsh )
 		s_customSources.erase( it );
 }
 
-std::shared_ptr<MktDataSource> GlobalMktDataSource::get()
+std::shared_ptr<IMktDataSource> GlobalMktDataSource::get()
 {
 	std::shared_lock<std::shared_mutex> sl( s_mut );
 	if( !s_globalSourceCreator )

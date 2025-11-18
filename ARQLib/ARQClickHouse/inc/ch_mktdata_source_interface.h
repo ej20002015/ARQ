@@ -10,7 +10,7 @@
 namespace ARQ
 {
 
-class CHMktDataSource : public MktDataSource
+class CHMktDataSource : public IMktDataSource
 {
 public:
 	CHMktDataSource( const std::string_view dsh )

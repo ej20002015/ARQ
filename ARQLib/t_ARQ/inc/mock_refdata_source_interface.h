@@ -12,7 +12,7 @@
 namespace ARQ
 {
 
-class MockRefDataSource : public RefDataSource
+class MockRefDataSource : public IRefDataSource
 {
 public:
 	virtual ~MockRefDataSource() = default;

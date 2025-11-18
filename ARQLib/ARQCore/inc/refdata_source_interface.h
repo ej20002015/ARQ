@@ -13,10 +13,10 @@
 namespace ARQ
 {
 
-class RefDataSource
+class IRefDataSource
 {
 public:
-	virtual ~RefDataSource() = default;
+	virtual ~IRefDataSource() = default;
 
     // --- Methods for Currency (CCY) ---
     [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::Currency> fetchCurrencies() = 0;
