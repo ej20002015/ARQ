@@ -32,16 +32,18 @@ struct Empty
 
 enum class Module
 {
+	// ARQ Components
 	CORE,
 	REFDATA,
 	MKT,
+
+	// External data systems
 	CLICKHOUSE,
 	GRPC,
+	NATS,
 
 	_SIZE
 };
-
-static constexpr const char* const MODULE_STRS[static_cast<size_t>( Module::_SIZE )] = { "CORE", "REFDATA", "MKT", "CLICKHOUSE", "GRPC" };
 
 // Commonly used concepts
 

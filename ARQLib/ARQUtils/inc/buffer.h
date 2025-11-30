@@ -76,6 +76,18 @@ struct Buffer
 
 		return *this;
 	}
+
+	uint8_t* getDataPtr() const noexcept
+	{
+		return data.get();
+	}
+
+	template<typename T>
+	T getDataPtrAs() const noexcept
+	{
+		return reinterpret_cast<T>( data.get() );
+	}
+
 };
 
 struct BufferView

@@ -21,4 +21,17 @@ private:
 	T m_val;
 };
 
+template<typename OnDtr>
+class Defer
+{
+public:
+	Defer( OnDtr func ) : m_func( func ) {}
+	~Defer() { m_func(); }
+
+private:
+	OnDtr m_func;
+};
+
+#define ARQDefer    Defer d([&]()
+
 }

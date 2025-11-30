@@ -5,11 +5,12 @@
 
 #include <string>
 #include <map>
+#include <vector>
 
 namespace ARQ
 {
 
-using HeaderMap = std::map<std::string, std::string>;
+using HeaderMap = std::map<std::string, std::vector<std::string>>;
 
 struct Message
 {
@@ -20,8 +21,12 @@ struct Message
 
 enum class MessagingEvent
 {
-	CONN_LOST,
-	// TODO
+	NO_SERVER,       /// Could not connect, the server could not be reached or is not running
+	CONN_CLOSED,     /// Connection has been closed
+	CONN_STALE,      /// The server closed our connection because it did not receive PINGs at the expected interval
+	CONN_DISCONNECT, /// The connection was disconnected. Will attempt reconnect.
+	SLOW_SUBSCRIBER, /// The maximum number of messages waiting to be delivered has been reached. Messages are dropped.
+	DRAINING         /// A subscription entered the draining mode
 };
 
 struct SubscriptionEvent
@@ -30,12 +35,21 @@ struct SubscriptionEvent
 	std::string    topic;
 };
 
+enum SubscriptionOptions
+{
+	NONE = 0,
+	DISABLE_HEADERS = 1 << 0, /// Reading headers on every message has allocation overhead - best to disable if not needed
+
+	DEFAULT = DISABLE_HEADERS /// Default flags include DISABLE_HEADERS
+};
+
 class ISubscriptionHandler
 {
 public:
-	              ARQCore_API virtual void             onMsg( Message&& msg )               = 0;
-	              ARQCore_API virtual void             onEvent( SubscriptionEvent&& event ) = 0;
-	[[nodiscard]] ARQCore_API virtual std::string_view getDesc() const                      = 0;
+	              ARQCore_API virtual void                onMsg( Message&& msg )                    = 0;
+	              ARQCore_API virtual void                onEvent( const SubscriptionEvent& event ) = 0;
+	[[nodiscard]] ARQCore_API virtual std::string_view    getDesc() const                           = 0;
+	[[nodiscard]] ARQCore_API virtual SubscriptionOptions getSubOptions()                           { return SubscriptionOptions::DEFAULT; }
 };
 
 struct SubStats

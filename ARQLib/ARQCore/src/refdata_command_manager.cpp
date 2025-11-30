@@ -13,7 +13,7 @@ void RefDataCommandManager::init( const Config& config )
 	m_config = config;
 	m_messagingService = MessagingServiceFactory::create( m_config.messagingServiceDSH );
 	m_subTopicPattern = SUB_TOPIC_PFX + ID::getSessionID().toString();
-	m_subHandler = std::make_shared<SubHandler>( this );
+	m_subHandler = std::make_shared<SubHandler>( *this );
 }
 
 void RefDataCommandManager::start()
@@ -185,9 +185,9 @@ void RefDataCommandManager::SubHandler::onMsg( Message&& msg )
 	m_owner.onCommandResponse( resp );
 }
 
-void RefDataCommandManager::SubHandler::onEvent( SubscriptionEvent&& event )
+void RefDataCommandManager::SubHandler::onEvent( const SubscriptionEvent& event )
 {
-	// TODO
+	Log( Module::REFDATA ).info( "RefDataCommandManager::SubHandler: Received [{}] subscription event for topic [{}]", Enum::enum_name( event.event ), event.topic );
 }
 
 }

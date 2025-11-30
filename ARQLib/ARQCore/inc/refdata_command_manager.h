@@ -85,9 +85,9 @@ private:
 		{
 		}
 
-		void             onMsg( Message&& msg )               override;
-		void             onEvent( SubscriptionEvent&& event ) override;
-		std::string_view getDesc() const                      override { return "RefDataCommandManager::SubHandler"sv; }
+		void             onMsg( Message&& msg )                    override;
+		void             onEvent( const SubscriptionEvent& event ) override;
+		std::string_view getDesc() const                           override { return "RefDataCommandManager::SubHandler"sv; }
 
 	private:
 		RefDataCommandManager& m_owner;

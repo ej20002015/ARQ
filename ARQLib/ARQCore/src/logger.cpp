@@ -2,6 +2,7 @@
 
 #include <ARQUtils/os.h>
 #include <ARQUtils/time.h>
+#include <ARQUtils/enum.h>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/async.h>
@@ -135,7 +136,7 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 		logEntry["proc_name"]      = m_procName;
 		logEntry["thread_id"]      = OS::threadID();
 		logEntry["thread_name"]    = OS::threadName();
-		logEntry["module"]         = MODULE_STRS[static_cast<size_t>( module )];
+		logEntry["module"]         = Enum::enum_name( module );
 		logEntry["source"]         = {
 			{ "file",     loc.file_name() },
 			{ "line",     loc.line() },
