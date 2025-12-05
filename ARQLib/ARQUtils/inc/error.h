@@ -63,4 +63,19 @@ inline std::string fmtInternalErrStr( const std::string_view errStr )
     return std::format( "!!! {0} !!!", errStr );
 }
 
+// Helpers for catching exceptions
+
+#define ARQ_DO_IN_TRY( arqException, errMsg ) \
+ARQException arqException;                    \
+std::string  errMsg;                          \
+try {                                         \
+
+#define ARQ_END_TRY_AND_CATCH( arqException, errorMsg) } \
+catch( const ARQException& e ) {                         \
+	arqException = e; }                                  \
+catch( const std::exception& e ) {                       \
+	errorMsg = e.what(); }                               \
+catch( ... ) {                                           \
+	errorMsg = "Unknown exception"; }                    \
+
 } // namespace ARQ

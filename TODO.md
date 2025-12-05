@@ -1,8 +1,9 @@
+- Create client library for Kafka
+- Use library to publish commands
 - Create RefDataGatekeeper gRPC service
-  - Make client side first
-  - Will need to integrate Kafka
   - Set up kafka co-partitioning
   - Use snapshotting technique and just keep all version data in-memory
+- Update refdata dll interfaces to use new approach used for the serialisation - namely templating
 - Create RefDataViewManager
 - Create subscription bit
 - Do all the same for mkt data

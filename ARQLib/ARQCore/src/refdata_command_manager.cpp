@@ -100,60 +100,48 @@ void RefDataCommandManager::onCommandResponse( const RefDataCommandResponse& res
 		}
 	}
 
-	if( command.has_value() )
+	if( !command )
 	{
-		const Time::Microseconds timeTaken = Time::DateTime::nowUTC() - command->startTime;
-		const std::string logMsg = std::format( "RefDataCommandManager: Received response with status={}, message={} for command with CorrID={} in {}ms - invoking callback(s)", Enum::enum_name( resp.status ), resp.message ? *resp.message : "NULL", resp.corrID, timeTaken / 1000.0 );
-		switch( resp.status )
-		{
-			case RefDataCommandResponse::SUCCESS:
-				Log( Module::REFDATA ).debug( "{}", logMsg ); break;
-			default:
-				Log( Module::REFDATA ).error( "{}", logMsg ); break;
-		}
-
-		try
-		{
-			command->callback( resp );
-		}
-		catch( const ARQException& e )
-		{
-			Log( Module::REFDATA ).error( e, "RefDataCommandManager: Exception thrown in callback for CorrID={}", resp.corrID );
-		}
-		catch( const std::exception& e )
-		{
-			Log( Module::REFDATA ).error( "RefDataCommandManager: Exception thrown in callback for CorrID={} - what: ", resp.corrID, e.what() );
-		}
-		catch( ... )
-		{
-			Log( Module::REFDATA ).error( "RefDataCommandManager: Unknown exception thrown in callback for CorrID={}", resp.corrID );
-		}
-		
-		{
-			std::shared_lock<std::shared_mutex> sl( m_globalCallbacksMut );
-			for( const auto& cb : m_globalCallbacks )
-			{
-				try
-				{
-					cb( resp );
-				}
-				catch( const ARQException& e )
-				{
-					Log( Module::REFDATA ).error( e, "RefDataCommandManager: Exception thrown in global callback for CorrID={}", resp.corrID );
-				}
-				catch( const std::exception& e )
-				{
-					Log( Module::REFDATA ).error( "RefDataCommandManager: Exception thrown in global callback for CorrID={} - what: ", resp.corrID, e.what() );
-				}
-				catch( ... )
-				{
-					Log( Module::REFDATA ).error( "RefDataCommandManager: Unknown exception thrown in global callback for CorrID={}", resp.corrID );
-				}
-			}
-		}
-	}
-	else
 		Log( Module::REFDATA ).error( "RefDataCommandManager: Received response for unknown command with CorrID={} - ignoring", resp.corrID );
+		return;
+	}
+
+	const Time::Microseconds timeTaken = Time::DateTime::nowUTC() - command->startTime;
+	const std::string logMsg = std::format( "RefDataCommandManager: Received response with status={}, message={} for command with CorrID={} in {}ms - invoking callback(s)", Enum::enum_name( resp.status ), resp.message ? *resp.message : "NULL", resp.corrID, timeTaken / 1000.0 );
+	switch( resp.status )
+	{
+		case RefDataCommandResponse::SUCCESS:
+			Log( Module::REFDATA ).debug( "{}", logMsg ); break;
+		default:
+			Log( Module::REFDATA ).error( "{}", logMsg ); break;
+	}
+
+	ARQ_DO_IN_TRY( arqExc, errMsg );
+		command->callback( resp );
+	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
+
+	if( arqExc.what().size() )
+		Log( Module::NATS ).error( arqExc, "RefDataCommandManager: Exception thrown in callback for CorrID={}", resp.corrID );
+	else if( errMsg.size() )
+		Log( Module::NATS ).error( "RefDataCommandManager: Exception thrown in callback for CorrID={} - what: ", resp.corrID, errMsg );
+		
+	std::vector<RefDataCommandCallback> globalCallbacks;
+	{
+		std::shared_lock<std::shared_mutex> sl( m_globalCallbacksMut );
+		globalCallbacks = m_globalCallbacks;
+	}
+
+	for( const auto& cb : m_globalCallbacks )
+	{
+		ARQ_DO_IN_TRY( arqExc, errMsg );
+			cb( resp );
+		ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
+
+		if( arqExc.what().size() )
+			Log( Module::NATS ).error( arqExc, "RefDataCommandManager: Exception thrown in global callback for CorrID={}", resp.corrID );
+		else if( errMsg.size() )
+			Log( Module::NATS ).error( "RefDataCommandManager: Exception thrown in global callback for CorrID={} - what: ", resp.corrID, errMsg );
+	}
 }
 
 void RefDataCommandManager::SubHandler::onMsg( Message&& msg )
@@ -162,32 +150,16 @@ void RefDataCommandManager::SubHandler::onMsg( Message&& msg )
 
 	RefDataCommandResponse resp;
 
-	try
-	{
+	ARQ_DO_IN_TRY( arqExc, errMsg );
 		resp = m_owner.m_config.serialiser->deserialise<RefDataCommandResponse>( msg.data );
-	}
-	catch( const ARQException& e )
-	{
-		Log( Module::REFDATA ).error( e, "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object", msg.topic );
-		return;
-	}
-	catch( const std::exception& e )
-	{
-		Log( Module::REFDATA ).error( "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object - what: ", msg.topic, e.what() );
-		return;
-	}
-	catch( ... )
-	{
-		Log( Module::REFDATA ).error( "RefDataCommandManager: Unknown exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object", msg.topic );
-		return;
-	}
+	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
+
+	if( arqExc.what().size() )
+		Log( Module::NATS ).error( arqExc, "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object", msg.topic );
+	else if( errMsg.size() )
+		Log( Module::NATS ).error( "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object - what: ", msg.topic, errMsg );
 
 	m_owner.onCommandResponse( resp );
-}
-
-void RefDataCommandManager::SubHandler::onEvent( const SubscriptionEvent& event )
-{
-	Log( Module::REFDATA ).info( "RefDataCommandManager::SubHandler: Received [{}] subscription event for topic [{}]", Enum::enum_name( event.event ), event.topic );
 }
 
 }

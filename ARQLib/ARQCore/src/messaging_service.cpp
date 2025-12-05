@@ -27,7 +27,7 @@ std::shared_ptr<IMessagingService> MessagingServiceFactory::create( const std::s
 	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<MessagingServiceCreateFunc>( "createMessagingService" );
-	return std::shared_ptr<IMessagingService>( createFunc( dsc.dsh ) ); // TODO: What to do here? I think the return value for a dsh should be cached - can I use std::shared_ptr in c external function?
+	return std::shared_ptr<IMessagingService>( createFunc( dsc.dsh ), [] (IMessagingService* ) { ; } ); // Lifetime handled by dlls so use null deleter
 }
 
 void MessagingServiceFactory::addCustomService( const std::string_view dsh, const std::shared_ptr<IMessagingService>& service )

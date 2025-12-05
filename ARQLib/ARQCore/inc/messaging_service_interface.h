@@ -6,6 +6,8 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <functional>
+#include <optional>
 
 namespace ARQ
 {
@@ -21,19 +23,16 @@ struct Message
 
 enum class MessagingEvent
 {
-	NO_SERVER,       /// Could not connect, the server could not be reached or is not running
-	CONN_CLOSED,     /// Connection has been closed
-	CONN_STALE,      /// The server closed our connection because it did not receive PINGs at the expected interval
-	CONN_DISCONNECT, /// The connection was disconnected. Will attempt reconnect.
-	SLOW_SUBSCRIBER, /// The maximum number of messages waiting to be delivered has been reached. Messages are dropped.
-	DRAINING         /// A subscription entered the draining mode
+	NO_SERVER,         /// Could not connect, the server could not be reached or is not running
+	CONN_CLOSED,       /// Connection has been closed
+	CONN_STALE,        /// The server closed our connection because it did not receive PINGs at the expected interval
+	CONN_DISCONNECTED, /// The connection was disconnected. Will attempt reconnect.
+	CONN_RECONNECTED,  /// The connection was reconnected
+	SLOW_SUBSCRIBER,   /// The maximum number of messages waiting to be delivered has been reached. Messages are dropped.
+	DRAINING           /// A subscription entered the draining mode
 };
 
-struct SubscriptionEvent
-{
-	MessagingEvent event;
-	std::string    topic;
-};
+using MessagingEventCallbackFunc = std::function<void( const MessagingEvent event, const std::optional<int64_t> subscriptionID )>;
 
 enum SubscriptionOptions
 {
@@ -46,20 +45,19 @@ enum SubscriptionOptions
 class ISubscriptionHandler
 {
 public:
-	              ARQCore_API virtual void                onMsg( Message&& msg )                    = 0;
-	              ARQCore_API virtual void                onEvent( const SubscriptionEvent& event ) = 0;
-	[[nodiscard]] ARQCore_API virtual std::string_view    getDesc() const                           = 0;
-	[[nodiscard]] ARQCore_API virtual SubscriptionOptions getSubOptions()                           { return SubscriptionOptions::DEFAULT; }
+	              ARQCore_API virtual void                onMsg( Message&& msg ) = 0;
+	[[nodiscard]] ARQCore_API virtual std::string_view    getDesc() const        = 0;
+	[[nodiscard]] ARQCore_API virtual SubscriptionOptions getSubOptions()        { return SubscriptionOptions::DEFAULT; }
 };
 
 struct SubStats
 {
-	uint64_t deliveredMsgs;
-	uint64_t droppedMsgs;
-	uint32_t pendingMsgs;
-	uint32_t pendingBytes;
-	uint32_t maxPendingMsgs;
-	uint32_t maxPendingBytes;
+	int32_t  pendingMsgs;
+	int32_t  pendingBytes;
+	int32_t  maxPendingMsgs;
+	int32_t  maxPendingBytes;
+	int64_t  deliveredMsgs;
+	int64_t  droppedMsgs;
 };
 
 class ISubscription
@@ -92,6 +90,8 @@ public:
 
 	              ARQCore_API virtual void                           publish( const std::string_view topic, const Message& msg )                                        = 0;
 	[[nodiscard]] ARQCore_API virtual std::unique_ptr<ISubscription> subscribe( const std::string_view topicPattern, std::shared_ptr<ISubscriptionHandler> subHandler ) = 0;
+
+	              ARQCore_API virtual void                           registerEventCallback( const MessagingEventCallbackFunc& eventCallbackFunc )                       = 0;
 
 	[[nodiscard]] ARQCore_API virtual GlobalStats                    getStats() const                                                                                   = 0;
 };

@@ -18,6 +18,7 @@ public:
 		: m_natsSub( natsSub )
 	{
 	}
+	~NatsSubscription();
 
 	[[nodiscard]] ARQNats_API int64_t          getID()                      override;
 	[[nodiscard]] ARQNats_API std::string_view getTopic()                   override;
@@ -41,11 +42,13 @@ public: // IMessagingService implementation
 	              ARQNats_API void                           publish( const std::string_view topic, const Message& msg )                                        override;
 	[[nodiscard]] ARQNats_API std::unique_ptr<ISubscription> subscribe( const std::string_view topicPattern, std::shared_ptr<ISubscriptionHandler> subHandler ) override;
 
+	              ARQNats_API void                           registerEventCallback( const MessagingEventCallbackFunc& eventCallbackFunc )                       override;
+
 	[[nodiscard]] ARQNats_API GlobalStats                    getStats() const                                                                                   override;
 
 private: // Connection
-	void         connect( const std::string_view dsh );
-	void         disconnect();
+	void connect( const std::string_view dsh );
+	void disconnect();
 
 private: // Callbacks
 	void onNatsError( natsSubscription* subscription, natsStatus err );
@@ -62,14 +65,15 @@ private: // Callbacks
 	friend void natsDiscoveredServersCB( natsConnection* nc, void* closure );
 	friend void natsLameDuckCB( natsConnection* nc, void* closure );
 
+	void invokeUserEventCallbacks( const MessagingEvent e, const std::optional<int64_t> subID = std::nullopt );
+
 private:
 	std::string m_dsh;
 
 	natsConnection* m_natsConn;
 
-	using HandlerAndTopic = std::pair<std::weak_ptr<ISubscriptionHandler>, std::string>;
-	std::map<int64_t, HandlerAndTopic> m_natsSubID2HandlerAndTopic;
-	std::shared_mutex                  m_natsSubID2HandlerAndTopicMutex;
+	std::vector<MessagingEventCallbackFunc> m_eventCallbacks;
+	std::shared_mutex              m_eventCallbacksMutex;
 };
 
 }

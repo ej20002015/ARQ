@@ -4,6 +4,7 @@
 #include <memory>
 #include <utility>
 #include <algorithm>
+#include <string>
 
 namespace ARQ
 {
@@ -88,6 +89,10 @@ struct Buffer
 		return reinterpret_cast<T>( data.get() );
 	}
 
+	std::string toString() const noexcept
+	{
+		return std::string( getDataPtrAs<const char*>(), size );
+	}
 };
 
 struct BufferView

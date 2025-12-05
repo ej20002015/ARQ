@@ -12,16 +12,6 @@ using namespace Enum::bitwise_operators;
 namespace ARQ
 {
 
-#define DO_IN_TRY() try {
-
-#define END_TRY_AND_CATCH( arqException, errorMsg) } \
-catch( const ARQException& e ) {                     \
-	arqException = e; }                              \
-catch( const std::exception& e ) {                   \
-	errorMsg = e.what(); }                           \
-catch( ... ) {                                       \
-	errorMsg = "Unknown exception"; }                \
-
 static std::string formatNatsError( natsStatus rc )
 {
 	return std::format( "nats.c error: code={}, error={}, message={}", static_cast<uint32_t>( rc ), natsStatus_GetText( rc ), nats_GetLastError( &rc ) );
@@ -34,7 +24,7 @@ static std::optional<MessagingEvent> natsStatus2MsgEvent( const natsStatus ns )
 		case NATS_CONNECTION_CLOSED:       return MessagingEvent::CONN_CLOSED;
 		case NATS_NO_SERVER:               return MessagingEvent::NO_SERVER;
 		case NATS_STALE_CONNECTION:        return MessagingEvent::CONN_STALE;
-		case NATS_CONNECTION_DISCONNECTED: return MessagingEvent::CONN_DISCONNECT;
+		case NATS_CONNECTION_DISCONNECTED: return MessagingEvent::CONN_DISCONNECTED;
 		case NATS_SLOW_CONSUMER:           return MessagingEvent::SLOW_SUBSCRIBER;
 		case NATS_DRAINING:                return MessagingEvent::DRAINING;
 		default:
@@ -111,9 +101,9 @@ static void onNatsMsg( natsConnection* nc, natsSubscription* sub, natsMsg* msg, 
 		natsStatus   rc;
 		const char** headerKeys;
 		int32_t      headerCount;
-		if( rc = natsMsgHeader_Keys( msg, &headerKeys, &headerCount ); rc != NATS_OK )
+		if( rc = natsMsgHeader_Keys( msg, &headerKeys, &headerCount ); rc != NATS_OK && rc != NATS_NOT_FOUND )
 			Log( Module::NATS ).error( "onNatsMsg() errored when processing message on topic [{}] - natsConnection_Subscribe() call failed with error: {}", subject, formatNatsError( rc ) );
-		else
+		else if( rc != NATS_NOT_FOUND )
 		{
 			ARQDefer {
 				free( headerKeys );
@@ -141,21 +131,16 @@ static void onNatsMsg( natsConnection* nc, natsSubscription* sub, natsMsg* msg, 
 	}
 
 	// Invoke callback
+	ARQ_DO_IN_TRY( arqExc, errMsg );
+		subHandler.onMsg( std::move( msgObj ) );
+	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 
-	ARQException arqException;
-	std::string errMsg;
-
-	DO_IN_TRY();
-	subHandler.onMsg( std::move( msgObj ) );
-	END_TRY_AND_CATCH( arqException, errMsg );
-
-	if( arqException.what().size() )
-		Log( Module::NATS ).error( arqException, "onNatsMsg() errored when invoking user callback for message on topic [{}], with subHandler.desc() [] - subHandler.onMsg() call threw an ARQException", subject, subHandler.getDesc() );
+	if( arqExc.what().size() )
+		Log( Module::NATS ).error( arqExc, "onNatsMsg() errored when invoking user callback for message on topic [{}], with subHandler.desc() [] - subHandler.onMsg() call threw an ARQException", subject, subHandler.getDesc() );
 	else if( errMsg.size() )
 		Log( Module::NATS ).error( "onNatsMsg() errored when invoking user callback for message on topic [{}], with subHandler.desc() [] - subHandler.onMsg() call threw an exception: {}", subject, subHandler.getDesc(), errMsg );
 
 	// Cleanup
-
 	natsMsg_Destroy( msg );
 }
 
@@ -176,10 +161,28 @@ NatsMessagingService::~NatsMessagingService()
 
 void NatsMessagingService::publish( const std::string_view topic, const Message& msg )
 {
-	if( natsStatus rc = natsConnection_Publish( m_natsConn, topic.data(), msg.data.getDataPtrAs<const char*>(), msg.data.size ); rc != NATS_OK )
+	natsStatus rc;
+	natsMsg* natsMsg;
+
+	if( rc = natsMsg_Create( &natsMsg, topic.data(), nullptr, msg.data.getDataPtrAs<const char*>(), msg.data.size ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to publish nats message - natsMsg_Create() call failed with error: {}", formatNatsError( rc ) ) );
+
+	if( msg.headers.size() )
+	{
+		for( const auto& [key, vals] : msg.headers )
+		{
+			for( const std::string& val : vals )
+			{
+				if( rc = natsMsgHeader_Add( natsMsg, key.c_str(), val.c_str() ); rc != NATS_OK )
+					throw ARQException( std::format( "Failed to publish nats message - natsMsgHeader_Add() call failed with error: {}", formatNatsError( rc ) ) );
+			}
+		}
+	}
+	
+	if( natsStatus rc = natsConnection_PublishMsg( m_natsConn, natsMsg ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to publish nats message - natsConnection_Publish() call failed with error: {}", formatNatsError( rc ) ) );
 
-	Log( Module::NATS ).trace( "NatsMessagingService: Published message of size [{}] on topic [{}]", msg.data.size, topic );
+	Log( Module::NATS ).trace( "NatsMessagingService: Published message of size [{}] on topic [{}] with [{}] headers", msg.data.size, topic, msg.headers.size() );
 }
 
 std::unique_ptr<ISubscription> NatsMessagingService::subscribe( const std::string_view topicPattern, std::shared_ptr<ISubscriptionHandler> subHandler )
@@ -190,14 +193,15 @@ std::unique_ptr<ISubscription> NatsMessagingService::subscribe( const std::strin
 	if( rc = natsConnection_Subscribe( &sub, m_natsConn, topicPattern.data(), onNatsMsg, subHandler.get() ); rc != NATS_OK )
 		throw ARQException( std::format("Failed to create nats subscriber - natsConnection_Subscribe() call failed with error: {}", formatNatsError( rc ) ) );
 
-	{
-		std::unique_lock<std::shared_mutex> ul( m_natsSubID2HandlerAndTopicMutex );
-		m_natsSubID2HandlerAndTopic.emplace( natsSubscription_GetID( sub ), std::make_pair( subHandler, topicPattern ) );
-	}
-
 	Log( Module::NATS ).info( "NatsMessagingService: Created subscription on topic [{}], with handler [{}], and nats subscription ID [{}]", topicPattern, subHandler->getDesc(), natsSubscription_GetID( sub ) );
 
 	return std::make_unique<NatsSubscription>( sub );
+}
+
+void NatsMessagingService::registerEventCallback( const MessagingEventCallbackFunc& eventCallbackFunc )
+{
+	std::unique_lock<std::shared_mutex> ul( m_eventCallbacksMutex );
+	m_eventCallbacks.push_back( eventCallbackFunc );
 }
 
 GlobalStats NatsMessagingService::getStats() const
@@ -233,6 +237,8 @@ GlobalStats NatsMessagingService::getStats() const
 
 void NatsMessagingService::connect( const std::string_view dsh )
 {
+	Log( Module::NATS ).info( "Connecting to Nats for dsh [{}]", dsh );
+
 	natsStatus rc;
 
 	natsOptions* natsOptions;
@@ -294,6 +300,8 @@ void NatsMessagingService::connect( const std::string_view dsh )
 
 	if( natsStatus rc = natsConnection_Connect( &m_natsConn, natsOptions ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to create NatsMessagingService - natsConnection_Connect() call failed with error: {}", formatNatsError( rc ) ) );
+
+	Log( Module::NATS ).info( "Finished connecting to Nats for dsh [{}]", dsh );
 }
 
 void NatsMessagingService::disconnect()
@@ -309,68 +317,75 @@ void NatsMessagingService::onNatsError( natsSubscription* subscription, natsStat
 
 	Log( Module::NATS ).debug( "onNatsError() callback triggered with nats status [{}] for subscription with ID [{}]", natsStatus_GetText( err ), subID );
 
-	std::shared_ptr<ISubscriptionHandler> subHandler;
-	std::string                           topic;
+	const std::optional<MessagingEvent> e = natsStatus2MsgEvent( err );
+	if( !e )
 	{
-		std::shared_lock<std::shared_mutex> sl( m_natsSubID2HandlerAndTopicMutex );
-		if( auto it = m_natsSubID2HandlerAndTopic.find( subID ); it != m_natsSubID2HandlerAndTopic.end() )
-		{
-			const auto& [handler, topicStr] = it->second;
-			subHandler = handler.lock();
-			topic      = topicStr;
-		}
+		Log( Module::NATS ).debug( "onNatsError() callback returning early - nats status [{}] not an ARQ messaging event", natsStatus_GetText( err ) );
+		return;
 	}
 
-	if( subHandler )
-	{
-		const std::optional<MessagingEvent> e = natsStatus2MsgEvent( err );
-		if( e )
-		{
-			ARQException arqException;
-			std::string errMsg;
-
-			DO_IN_TRY();
-			subHandler->onEvent( SubscriptionEvent{ *e, topic } );
-			END_TRY_AND_CATCH( arqException, errMsg );
-
-			if( arqException.what().size() )
-				Log( Module::NATS ).error( arqException, "onNatsError() errored when invoking user callback for subscription event [{}], with subHandler.desc() [] - subHandler.onEvent() call threw an ARQException", Enum::enum_name( *e ), subHandler->getDesc() );
-			else if( errMsg.size() )
-				Log( Module::NATS ).error( "onNatsError() errored when invoking user callback for subscription event [{}], with subHandler.desc() [] - subHandler.onEvent() call threw an exception: {}", Enum::enum_name( *e ), subHandler->getDesc(), errMsg );
-		}
-	}
-	else
-		Log( Module::NATS ).error( "onNatsError() errored so cannot forward event [{}] - couldn't get subscription handler", natsStatus_GetText( err ) );
+	invokeUserEventCallbacks( *e, subID );
 }
 
 void NatsMessagingService::onNatsClosed()
 {
 	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
 	Log( Module::NATS ).error( "NatsMessagingService: Nats connection has been closed" );
+	invokeUserEventCallbacks( MessagingEvent::CONN_CLOSED );
 }
 
 void NatsMessagingService::onNatsDisconnected()
 {
 	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
 	Log( Module::NATS ).error( "NatsMessagingService: Nats connection has been disconnected - will attempt to reconnect" );
+	invokeUserEventCallbacks( MessagingEvent::CONN_DISCONNECTED );
 }
 
 void NatsMessagingService::onNatsReconnected()
 {
 	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
 	Log( Module::NATS ).info( "NatsMessagingService: Nats connection has been reconnected" );
+	invokeUserEventCallbacks( MessagingEvent::CONN_RECONNECTED );
 }
 
 void NatsMessagingService::onNatsDiscoveredServers()
 {
-	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
 	Log( Module::NATS ).info( "NatsMessagingService: There are new nats servers" );
 }
 
 void NatsMessagingService::onNatsLameDuck()
 {
-	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
 	Log( Module::NATS ).info( "NatsMessagingService: Nats connection has gone into lame duck mode" );
+}
+
+void NatsMessagingService::invokeUserEventCallbacks( const MessagingEvent e, const std::optional<int64_t> subID )
+{
+	std::vector<MessagingEventCallbackFunc> eventCallbacks;
+	{
+		std::shared_lock<std::shared_mutex> sl( m_eventCallbacksMutex );
+		eventCallbacks = m_eventCallbacks;
+	}
+	if( eventCallbacks.empty() )
+	{
+		Log( Module::NATS ).debug( "NatsMessagingService::invokeUserEventCallbacks() returning early - no user event callbacks registered" );
+		return;
+	}
+
+	Log( Module::NATS ).debug( "NatsMessagingService::invokeUserEventCallbacks() invoking [{}] user messaging event callback functions", eventCallbacks.size() );
+	for( const auto& cb : eventCallbacks )
+	{
+		if( !cb )
+			continue;
+
+		ARQ_DO_IN_TRY( arqExc, errMsg );
+			cb( e, subID );
+		ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
+
+		if( arqExc.what().size() )
+			Log( Module::NATS ).error( arqExc, "NatsMessagingService::invokeUserEventCallbacks() errored when invoking user callback for messaging event [{}] - callback threw an ARQException", Enum::enum_name( e ) );
+		else if( errMsg.size() )
+			Log( Module::NATS ).error( "NatsMessagingService::invokeUserEventCallbacks() errored when invoking user callback for messaging event [{}] - callback threw an exception: {}", Enum::enum_name( e ), errMsg );
+	}
 }
 
 /*
@@ -378,6 +393,11 @@ void NatsMessagingService::onNatsLameDuck()
 *    Implementation of NatsSubscription     *
 *********************************************
 */
+
+NatsSubscription::~NatsSubscription()
+{
+	unsubscribe();
+}
 
 int64_t NatsSubscription::getID()
 {
@@ -396,27 +416,38 @@ bool NatsSubscription::isValid()
 
 SubStats NatsSubscription::getStats()
 {
-	// TODO
-	return SubStats();
+	int32_t pendingMsgs, pendingBytes, maxPendingMsgs, maxPendingBytes;
+	int64_t deliveredMsgs, droppedMsgs;
+
+	if( const natsStatus rc = natsSubscription_GetStats( m_natsSub, &pendingMsgs, &pendingBytes, &maxPendingMsgs, &maxPendingBytes, &deliveredMsgs, &droppedMsgs ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to get nats subscription stats - natsSubscription_GetStats() call failed with error: {}", formatNatsError( rc ) ) );
+	
+	return SubStats {
+		pendingMsgs,
+		pendingBytes,
+		maxPendingMsgs,
+		maxPendingBytes,
+		deliveredMsgs,
+		droppedMsgs
+	};
 }
 
 void NatsSubscription::unsubscribe()
 {
-	// TODO
-	/*{
-		std::unique_lock<std::shared_mutex> ul( m_natsSubID2HandlerMutex );
-		m_natsSubID2Handler.emplace( natsSubscription_GetID( sub ), subHandler );
-	}*/
+	if( const natsStatus rc = natsSubscription_Unsubscribe( m_natsSub ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to unsubscribe nats subscription - natsSubscription_Unsubscribe() call failed with error: {}", formatNatsError( rc ) ) );
 }
 
 void NatsSubscription::drainAndUnsubscribe()
 {
-	// TODO
+	if( const natsStatus rc = natsSubscription_Drain( m_natsSub ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to drain and unsubscribe nats subscription - natsSubscription_Drain() call failed with error: {}", formatNatsError( rc ) ) );
 }
 
 void NatsSubscription::blockOnDrainAndUnsubscribe()
 {
-	// TODO
+	if( const natsStatus rc = natsSubscription_WaitForDrainCompletion( m_natsSub, 1000 * 30 /* 30 seconds */); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to unsubscribe nats subscription - natsSubscription_Unsubscribe() call failed with error: {}", formatNatsError( rc ) ) );
 }
 
 }

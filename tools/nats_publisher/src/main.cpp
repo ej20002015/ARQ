@@ -1,67 +1,95 @@
-// Copyright 2015-2018 The NATS Authors
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+#include <ARQUtils/error.h>
+#include <ARQUtils/enum.h>
+#include <ARQUtils/time.h>
+#include <ARQCore/messaging_service.h>
 
-#include "examples.h"
+#include <iostream>
+#include <string>
+#include <chrono>
+#include <vector>
+#include <atomic>
 
-static const char *usage = ""\
-"-txt           text to send (default is 'hello')\n" \
-"-count         number of messages to send\n";
+using namespace ARQ;
 
-int main(int argc, char **argv)
+int main( int argc, char* argv[] )
 {
-    natsConnection  *conn  = NULL;
-    natsStatistics  *stats = NULL;
-    natsOptions     *opts  = NULL;
-    natsStatus      s;
-    int             dataLen=0;
-
-    opts = parseArgs(argc, argv, usage);
-
-    printf("Sending %" PRId64 " messages to subject '%s'\n", total, subj);
-
-    s = natsConnection_Connect(&conn, opts);
-
-    if (s == NATS_OK)
-        s = natsStatistics_Create(&stats);
-
-    if (s == NATS_OK)
-        start = nats_Now();
-
-    dataLen = (int) strlen(payload);
-    for (count = 0; (s == NATS_OK) && (count < total); count++)
-        s = natsConnection_Publish(conn, subj, (const void*) payload, dataLen);
-
-    if (s == NATS_OK)
-        s = natsConnection_FlushTimeout(conn, 1000);
-
-    if (s == NATS_OK)
+    if( argc < 3 )
     {
-        printStats(STATS_OUT, conn, NULL, stats);
-        printPerf("Sent");
-    }
-    else
-    {
-        printf("Error: %u - %s\n", s, natsStatus_GetText(s));
-        nats_PrintLastErrorStack(stderr);
+        std::cerr << "Usage: " << argv[0] << " <DSH> <TOPIC>" << std::endl;
+        std::cerr << "Example: " << argv[0] << " NATS quotes.us" << std::endl;
+        return 1;
     }
 
-    // Destroy all our objects to avoid report of memory leak
-    natsStatistics_Destroy(stats);
-    natsConnection_Destroy(conn);
-    natsOptions_Destroy(opts);
+    std::string dshId = argv[1];
+    std::string targetTopic = argv[2];
 
-    // To silence reports of memory still in used with valgrind
-    nats_Close();
+    std::cout << "Initializing NATS Publisher..." << std::endl;
+    std::cout << "DSH: " << dshId << " | Topic: " << targetTopic << std::endl;
+    std::shared_ptr<IMessagingService> msgServ;
+    ARQ_DO_IN_TRY( arqExc, errMsg );
+        msgServ = MessagingServiceFactory::create( "NATS" );
+    ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
+    if( arqExc.what().size() )
+        std::cout << "Error creating nats messaging service - what: " << arqExc.what();
+    else if( errMsg.size() )
+        std::cout << "Error creating nats messaging service - what: " << errMsg;
+
+    // Register Event Callback
+    // This is crucial to know if we are actually connected before publishing
+    std::atomic<bool> isConnected = false;
+
+    msgServ->registerEventCallback( [&] ( const MessagingEvent event, const std::optional<int64_t> subID )
+    {
+        std::cout << "[NATS Event]: " << Enum::enum_name( event );
+        if( subID.has_value() )
+            std::cout << " (SubID: " << subID.value() << ")";
+        std::cout << std::endl;
+
+        if( event == MessagingEvent::CONN_RECONNECTED )
+            isConnected = true;
+        else if( event == MessagingEvent::CONN_DISCONNECTED || event == MessagingEvent::CONN_CLOSED )
+            isConnected = false;
+    } );
+
+    // Publish Loop
+    std::cout << "\n--- Publisher Ready ---\n";
+    std::cout << "Type a message and press ENTER to publish.\n";
+    std::cout << "Type 'exit' to quit.\n";
+
+    std::string userInput;
+    while( true )
+    {
+        std::cout << "> ";
+        std::getline( std::cin, userInput );
+
+        if( userInput == "exit" )
+            break;
+        if( userInput.empty() )
+            continue;
+
+        Buffer payload( reinterpret_cast<const uint8_t*>( userInput.c_str() ), userInput.size() + 1 );
+
+        // Construct the Message
+        Message msg;
+        msg.topic = targetTopic;
+        msg.data = std::move( payload );
+
+        // Add Headers
+        msg.headers["Sender-DSH"].push_back( dshId );
+        msg.headers["Timestamp"].push_back( Time::DateTime::nowUTC().fmtISO8601() );
+
+        ARQ_DO_IN_TRY( arqExc, errMsg );
+            msgServ->publish( targetTopic, msg );
+            std::cout << " [Sent]" << std::endl;
+        ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
+
+        if( arqExc.what().size() )
+            std::cout << "Error publishing - what: " << arqExc.what();
+        else if( errMsg.size() )
+            std::cout << "Error publishing - what: " << errMsg;
+    }
+
+    std::cout << "Shutting down..." << std::endl;
 
     return 0;
 }
