@@ -73,7 +73,7 @@ private:
 	natsConnection* m_natsConn;
 
 	std::vector<MessagingEventCallbackFunc> m_eventCallbacks;
-	std::shared_mutex              m_eventCallbacksMutex;
+	std::shared_mutex                       m_eventCallbacksMutex;
 };
 
 }

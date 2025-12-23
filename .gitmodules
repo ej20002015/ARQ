@@ -16,3 +16,6 @@
 [submodule "vendor/tomlplusplus"]
 	path = vendor/tomlplusplus
 	url = https://github.com/marzer/tomlplusplus.git
+[submodule "vendor/modern-cpp-kafka"]
+	path = vendor/modern-cpp-kafka
+	url = git@github.com:morganstanley/modern-cpp-kafka.git

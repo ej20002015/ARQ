@@ -5,18 +5,6 @@
 #include <type_traits>
 #include <cstddef>
 
-#ifdef _WIN32
-	#define ARQ_BREAK() __debugbreak()
-#else
-	#define ARQ_BREAK()
-#endif
-
-#ifdef NDEBUG
-	#define ARQ_ASSERT( x )
-#else
-	#define ARQ_ASSERT( x ) { if( !( x ) ) { ARQ_BREAK(); } }
-#endif
-
 namespace ARQ
 {
 
@@ -41,6 +29,7 @@ enum class Module
 	CLICKHOUSE,
 	GRPC,
 	NATS,
+	KAFKA,
 
 	_SIZE
 };

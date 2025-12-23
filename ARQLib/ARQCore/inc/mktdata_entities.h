@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <ARQUtils/core.h>
+#include <ARQUtils/error.h>
 #include <ARQUtils/time.h>
 
 #include <string>

@@ -14,31 +14,19 @@
 namespace ARQ
 {
 
-struct DataSourceType
+enum class DataSourceType
 {
-public:
-
-	enum Enum
-	{
-		ClickHouse,
-		gRPC,
-		NATS,
-
-		_SIZE
-	};
-
-	static Enum fromStr( const std::string_view str );
-	static std::string_view toStr( const Enum type );
-
-private:
-	static constexpr const std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE )> TYPE_STRINGS = { "ClickHouse", "gRPC", "NATS" };
+	ClickHouse,
+	gRPC,
+	NATS,
+	Kafka,
 };
 
 struct DataSourceConfig
 {
 	std::string dsh;
 
-	DataSourceType::Enum type;
+	DataSourceType type;
 
 	struct ConnProps
 	{

@@ -14,3 +14,15 @@ port = 50052
 [data_sources.RefData_gRPC.conn_props.RefDataReader]
 hostname = "localhost"
 port = 50051
+
+[data_sources.NATS]
+type = "NATS"
+[data_sources.NATS.conn_props.Main]
+hostname = "localhost"
+port = 4222
+
+[data_sources.Kafka]
+type = "Kafka"
+[data_sources.Kafka.conn_props.Main]
+hostname = "localhost"
+port = 9092

@@ -151,6 +151,7 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 					{ "function", exception->get().where().function_name() }
 				} },
 				{ "what",  exception->get().what() },
+				{ "stack", fmtStacktrace( exception->get().stack() ) }
 			};
 		}
 		if( !ctx.empty() )

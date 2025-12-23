@@ -1,0 +1,6 @@
+ARQ_define_dynalib(ARQKafka)
+append_link_libraries(ARQKafka ARQCore rdkafka::rdkafkacpp)
+librdkafka_setup_runtime(ARQKafka)
+openssl_setup_runtime(ARQKafka)
+zlib_setup_runtime(ARQKafka)
+target_include_directories(ARQKafka PRIVATE "${MODERN_CPP_KAFKA_INC_PATHS}")

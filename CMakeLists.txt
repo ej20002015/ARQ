@@ -6,13 +6,15 @@ message(STATUS "CMake Generator: ${CMAKE_GENERATOR}")
 project(ARQ)
 
 # Set the C++ standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (MSVC)
     add_compile_options("/Zc:__cplusplus")
     option(ENABLE_VCPKG OFF)
 endif()
+
+#-lstdc++exp
 
 # Allow for folders in the IDE
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -202,6 +204,10 @@ function(ARQ_define_dynalib TARGET)
 
     target_compile_definitions(${TARGET} PRIVATE "${TARGET}_EXPORTS")
 
+    if(NOT WIN32)
+        target_link_libraries(${TARGET} PUBLIC stdc++exp) # To enable usage of some c++23 features (e.g. stacktrace)
+    endif()
+
     set_target_properties(${TARGET} PROPERTIES FOLDER "shared_libs")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
     source_group("inc" FILES ${INCLUDES})
@@ -272,6 +278,10 @@ function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
     add_executable(${EXE_NAME}
                    ${SOURCES}
                    ${HEADERS})
+
+    if(NOT WIN32)
+        target_link_libraries(${TARGET} PUBLIC stdc++exp) # To enable usage of some c++23 features (e.g. stacktrace)
+    endif()
 
     set_target_properties(${EXE_NAME} PROPERTIES FOLDER ${FOLDER_NAME})
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
@@ -386,6 +396,9 @@ unset(CMAKE_FOLDER)
 add_subdirectory(vendor/tomlplusplus)
 set(TOMLPP_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/tomlplusplus/include")
 
+# modern-cpp-kafka set up
+set(MODERN_CPP_KAFKA_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/modern-cpp-kafka/include")
+
 # Add ARQLib subdirectories
 add_subdirectory(ARQLib/ARQCore)
 add_subdirectory(ARQLib/ARQUtils)
@@ -397,6 +410,7 @@ add_subdirectory(ARQLib/ARQGrpc)
 add_subdirectory(ARQLib/ARQSerialisation)
 add_subdirectory(ARQLib/ARQProtobuf)
 add_subdirectory(ARQLib/ARQNats)
+add_subdirectory(ARQLib/ARQKafka)
 
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataReader)

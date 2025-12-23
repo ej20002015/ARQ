@@ -1,5 +1,9 @@
 #pragma once
 
+#include <ARQUtils/core.h>
+
+#include <concepts>
+
 namespace ARQ
 {
 
@@ -21,7 +25,7 @@ private:
 	T m_val;
 };
 
-template<typename OnDtr>
+template<std::invocable OnDtr>
 class Defer
 {
 public:
@@ -32,6 +36,6 @@ private:
 	OnDtr m_func;
 };
 
-#define ARQDefer    Defer d([&]()
+#define ARQDefer Defer d([&]()
 
 }

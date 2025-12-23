@@ -1,8 +1,19 @@
 - Create client library for Kafka
+  - Flesh out factory
+  - Create StreamProducer class
+  - Create StreamConsumer class
 - Use library to publish commands
-- Create RefDataGatekeeper gRPC service
+- Change RefDataGatekeeper service
+  - Should listener to Kafka for requests
+  - Should publish ack/nacks to nats
+  - Should save updates to a kafka topic
   - Set up kafka co-partitioning
   - Use snapshotting technique and just keep all version data in-memory
+  - Use gRPC to get details of service?
+- Create RefDataViewManager
+  - Listen to refdata update kafka topic
+  - Save down updates to ClickHouse
+- Deploy service to 
 - Update refdata dll interfaces to use new approach used for the serialisation - namely templating
 - Create RefDataViewManager
 - Create subscription bit

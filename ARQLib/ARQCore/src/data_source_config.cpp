@@ -1,5 +1,6 @@
 #include <ARQCore/data_source_config.h>
 
+#include <ARQUtils/enum.h>
 #include <ARQUtils/error.h>
 #include <ARQUtils/sys.h>
 #include <ARQUtils/toml.h>
@@ -10,22 +11,6 @@
 
 namespace ARQ
 {
-
-DataSourceType::Enum DataSourceType::fromStr( const std::string_view str )
-{
-	for( size_t i = 0; i < TYPE_STRINGS.size(); ++i )
-	{
-		if( TYPE_STRINGS[i] == str )
-			return static_cast<Enum>( i );
-	}
-
-	throw ARQException( std::format( "Cannot map given str [{}] to a DataSourceType::Enum", str ) );
-}
-
-std::string_view DataSourceType::toStr( const DataSourceType::Enum type )
-{
-	return TYPE_STRINGS[static_cast<size_t>( type )];
-}
 
 DataSourceConfigManager& DataSourceConfigManager::inst()
 {
@@ -138,7 +123,14 @@ void DataSourceConfigManager::parseConfig( const std::string_view tomlCfg )
 		{
 			DataSourceConfig cfg;
 			cfg.dsh = dsh;
-			cfg.type = DataSourceType::fromStr( getRequiredTomlValue<std::string>( *sourceTable, "type" ) );
+
+			std::optional<DataSourceType> typeOpt = Enum::enum_cast<DataSourceType>( getRequiredTomlValue<std::string>( *sourceTable, "type" ) );
+			if( !typeOpt )
+			{
+				Log( Module::CORE ).error( "Entry '{}' in [data_sources] has invalid type. Skipping.", dsh );
+				continue;
+			}
+			cfg.type = *typeOpt;
 
 			const toml::node* connPropsNode = sourceTable->get( "conn_props" );
 			if( !connPropsNode )
