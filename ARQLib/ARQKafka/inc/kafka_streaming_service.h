@@ -1,4 +1,4 @@
-#include <ARQkafka/dll.h>
+#include <ARQKafka/dll.h>
 
 #include <ARQCore/streaming_service.h>
 

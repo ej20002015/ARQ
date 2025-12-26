@@ -16,21 +16,30 @@ TEST( DynaLibCacheTests, LoadARQClickHouse )
 
 TEST( Temp, temp1 ) // Temp
 {
-    const auto streamProducer = StreamingServiceFactory::createProducer( "Kafka", StreamProducerOptions::OPTIMISE_LATENCY );
-
-	std::string msgStr = "Test message";
-	Buffer msgData( reinterpret_cast<uint8_t*>( msgStr.data() ), msgStr.size() + 1 );
-	StreamProducerMessage msg;
-	msg.data = msgData;
-	msg.id = 1000;
-	msg.key = "TestKey";
-	msg.topic = "EvanTopicIsNotHere";
+	std::shared_ptr<IStreamProducer> streamProducer;
+	try
+	{
+		streamProducer = StreamingServiceFactory::createProducer( "Kafka", StreamProducerOptions::OPTIMISE_LATENCY );
+	}
+	catch(const ARQException& e)
+	{
+		std::cout << e.what() << std::endl;
+	}
 
 	try
 	{
 		while( true )
 		{
 			auto tsStart = std::chrono::system_clock::now();
+
+			std::string msgStr = "A New Test message that dies";
+			Buffer msgData( reinterpret_cast<uint8_t*>( msgStr.data() ), msgStr.size() + 1 );
+			StreamProducerMessage msg;
+			msg.data = SharedBuffer( std::move( msgData ) );
+			msg.id = 1000;
+			msg.key = "TestKey";
+			msg.topic = "EvanTopicIsNotHere";
+			msg.headers["Test"] = "evan";
 
 			streamProducer->send( msg, [tsStart] ( const StreamProducerMessageMetadata& messageMetadata, std::optional<std::string> error )
 			{

@@ -5,7 +5,7 @@
 namespace ARQ
 {
 
-IMessagingService* ARQ::createMessagingService( const std::string_view dsh )
+IMessagingService* createMessagingService( const std::string_view dsh )
 {
     return NatsMessagingServiceManager::inst().get( dsh );
 }
@@ -16,7 +16,7 @@ NatsMessagingServiceManager& NatsMessagingServiceManager::inst()
     return s_inst;
 }
 
-NatsMessagingService* ARQ::NatsMessagingServiceManager::get( const std::string_view dsh )
+NatsMessagingService* NatsMessagingServiceManager::get( const std::string_view dsh )
 {
     NatsMessagingService* svc = nullptr;
     {

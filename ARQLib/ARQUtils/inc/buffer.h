@@ -9,10 +9,24 @@
 namespace ARQ
 {
 
+struct BufferView
+{
+	const uint8_t* data = nullptr;
+	size_t         size = 0;
+
+	BufferView() = default;
+
+	// Construct BufferView from raw data pointer
+	explicit BufferView( const uint8_t* data, const size_t size )
+		: data( data )
+		, size( size )
+	{}
+};
+
 struct Buffer
 {
 	std::unique_ptr<uint8_t[]> data = nullptr;
-	size_t size                     = 0;
+	size_t                     size = 0;
 
 	Buffer() = default;
 
@@ -30,6 +44,12 @@ struct Buffer
 	{
 		if( dataToCopy )
 			std::copy_n( dataToCopy, size, data.get() );
+	}
+
+	// Construct buffer by copying the given (void*) data
+	explicit Buffer( const void* dataToCopy, const size_t size )
+		: Buffer( reinterpret_cast<const uint8_t*>( dataToCopy ), size )
+	{
 	}
 
 	// Construct buffer by taking ownership of given data
@@ -78,6 +98,8 @@ struct Buffer
 		return *this;
 	}
 
+	operator BufferView() const { return BufferView( data.get(), size ); }
+
 	uint8_t* getDataPtr() const noexcept
 	{
 		return data.get();
@@ -95,25 +117,69 @@ struct Buffer
 	}
 };
 
-struct BufferView
+struct SharedBuffer
 {
-	const uint8_t* data = nullptr;
-	size_t size         = 0;
+	std::shared_ptr<uint8_t[]> data = nullptr;
+	size_t                     size = 0;
 
-	BufferView() = default;
+	SharedBuffer() = default;
 
-	// Construct BufferView from raw data pointer
-	explicit BufferView( const uint8_t* data, const size_t size )
-		: data( data )
-		, size( size )
-	{}
+	// Construct zero-initialised SharedBuffer of a given size
+	explicit SharedBuffer( const size_t size )
+		: size( size )
+	{
+		if( size )
+			data = std::make_shared<uint8_t[]>( size );
+	}
 
-	// Construct BufferView from Buffer
-	BufferView( const Buffer& buffer )
-		: data( buffer.data.get() )
-		, size( buffer.size )
-	{}
+	// Construct SharedBuffer by copying the given data
+	explicit SharedBuffer( const uint8_t* dataToCopy, const size_t size )
+		: SharedBuffer( size )
+	{
+		if( dataToCopy )
+			std::copy_n( dataToCopy, size, data.get() );
+	}
 
+	// Construct SharedBuffer by copying the given (void*) data
+	explicit SharedBuffer( const void* dataToCopy, const size_t size )
+		: SharedBuffer( reinterpret_cast<const uint8_t*>( dataToCopy ), size )
+	{
+	}
+
+	// Construct SharedBuffer by stealing data from Buffer
+	SharedBuffer( Buffer&& buffer ) noexcept
+		: size( buffer.size )
+	{
+		if( buffer.data )
+			data = std::shared_ptr<uint8_t[]>( std::move( buffer.data ) );
+
+		buffer.size = 0;
+	}
+
+	~SharedBuffer() = default;
+
+	SharedBuffer( const SharedBuffer& other ) = default;
+	SharedBuffer& operator=( const SharedBuffer& other ) = default;
+	SharedBuffer( SharedBuffer&& other ) noexcept = default;
+	SharedBuffer& operator=( SharedBuffer&& other ) noexcept = default;
+
+	operator BufferView() const { return BufferView( data.get(), size ); }
+
+	uint8_t* getDataPtr() const noexcept
+	{
+		return data.get();
+	}
+
+	template<typename T>
+	T getDataPtrAs() const noexcept
+	{
+		return reinterpret_cast<T>( data.get() );
+	}
+
+	std::string toString() const noexcept
+	{
+		return std::string( getDataPtrAs<const char*>(), size );
+	}
 };
 
 }

@@ -1,4 +1,4 @@
-#include <ARQkafka/kafka_streaming_service_interface.h>
+#include <ARQKafka/kafka_streaming_service_interface.h>
 
 #include <ARQUtils/id.h>
 #include <ARQCore/data_source_config.h>
@@ -24,20 +24,41 @@ void KafkaStreamProducer::send( const StreamProducerMessage& msg, const StreamPr
 {
 	using namespace kafka::clients::producer;
 
-	const kafka::Key     key    = msg.key ? kafka::Key( msg.key->data(), msg.key->size() ) : kafka::NullKey;
-	const kafka::Value   value  = kafka::Value( msg.data.data, msg.data.size );
-	      ProducerRecord record = msg.id ? ProducerRecord( msg.topic.data(), key, value, *msg.id ) : ProducerRecord( msg.topic.data(), key, value );
+	SharedBuffer keepAliveBuf;
+	kafka::Value value;
 
+	if( const SharedBuffer* sharedBuf = std::get_if<SharedBuffer>( &msg.data ) )
+	{
+		// Extend lifetime of SharedBuffer
+		value        = kafka::Value( sharedBuf->getDataPtrAs<const char*>(), sharedBuf->size );
+		keepAliveBuf = *sharedBuf;
+	}
+	else if( const BufferView* view = std::get_if<BufferView>( &msg.data ) )
+    {
+        // Only given a view - No ownership taken.
+        value = kafka::Value(view->data, view->size);
+    }
+	else
+		ARQ_ASSERT( false );
+
+	const kafka::Key key = msg.key ? kafka::Key( msg.key->data(), msg.key->size() ) : kafka::NullKey;
+	
+	std::optional<ProducerRecord> recordOpt;
+	if( msg.partition )
+		recordOpt = msg.id ? ProducerRecord( msg.topic.data(), *msg.partition, key, value, *msg.id )
+		                   : ProducerRecord( msg.topic.data(), *msg.partition, key, value );
+	else
+	    recordOpt = msg.id ? ProducerRecord( msg.topic.data(), key, value, *msg.id )
+		                   : ProducerRecord( msg.topic.data(), key, value );
+
+	ProducerRecord& record = *recordOpt;
 	for( const auto& [headerKey, headerValue] : msg.headers )
 	{
 		kafka::Header::Value headerValueObj( headerValue.data(), headerValue.size() + 1 ); // +1 to include null terminator
 		record.headers().emplace_back( headerKey, headerValueObj );
 	}
 
-	// TODO: Set partition if needed
-	// TODO: Expose copy message option (need to think about headers, key and value)
-
-	const auto kafkaCallback = [callback] ( const RecordMetadata& metadata, const kafka::Error& err )
+	const auto kafkaCallback = [callback, keepAliveBuf] ( const RecordMetadata& metadata, const kafka::Error& err )
 	{
 		if( callback )
 		{

@@ -6,6 +6,7 @@
 #include <ARQUtils/error.h>
 
 #include <random>
+#include <cstring>
 
 namespace ARQ
 {

@@ -9,6 +9,7 @@
 #include <map>
 #include <chrono>
 #include <functional>
+#include <variant>
 
 using namespace std::chrono_literals;
 
@@ -19,11 +20,13 @@ using StreamingHeaderMap = std::map<std::string, std::string>;
 
 struct StreamProducerMessage
 {
-	std::string_view                topic;
-	std::optional<uint64_t>         id;
-	std::optional<std::string_view> key;
-	BufferView                      data;
-	StreamingHeaderMap              headers;
+	std::string_view                       topic;
+	std::optional<uint64_t>                id;
+	std::optional<std::string_view>        key;
+	std::optional<int32_t>                 partition;
+	// data: 'BufferView' (zero-copy, you guarantee lifetime) or 'SharedBuffer' (safe, producer extends lifetime)
+	std::variant<BufferView, SharedBuffer> data;
+	StreamingHeaderMap                     headers;
 };
 
 enum class StreamMessagePersistedStatus

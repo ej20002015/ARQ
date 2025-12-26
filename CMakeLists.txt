@@ -280,7 +280,7 @@ function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
                    ${HEADERS})
 
     if(NOT WIN32)
-        target_link_libraries(${TARGET} PUBLIC stdc++exp) # To enable usage of some c++23 features (e.g. stacktrace)
+        target_link_libraries(${EXE_NAME} PRIVATE stdc++exp) # To enable usage of some c++23 features (e.g. stacktrace)
     endif()
 
     set_target_properties(${EXE_NAME} PROPERTIES FOLDER ${FOLDER_NAME})

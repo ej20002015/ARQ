@@ -40,43 +40,43 @@ static std::optional<MessagingEvent> natsStatus2MsgEvent( const natsStatus ns )
 
 // ---------------------------- free function callbacks ----------------------------
 
-static void natsErrorCB( natsConnection* nc, natsSubscription* subscription, natsStatus err, void* closure )
+void natsErrorCB( natsConnection* nc, natsSubscription* subscription, natsStatus err, void* closure )
 {
 	NatsMessagingService& nms = *reinterpret_cast<NatsMessagingService*>( closure );
 	nms.onNatsError( subscription, err );
 }
 
-static void natsClosedCB( natsConnection* nc, void* closure )
+void natsClosedCB( natsConnection* nc, void* closure )
 {
 	NatsMessagingService& nms = *reinterpret_cast<NatsMessagingService*>( closure );
 	nms.onNatsClosed();
 }
 
-static void natsDisconnectedCB( natsConnection* nc, void* closure )
+void natsDisconnectedCB( natsConnection* nc, void* closure )
 {
 	NatsMessagingService& nms = *reinterpret_cast<NatsMessagingService*>( closure );
 	nms.onNatsDisconnected();
 }
 
-static void natsReconnectedCB( natsConnection* nc, void* closure )
+void natsReconnectedCB( natsConnection* nc, void* closure )
 {
 	NatsMessagingService& nms = *reinterpret_cast<NatsMessagingService*>( closure );
 	nms.onNatsReconnected();
 }
 
-static void natsDiscoveredServersCB( natsConnection* nc, void* closure )
+void natsDiscoveredServersCB( natsConnection* nc, void* closure )
 {
 	NatsMessagingService& nms = *reinterpret_cast<NatsMessagingService*>( closure );
 	nms.onNatsDiscoveredServers();
 }
 
-static void natsLameDuckCB( natsConnection* nc, void* closure )
+void natsLameDuckCB( natsConnection* nc, void* closure )
 {
 	NatsMessagingService& nms = *reinterpret_cast<NatsMessagingService*>( closure );
 	nms.onNatsLameDuck();
 }
 
-static void onNatsMsg( natsConnection* nc, natsSubscription* sub, natsMsg* msg, void* closure )
+void onNatsMsg( natsConnection* nc, natsSubscription* sub, natsMsg* msg, void* closure )
 {
 	ISubscriptionHandler& subHandler = *reinterpret_cast<ISubscriptionHandler*>( closure );
 

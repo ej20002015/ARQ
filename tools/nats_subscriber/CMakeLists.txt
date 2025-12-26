@@ -1,4 +1,4 @@
 ARQ_define_tools_exe(nats_subscriber)
 
-target_link_libraries(nats_subscriber ARQCore)
+target_link_libraries(nats_subscriber PRIVATE ARQCore)
 openssl_setup_runtime(nats_subscriber)

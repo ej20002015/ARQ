@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <format>
+#include <cstdint>
 
 namespace ARQ
 {
@@ -41,7 +42,7 @@ namespace std
 {
 
 template <>
-struct std::formatter<ARQ::ID::UUID> : std::formatter<std::string>
+struct formatter<ARQ::ID::UUID> : formatter<string>
 {
     auto format( ARQ::ID::UUID uuid, format_context& ctx ) const
     {

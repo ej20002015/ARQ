@@ -1,5 +1,5 @@
 ARQ_define_dynalib(ARQKafka)
-append_link_libraries(ARQKafka ARQCore rdkafka::rdkafkacpp)
+append_link_libraries(ARQKafka PUBLIC ARQCore rdkafka::rdkafkacpp)
 librdkafka_setup_runtime(ARQKafka)
 openssl_setup_runtime(ARQKafka)
 zlib_setup_runtime(ARQKafka)

@@ -1,2 +1,2 @@
 ARQ_define_services_exe(RefDataGatekeeper RefData)
-target_link_libraries(RefDataGatekeeper ARQUtils ARQGrpc ${PROTO_GRPC_LINK_LIB})
+target_link_libraries(RefDataGatekeeper PRIVATE ARQUtils ARQGrpc ${PROTO_GRPC_LINK_LIB})
