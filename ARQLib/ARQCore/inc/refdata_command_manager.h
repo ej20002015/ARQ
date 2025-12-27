@@ -35,8 +35,8 @@ struct RefDataCommandResponse
 		TIMEOUT
 	};
 
-	ID::UUID corrID;
-	Status status = _NOTSET_;
+	ID::UUID                   corrID;
+	Status                     status = _NOTSET_;
 	std::optional<std::string> message;
 };
 

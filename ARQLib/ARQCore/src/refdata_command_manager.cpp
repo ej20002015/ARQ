@@ -39,8 +39,8 @@ void RefDataCommandManager::registerOnResponseCallback( const RefDataCommandCall
 
 ID::UUID RefDataCommandManager::upsertCurrencies( const std::vector<RDEntities::Currency>& currencies, const RefDataCommandCallback& callback, const Time::Milliseconds timeout )
 {
-	Time::DateTime now = Time::DateTime::nowUTC();
-	ID::UUID corrID = ID::UUID::create();
+	Time::DateTime now    = Time::DateTime::nowUTC();
+	ID::UUID       corrID = ID::UUID::create();
 
 	// TODO: Actually send to kafka broker
 
