@@ -20,9 +20,9 @@ using StreamingHeaderMap = std::map<std::string, std::string>;
 
 struct StreamProducerMessage
 {
-	std::string_view                       topic;
+	std::string                            topic;
 	std::optional<uint64_t>                id;
-	std::optional<std::string_view>        key;
+	std::optional<std::string>             key;
 	std::optional<int32_t>                 partition;
 	// data: 'BufferView' (zero-copy, you guarantee lifetime) or 'SharedBuffer' (safe, producer extends lifetime)
 	std::variant<BufferView, SharedBuffer> data;

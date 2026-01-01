@@ -3,7 +3,7 @@
 
 #include <ARQCore/serialiser.h>
 
-namespace ARQ
+namespace ARQ::Proto
 {
 
 extern "C" ARQProtobuf_API void registerTypeSerialisers( Serialiser* const serialiserPtr );

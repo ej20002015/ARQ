@@ -14,7 +14,7 @@
 #include <vector>
 #include <chrono>
 
-namespace ARQ
+namespace ARQ::RD
 {
 
 class IRefDataSource
@@ -25,10 +25,10 @@ public:
     {# Loop through each entity and create the required pure virtual methods #}
     {% for entity in entities %}
     // --- Methods for {{ entity.name }} ({{ entity.type_string }}) ---
-    [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::{{ entity.name }}> fetch{{ entity.name_plural }}() = 0;
-    [[nodiscard]] ARQCore_API virtual std::optional<RDEntities::{{ entity.name }}> fetch{{ entity.name }}( const RDEntities::Traits<RDEntities::{{ entity.name }}>::KeyType& {{ entity.key }} ) = 0;
-    [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( const Time::DateTime asof ) = 0;
-    ARQCore_API virtual void upsert{{ entity.name_plural }}( const std::vector<RDEntities::{{ entity.name }}>& data ) = 0;
+    [[nodiscard]] ARQCore_API virtual std::vector<{{ entity.name }}> fetch{{ entity.name_plural }}() = 0;
+    [[nodiscard]] ARQCore_API virtual std::optional<{{ entity.name }}> fetch{{ entity.name }}( const ID::UUID uuid ) = 0;
+    [[nodiscard]] ARQCore_API virtual std::vector<{{ entity.name }}> fetchAsOf{{ entity.name_plural }}( const Time::DateTime asof ) = 0;
+    ARQCore_API virtual void upsert{{ entity.name_plural }}( const std::vector<{{ entity.name }}>& data ) = 0;
 
     {% endfor %}
 };

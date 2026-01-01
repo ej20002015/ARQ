@@ -282,9 +282,6 @@ Log::Context::ReadLock Log::Context::Thread::read()
 
 Log::Context::Global::Scoped::Scoped( const JSON& contextArgs )
 {
-	if( !contextArgs.is_object() )
-		throw ARQException( "Attempting to create Log::Context::Global::Scoped with non-object JSON" );
-
 	std::unique_lock<std::shared_mutex>( s_globalMut );
 	JSON& targetJson = s_global;
 
@@ -316,9 +313,6 @@ Log::Context::Global::Scoped::~Scoped()
 
 Log::Context::Thread::Scoped::Scoped( const JSON& contextArgs )
 {
-	if( !contextArgs.is_object() )
-		throw ARQException( "Attempting to create Log::Context::Thread::Scoped with non-object JSON" );
-
 	JSON& targetJson = t_thread;
 
 	for( const auto& [key, newValue] : contextArgs.items() )

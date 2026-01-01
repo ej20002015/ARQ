@@ -17,8 +17,9 @@ message CurrencyPayload
     uint32 settlement_days = 4;
 }
 
+
 // A Currency object (contains metadata).
-message Currency 
+message CurrencyOld
 {
     CurrencyPayload payload = 1;
 
@@ -37,8 +38,9 @@ message UserPayload
     string trading_desk = 4;
 }
 
+
 // A User object (contains metadata).
-message User 
+message UserOld
 {
     UserPayload payload = 1;
 
@@ -59,7 +61,7 @@ message GetCurrenciesRequest {}
 
 message GetCurrenciesResponse
 {
-    repeated Currency currencies = 1;
+    repeated CurrencyOld currencies = 1;
 }
 
 message GetCurrencyRequest 
@@ -72,7 +74,7 @@ message GetCurrencyResponse
     bool found = 1;
     string message = 2; // Optional message, e.g. for not found reason
 
-    Currency currency = 3;
+    CurrencyOld currency = 3;
 }
 
 message UpsertCurrenciesRequest
@@ -149,7 +151,7 @@ message GetUsersRequest {}
 
 message GetUsersResponse
 {
-    repeated User users = 1;
+    repeated UserOld users = 1;
 }
 
 message GetUserRequest 
@@ -162,7 +164,7 @@ message GetUserResponse
     bool found = 1;
     string message = 2; // Optional message, e.g. for not found reason
 
-    User user = 3;
+    UserOld user = 3;
 }
 
 message UpsertUsersRequest

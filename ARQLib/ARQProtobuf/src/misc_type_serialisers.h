@@ -5,16 +5,16 @@
 
 #include <ARQCore/refdata_command_manager.h>
 
-namespace ARQ
+namespace ARQ::Proto::RD
 {
 
 void registerMiscTypeSerialisers( Serialiser& serialiser );
 
-class ProtobufTypeSerialiser_RefDataCommandResponse : public ISerialisableType<RefDataCommandResponse>
+class ProtobufTypeSerialiser_RDCommandResponse : public ISerialisableType<ARQ::RD::CommandResponse>
 {
 public:
-	ARQProtobuf_API Buffer serialise( const RefDataCommandResponse& obj )                      const override;
-	ARQProtobuf_API void   deserialise( const BufferView buf, RefDataCommandResponse& objOut ) const override;
+	ARQProtobuf_API Buffer serialise( const ARQ::RD::CommandResponse& obj )                      const override;
+	ARQProtobuf_API void   deserialise( const BufferView buf, ARQ::RD::CommandResponse& objOut ) const override;
 };
 
 }

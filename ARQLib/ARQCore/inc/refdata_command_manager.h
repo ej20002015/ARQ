@@ -4,9 +4,12 @@
 #include <ARQUtils/time.h>
 #include <ARQUtils/id.h>
 #include <ARQCore/refdata_entities.h>
+#include <ARQCore/refdata_commands.h>
 #include <ARQCore/messaging_service_interface.h>
+#include <ARQCore/streaming_service.h>
 #include <ARQCore/type_registry.h>
 #include <ARQCore/serialiser.h>
+#include <ARQCore/logger.h>
 
 #include <map>
 #include <functional>
@@ -19,12 +22,10 @@
 using namespace std::string_view_literals;
 using namespace std::chrono_literals;
 
-namespace ARQ
+namespace ARQ::RD
 {
 
-class IMessagingService;
-
-struct RefDataCommandResponse
+struct CommandResponse
 {
 	enum Status
 	{
@@ -40,82 +41,104 @@ struct RefDataCommandResponse
 	std::optional<std::string> message;
 };
 
-REG_ARQ_TYPE( ARQ::RefDataCommandResponse )
+using CommandCallback = std::function<void( const CommandResponse& resp )>;
 
-using RefDataCommandCallback = std::function<void( const RefDataCommandResponse& resp )>;
-
-class RefDataCommandManager
+class CommandManager
 {
 public:
-
 	struct Config
 	{
 		std::string messagingServiceDSH           = "NATS";
+		std::string streamingServiceDSH           = "Kafka";
 		std::shared_ptr<Serialiser> serialiser    = SerialiserFactory::create( SerialiserFactory::SerialiserImpl::Protobuf );
-		std::chrono::milliseconds checkerInterval = 50ms;
+		std::chrono::milliseconds checkerInterval = 1ms;
 	};
 
 public:
-	RefDataCommandManager() = default;
+	CommandManager() = default;
 
 	ARQCore_API void init( const Config& config );
 	ARQCore_API void start();
 	ARQCore_API void stop();
 
-	ARQCore_API void registerOnResponseCallback( const RefDataCommandCallback& callback );
+	ARQCore_API void registerOnResponseCallback( const CommandCallback& callback );
 
-	[[nodiscard]] ARQCore_API ID::UUID upsertCurrencies( const std::vector<RDEntities::Currency>& currencies, const RefDataCommandCallback& callback, const Time::Milliseconds timeout = Time::Milliseconds( 1000 ) );
+	template<Cmd::c_Command T>
+	ID::UUID sendCommand( const T& cmd, const CommandCallback& callback, const Time::Milliseconds timeout = Time::Milliseconds( 1000 ) )
+	{
+		Buffer buf      = m_config.serialiser->serialise( cmd );
+		std::string key = Cmd::Traits<T>::getKey( cmd ).toString();
+
+		return sendCommandImpl(
+			std::move( buf ),
+			std::move( key ),
+			Cmd::Traits<T>::name(),
+			Cmd::Traits<T>::action(),
+			Cmd::Traits<T>::entity(),
+			callback,
+			timeout
+		);
+	}
 
 private:
-
 	struct InFlightCommand
 	{
-		RefDataCommandCallback callback;
-		Time::DateTime startTime;
-		Time::DateTime timeoutTime;
+		CommandCallback callback;
+		Time::DateTime  startTime;
+		Time::DateTime  timeoutTime;
 	};
 
 private:
-
 	class SubHandler : public ISubscriptionHandler
 	{
 	public:
-		SubHandler( RefDataCommandManager& owner )
+		SubHandler( CommandManager& owner )
 			: m_owner( owner )
 		{
 		}
 
 		void             onMsg( Message&& msg ) override;
-		std::string_view getDesc() const        override { return "RefDataCommandManager::SubHandler"sv; }
+		std::string_view getDesc() const        override { return "RD::CommandManager::SubHandler"sv; }
 
 	private:
-		RefDataCommandManager& m_owner;
+		CommandManager& m_owner;
 	};
 
-private:
+private: // Worker thread function
 	void checkInFlightCommands();
-	
-	void onCommandResponse( const RefDataCommandResponse& resp );
+
+private: // Helpers
+	ID::UUID              sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdAction, const std::string_view cmdEntity, const CommandCallback& callback, const Time::Milliseconds timeout );
+	StreamProducerMessage formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdAction, const std::string_view cmdEntity );
+	std::string           getStreamTopic( const std::string_view cmdAction, const std::string_view cmdEntity ) const;
+	void                  createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout );
+
+private: // On response handler
+	void onCommandResponse( const CommandResponse& resp );
 
 private:
 	static constexpr auto SUB_TOPIC_PFX = "ARQ.RefData.Commands.Response.Session-";
 
 private:
-	Config m_config;
+	Config                             m_config;
 	std::shared_ptr<IMessagingService> m_messagingService;
-	std::string m_subTopicPattern;
+	std::shared_ptr<IStreamProducer>   m_streamProducer;
+	std::string                        m_subTopicPattern;
 
-	std::shared_ptr<SubHandler> m_subHandler;
+	std::atomic<bool> m_running;
+
+	std::shared_ptr<SubHandler>    m_subHandler;
 	std::unique_ptr<ISubscription> m_subscription;
 
 	std::map<ID::UUID, InFlightCommand> m_inFlightCommands;
-	std::shared_mutex m_inFlightCommandsMut;
+	std::shared_mutex                   m_inFlightCommandsMut;
 
 	std::thread m_commandCheckerThread;
-	std::atomic<bool> m_running;
 
-	std::vector<RefDataCommandCallback> m_globalCallbacks;
-	std::shared_mutex m_globalCallbacksMut;
+	std::vector<CommandCallback> m_globalCallbacks;
+	std::shared_mutex            m_globalCallbacksMut;
 };
 
 }
+
+ARQ_REG_TYPE( ARQ::RD::CommandResponse )

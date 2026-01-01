@@ -10,7 +10,7 @@
 #include <shared_mutex>
 #include <functional>
 
-namespace ARQ
+namespace ARQ::RD
 {
 
 using RefDataSourceCreateFunc = std::add_pointer<IRefDataSource*( const std::string_view dsh )>::type;

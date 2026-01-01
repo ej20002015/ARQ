@@ -6,17 +6,16 @@ namespace ARQ
 {
 
 template<typename T>
-class ARQType
+struct ARQType
 {
-	static_assert( false, "Type is not registered. Use REG_ARQ_TYPE( Type ) macro" );
-};
-
-#define REG_ARQ_TYPE( T )                                          \
-template<>                                                         \
-class ARQType<T>                                                   \
-{                                                                  \
-public:                                                            \
-	inline static constexpr std::string_view name() { return #T; } \
+	static_assert( false, "Type is not registered. Use ARQ_REG_TYPE( Type ) macro" );
 };
 
 }
+
+#define ARQ_REG_TYPE( T )                                          \
+template<>                                                         \
+struct ::ARQ::ARQType<T>                                           \
+{                                                                  \
+	inline static constexpr std::string_view name() { return #T; } \
+};

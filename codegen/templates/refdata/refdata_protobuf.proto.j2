@@ -21,8 +21,9 @@ message {{ entity.name }}Payload
     {% endfor %}
 }
 
+
 // A {{ entity.name }} object (contains metadata).
-message {{ entity.name }} 
+message {{ entity.name }}Old
 {
     {{ entity.name }}Payload payload = 1;
 
@@ -45,7 +46,7 @@ message Get{{ entity.name_plural }}Request {}
 
 message Get{{ entity.name_plural }}Response
 {
-    repeated {{ entity.name }} {{ entity.name_plural | snake_case }} = 1;
+    repeated {{ entity.name }}Old {{ entity.name_plural | snake_case }} = 1;
 }
 
 message Get{{ entity.name }}Request 
@@ -58,7 +59,7 @@ message Get{{ entity.name }}Response
     bool found = 1;
     string message = 2; // Optional message, e.g. for not found reason
 
-    {{ entity.name }} {{ entity.name | snake_case }} = 3;
+    {{ entity.name }}Old {{ entity.name | snake_case }} = 3;
 }
 
 message Upsert{{ entity.name_plural }}Request

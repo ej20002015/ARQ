@@ -4,7 +4,7 @@
 #include <ARQCore/logger.h>
 #include <ARQCore/data_source_config.h>
 
-namespace ARQ
+namespace ARQ::RD
 {
 
 std::unordered_map<std::string, std::shared_ptr<IRefDataSource>, TransparentStringHash, std::equal_to<>> RefDataSourceFactory::s_customSources;
