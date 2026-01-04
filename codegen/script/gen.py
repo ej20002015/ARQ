@@ -33,18 +33,18 @@ class EntityDefinition:
         self.name = data.get('name', '')
         self.key = data.get('key')
         self.key_type = None
+        self.has_indices = False
         
         self._validate_and_process()
     
     def _validate_and_process(self) -> None:
-        """Validate the entity definition and process key type."""
+        """Validate the entity definition, process key type and process indices."""
         if not self.name:
             raise CodeGenerationError(f"Entity in {self.source_file} is missing a name")
         
         # Process key type if a key is defined
         if self.key:
-            members = self.data.get('members', [])
-            for member in members:
+            for member in self.data.get('members', []):
                 if member.get('name') == self.key:
                     self.key_type = member.get('type')
                     break
@@ -54,10 +54,20 @@ class EntityDefinition:
                     f"Entity '{self.name}' in {self.source_file} defines key '{self.key}' "
                     f"but no matching member found"
                 )
-        
+            
         # Store the processed key_type back in the data
         self.data['key_type'] = self.key_type
 
+        # Check if the entity has indices
+        for member in self.data.get('members', []):
+            if member.get('index_type', 'None') != 'None':
+                if member.get('type') != 'string':
+                    raise CodeGenerationError( f"Entity {self.name} in {self.source_file} has specified index type on a non-string member - this is not supported")
+                self.has_indices = True
+                break
+
+        # Store has_indices in template data
+        self.data['has_indices'] = self.has_indices
 
 class TemplateMetadata:
     """Represents metadata extracted from a template file."""

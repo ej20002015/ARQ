@@ -50,4 +50,20 @@ struct formatter<ARQ::ID::UUID> : formatter<string>
     }
 };
 
+template<>
+struct hash<ARQ::ID::UUID>
+{
+    std::size_t operator()( const ARQ::ID::UUID& uuid ) const noexcept
+    {
+        uint64_t p[2];
+        std::memcpy( p, uuid.bytes.data(), 16 );
+
+        std::size_t h1 = std::hash<uint64_t>{}( p[0] );
+        std::size_t h2 = std::hash<uint64_t>{}( p[1] );
+        // Combine them using the standard "Hash Combine" magic number
+        // (0x9e3779b9 is the inverse of the golden ratio, spreading bits nicely)
+        return h1 ^ ( h2 + 0x9e3779b97f4a7c15ULL + ( h1 << 6 ) + ( h1 >> 2 ) );
+    }
+};
+
 }

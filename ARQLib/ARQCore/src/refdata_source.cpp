@@ -7,11 +7,21 @@
 namespace ARQ::RD
 {
 
-std::unordered_map<std::string, std::shared_ptr<IRefDataSource>, TransparentStringHash, std::equal_to<>> RefDataSourceFactory::s_customSources;
-
-std::shared_ptr<IRefDataSource> RefDataSourceFactory::create( const std::string_view dsh )
+void ARQ::RD::Source::setDSH( const std::string_view dsh )
 {
-	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
+	m_dsh = dsh;
+	for( auto& [_, entitySource] : m_entitySources )
+		entitySource->setDSH( dsh );
+}
+
+std::unordered_map<std::string, std::shared_ptr<Source>, TransparentStringHash, std::equal_to<>> SourceFactory::s_sources;
+std::mutex SourceFactory::s_sourcesMutex;
+
+std::shared_ptr<Source> SourceFactory::create( const std::string_view dsh )
+{
+	std::lock_guard<std::mutex> lg( s_sourcesMutex );
+
+	if( const auto it = s_sources.find( dsh ); it != s_sources.end() )
 		return it->second;
 
 	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
@@ -27,36 +37,30 @@ std::shared_ptr<IRefDataSource> RefDataSourceFactory::create( const std::string_
 
 	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
-	const auto createFunc = lib.getFunc<RefDataSourceCreateFunc>( "createRefDataSource" );
-	return std::shared_ptr<IRefDataSource>( createFunc( dsc.dsh ) );
+	const auto registerSourcesFunc = lib.getFunc<RegisterEntitySourcesFunc>( "registerEntitySources" );
+	auto newSource = std::make_shared<Source>();
+	registerSourcesFunc( newSource.get() );
+	newSource->setDSH( dsh );
+
+	return s_sources.emplace( dsh, std::move( newSource ) ).first->second;
 }
 
-void RefDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<IRefDataSource>& source )
+void SourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<Source>& source )
 {
-	s_customSources.emplace( dsh, source );
+	std::lock_guard<std::mutex> lg( s_sourcesMutex );
+
+	if( !s_sources.emplace( dsh, source ).second )
+		throw ARQException( std::format( "RD::SourceFactory: Cannot add custom source with dsh={} as it already exists", dsh ) );
 }
 
-void RefDataSourceFactory::delCustomSource( const std::string_view dsh )
+void SourceFactory::delCustomSource( const std::string_view dsh )
 {
-	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
-		s_customSources.erase( it );
+	std::lock_guard<std::mutex> lg( s_sourcesMutex );
+
+	if( const auto it = s_sources.find( dsh ); it != s_sources.end() )
+		s_sources.erase( it );
 	else
-		throw ARQException( std::format( "Cannot find custom refdata source with dsh={} to delete", dsh ) );
-}
-
-std::shared_ptr<IRefDataSource> GlobalRefDataSource::get()
-{
-	std::shared_lock<std::shared_mutex> sl( s_mut );
-	if( !s_globalSourceCreator )
-		s_globalSourceCreator = [] () { return RefDataSourceFactory::create( "ClickHouseDB" ); };
-
-	return s_globalSourceCreator();	
-}
-
-void GlobalRefDataSource::setFunc( const CreatorFunc& creatorFunc )
-{
-	std::unique_lock<std::shared_mutex> ul( s_mut );
-	s_globalSourceCreator = creatorFunc;
+		throw ARQException( std::format( "RD::SourceFactory: Cannot find custom source with dsh={} to delete", dsh ) );
 }
 
 }

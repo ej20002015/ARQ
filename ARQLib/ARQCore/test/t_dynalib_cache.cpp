@@ -2,7 +2,8 @@
 #include <gtest/gtest.h>
 
 #include <ARQCore/streaming_service.h> // Temp
-#include <ARQCore/refdata_command_manager.h>
+#include <ARQCore/refdata_command_manager.h> // Temp
+#include <ARQCore/refdata_repository.h> // Temp
 
 using namespace ARQ;
 using namespace std::string_view_literals; //temp
@@ -15,35 +16,62 @@ TEST( DynaLibCacheTests, LoadARQClickHouse )
     EXPECT_NO_THROW( const auto& t = DynaLibCache::inst().get( "ARQClickHouse" ) );
 }
 
-TEST( Tmp, tmp1 )
+TEST( Tmp, tmp2 )
 {
-	RD::Cmd::Upsert<RD::Currency> cmd;
-	cmd.expectedVersion = 0;
-	cmd.updatedBy = "Evan";
-	cmd.targetUUID = ID::UUID::create();
+	auto source = RD::SourceFactory::create( "ClickHouseDB" );
+	RD::Record<RD::User> newUser;
+	/*newUser.header.uuid = ID::UUID::create();
+	newUser.header.isActive = true;
+	newUser.header.lastUpdatedTs = Time::DateTime::nowUTC();
+	newUser.header.lastUpdatedBy = "Calum";
+	newUser.header.version = 0;
+	newUser.data.uuid = newUser.header.uuid;
+	newUser.data.userID = "cwallbridge";
+	newUser.data.fullName = "Calum Wallbridge";
+	newUser.data.email = "calum.wallbridge@example.com";
+	newUser.data.tradingDesk = "DOGE Trading";
+	source->insert<RD::User>( { newUser } );*/
+	
 
-	cmd.data.ccyID = "USD";
-	cmd.data.name = "US Dollar";
-	cmd.data.decimalPlaces = 2;
-	cmd.data.settlementDays = 2;
+	RD::Repository repo( "ClickHouseDB" );
+	auto userCache = repo.get<RD::User>();
+	auto userOpt = userCache->getByIndex( "userID", "cwallbridge" );
+	auto userOpt2 = userCache->getByIndex( "userID", "ejames" );
+	auto list = userCache->getByNonUniqIndex( "tradingDesk", "DOGE Trading" );
 
-	RD::CommandManager cmdMgr;
-	cmdMgr.init( RD::CommandManager::Config() );
-	cmdMgr.start();
-
-	ID::UUID corrID = cmdMgr.sendCommand( cmd,
-		[] ( const RD::CommandResponse& resp )
-		{
-			std::cout << "Command Response received: CorrID=" << resp.corrID
-				<< ", Status=" << Enum::enum_name<RD::CommandResponse::Status>( resp.status )
-				<< ", Message=" << ( resp.message ? *resp.message : "NULL" )
-				<< std::endl;
-		},
-		Time::Milliseconds( 5000 )
-	);
-
-	while( true );
+	
+	std::vector<RD::Record<RD::Currency>> currencies = source->fetch<RD::Currency>();
 }
+
+//TEST( Tmp, tmp1 )
+//{
+//	RD::Cmd::Upsert<RD::Currency> cmd;
+//	cmd.expectedVersion = 0;
+//	cmd.updatedBy = "Evan";
+//	cmd.targetUUID = ID::UUID::create();
+//
+//	cmd.data.ccyID = "USD";
+//	cmd.data.name = "US Dollar";
+//	cmd.data.decimalPlaces = 2;
+//	cmd.data.settlementDays = 2;
+//
+//	RD::CommandManager cmdMgr;
+//	cmdMgr.init( RD::CommandManager::Config() );
+//	cmdMgr.start();
+//
+//	ID::UUID corrID = cmdMgr.sendCommand( cmd,
+//		[] ( const RD::CommandResponse& resp )
+//		{
+//			std::cout << "Command Response received: CorrID=" << resp.corrID
+//				<< ", Status=" << Enum::enum_name<RD::CommandResponse::Status>( resp.status )
+//				<< ", Message=" << ( resp.message ? *resp.message : "NULL" )
+//				<< std::endl;
+//		},
+//		Time::Milliseconds( 5000 )
+//	);
+//
+//	while( true );
+//}
 
 //TEST( Temp, temp1 ) // Temp
 //{
