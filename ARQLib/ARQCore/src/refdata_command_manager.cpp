@@ -5,25 +5,26 @@
 #include <ARQUtils/enum.h>
 #include <ARQCore/logger.h>
 
-namespace ARQ
+namespace ARQ::RD
 {
 
-void RefDataCommandManager::init( const Config& config )
+void CommandManager::init( const Config& config )
 {
-	m_config = config;
+	m_config           = config;
 	m_messagingService = MessagingServiceFactory::create( m_config.messagingServiceDSH );
-	m_subTopicPattern = SUB_TOPIC_PFX + ID::getSessionID().toString();
-	m_subHandler = std::make_shared<SubHandler>( *this );
+	m_streamProducer   = StreamingServiceFactory::createProducer( m_config.streamingServiceDSH, StreamProducerOptions::OPTIMISE_LATENCY );
+	m_subTopicPattern  = SUB_TOPIC_PFX + ID::getSessionID().toString();
+	m_subHandler       = std::make_shared<SubHandler>( *this );
 }
 
-void RefDataCommandManager::start()
+void CommandManager::start()
 {
 	m_subscription = m_messagingService->subscribe( m_subTopicPattern, m_subHandler );
 	m_running.store( true );
-	m_commandCheckerThread = std::thread( &RefDataCommandManager::checkInFlightCommands, this );
+	m_commandCheckerThread = std::thread( &CommandManager::checkInFlightCommands, this );
 }
 
-void RefDataCommandManager::stop()
+void CommandManager::stop()
 {
 	m_subscription->blockOnDrainAndUnsubscribe();
 	m_running.store( false );
@@ -31,37 +32,15 @@ void RefDataCommandManager::stop()
 		m_commandCheckerThread.join();
 }
 
-void RefDataCommandManager::registerOnResponseCallback( const RefDataCommandCallback& callback )
+void CommandManager::registerOnResponseCallback( const CommandCallback& callback )
 {
 	std::unique_lock<std::shared_mutex> ul( m_globalCallbacksMut );
 	m_globalCallbacks.push_back( callback );
 }
 
-ID::UUID RefDataCommandManager::upsertCurrencies( const std::vector<RDEntities::Currency>& currencies, const RefDataCommandCallback& callback, const Time::Milliseconds timeout )
+void CommandManager::checkInFlightCommands()
 {
-	Time::DateTime now = Time::DateTime::nowUTC();
-	ID::UUID corrID = ID::UUID::create();
-
-	// TODO: Actually send to kafka broker
-
-	InFlightCommand command = {
-		.callback = callback,
-		.startTime = now,
-		.timeoutTime = now + timeout
-	};
-
-	{
-		std::unique_lock<std::shared_mutex> ul( m_inFlightCommandsMut );
-		m_inFlightCommands.insert( std::make_pair( std::move( corrID ), std::move( command ) ) );
-	}
-
-	Log( Module::REFDATA ).debug( "RefDataCommandManager: Created upsertCurrencies command with CorrID={}", corrID );
-	return corrID;
-}
-
-void RefDataCommandManager::checkInFlightCommands()
-{
-	if( m_running )
+	while( m_running )
 	{
 		std::map<ID::UUID, InFlightCommand> inFlightCommands;
 		{
@@ -73,9 +52,9 @@ void RefDataCommandManager::checkInFlightCommands()
 		{
 			if( Time::DateTime::nowUTC() > inFlightCommand.timeoutTime )
 			{
-				RefDataCommandResponse resp = {
-					.corrID = corrID,
-					.status = RefDataCommandResponse::TIMEOUT,
+				CommandResponse resp = {
+					.corrID  = corrID,
+					.status  = CommandResponse::TIMEOUT,
 					.message = "Command has timed out"
 				};
 
@@ -87,7 +66,92 @@ void RefDataCommandManager::checkInFlightCommands()
 	}
 }
 
-void RefDataCommandManager::onCommandResponse( const RefDataCommandResponse& resp )
+ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdAction, const std::string_view cmdEntity, const CommandCallback& callback, const Time::Milliseconds timeout )
+{
+	ID::UUID corrID = ID::UUID::create();
+
+	JSON logContext = {
+		"Command", {
+			{ "CorrID",      corrID.toString() },
+			{ "Domain",      "RefData" },
+			{ "CommandType", cmdName }
+		}
+	};
+
+	Log::Context::Thread::Scoped logCtx( logContext );
+	Log( Module::REFDATA ).debug( "RD::CommandManager: Sending command of type {} with CorrID={}", cmdName, corrID );
+
+	StreamProducerMessage msg = formStreamMsg(
+		std::move( buf ),
+		key,
+		corrID,
+		cmdName,
+		cmdAction,
+		cmdEntity
+	);
+
+	// Register in-flight command before sending to avoid race
+	createInFlightCommand( corrID, callback, timeout );
+
+	m_streamProducer->send( msg, [=] ( const StreamProducerMessageMetadata& messageMetadata, std::optional<std::string> error )
+	{
+		Log::Context::Thread::Scoped logCtx( logContext );
+
+		if( !error )
+		{
+			Log( Module::REFDATA ).debug( "RD::CommandManager: Successfully sent command message to streaming topic {}: MessageID={}, Partition={}, Offset={}",
+				messageMetadata.topic,
+				messageMetadata.messageID ? std::to_string( *messageMetadata.messageID ) : "N/A",
+				messageMetadata.partition,
+				messageMetadata.offset ? std::to_string( *messageMetadata.offset ) : "N/A" );
+		}
+		else
+		{
+			std::string errMsg = std::format( "RD::CommandManager: Failed to send command message to streaming topic {}: {}", messageMetadata.topic, *error );
+			Log( Module::REFDATA ).error( "{}", errMsg );
+			onCommandResponse( CommandResponse{ .corrID = corrID, .status = CommandResponse::ERROR, .message = errMsg } );
+		}
+	} );
+
+	return corrID;
+}
+
+StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdAction, const std::string_view cmdEntity )
+{
+	StreamProducerMessage msg;
+	msg.topic = getStreamTopic( cmdAction, cmdEntity );
+	msg.data  = SharedBuffer( std::move( buf ) ); // Get kafka to own the buffer
+	msg.key   = key;
+
+	msg.headers["ARQ_CorrID"]        = corrID.toString();
+	msg.headers["ARQ_Type"]          = std::string( cmdName );
+	msg.headers["ARQ_ResponseTopic"] = m_subTopicPattern;
+
+	return msg;
+}
+
+std::string CommandManager::getStreamTopic( const std::string_view cmdAction, const std::string_view cmdEntity ) const
+{
+	return std::format( "ARQ.RefData.Commands.{}.{}", cmdAction, cmdEntity );
+}
+
+void RD::CommandManager::createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout )
+{
+	Time::DateTime now = Time::DateTime::nowUTC();
+
+	InFlightCommand command = {
+		.callback    = callback,
+		.startTime   = now,
+		.timeoutTime = now + timeout
+	};
+
+	{
+		std::unique_lock<std::shared_mutex> ul( m_inFlightCommandsMut );
+		m_inFlightCommands.insert( std::make_pair( std::move( corrID ), std::move( command ) ) );
+	}
+}
+
+void CommandManager::onCommandResponse( const CommandResponse& resp )
 {
 	std::optional<InFlightCommand> command;
 	{
@@ -102,15 +166,15 @@ void RefDataCommandManager::onCommandResponse( const RefDataCommandResponse& res
 
 	if( !command )
 	{
-		Log( Module::REFDATA ).error( "RefDataCommandManager: Received response for unknown command with CorrID={} - ignoring", resp.corrID );
+		Log( Module::REFDATA ).warn( "RD::CommandManager: Received response for unknown command with CorrID={} - ignoring", resp.corrID );
 		return;
 	}
 
 	const Time::Microseconds timeTaken = Time::DateTime::nowUTC() - command->startTime;
-	const std::string logMsg = std::format( "RefDataCommandManager: Received response with status={}, message={} for command with CorrID={} in {}ms - invoking callback(s)", Enum::enum_name( resp.status ), resp.message ? *resp.message : "NULL", resp.corrID, timeTaken / 1000.0 );
+	const std::string logMsg = std::format( "RD::CommandManager: Received response with status={}, message={} for command with CorrID={} in {}ms - invoking callback(s)", Enum::enum_name( resp.status ), resp.message ? *resp.message : "NULL", resp.corrID, timeTaken / 1000.0 );
 	switch( resp.status )
 	{
-		case RefDataCommandResponse::SUCCESS:
+		case CommandResponse::SUCCESS:
 			Log( Module::REFDATA ).debug( "{}", logMsg ); break;
 		default:
 			Log( Module::REFDATA ).error( "{}", logMsg ); break;
@@ -121,11 +185,11 @@ void RefDataCommandManager::onCommandResponse( const RefDataCommandResponse& res
 	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 
 	if( arqExc.what().size() )
-		Log( Module::NATS ).error( arqExc, "RefDataCommandManager: Exception thrown in callback for CorrID={}", resp.corrID );
+		Log( Module::NATS ).error( arqExc, "RD::CommandManager: Exception thrown in callback for CorrID={}", resp.corrID );
 	else if( errMsg.size() )
-		Log( Module::NATS ).error( "RefDataCommandManager: Exception thrown in callback for CorrID={} - what: ", resp.corrID, errMsg );
+		Log( Module::NATS ).error( "RD::CommandManager: Exception thrown in callback for CorrID={} - what: ", resp.corrID, errMsg );
 		
-	std::vector<RefDataCommandCallback> globalCallbacks;
+	std::vector<CommandCallback> globalCallbacks;
 	{
 		std::shared_lock<std::shared_mutex> sl( m_globalCallbacksMut );
 		globalCallbacks = m_globalCallbacks;
@@ -138,26 +202,26 @@ void RefDataCommandManager::onCommandResponse( const RefDataCommandResponse& res
 		ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 
 		if( arqExc.what().size() )
-			Log( Module::NATS ).error( arqExc, "RefDataCommandManager: Exception thrown in global callback for CorrID={}", resp.corrID );
+			Log( Module::NATS ).error( arqExc, "RD::CommandManager: Exception thrown in global callback for CorrID={}", resp.corrID );
 		else if( errMsg.size() )
-			Log( Module::NATS ).error( "RefDataCommandManager: Exception thrown in global callback for CorrID={} - what: ", resp.corrID, errMsg );
+			Log( Module::NATS ).error( "RD::CommandManager: Exception thrown in global callback for CorrID={} - what: ", resp.corrID, errMsg );
 	}
 }
 
-void RefDataCommandManager::SubHandler::onMsg( Message&& msg )
+void CommandManager::SubHandler::onMsg( Message&& msg )
 {
-	Log( Module::REFDATA ).debug( "RefDataCommandManager: Received response message on topic {}", msg.topic );
+	Log( Module::REFDATA ).debug( "RD::CommandManager: Received response message on topic {}", msg.topic );
 
-	RefDataCommandResponse resp;
+	CommandResponse resp;
 
 	ARQ_DO_IN_TRY( arqExc, errMsg );
-		resp = m_owner.m_config.serialiser->deserialise<RefDataCommandResponse>( msg.data );
+		resp = m_owner.m_config.serialiser->deserialise<CommandResponse>( msg.data );
 	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 
 	if( arqExc.what().size() )
-		Log( Module::NATS ).error( arqExc, "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object", msg.topic );
+		Log( Module::NATS ).error( arqExc, "RD::CommandManager: Exception thrown when deserialising message on topic [{}] to a CommandResponse object", msg.topic );
 	else if( errMsg.size() )
-		Log( Module::NATS ).error( "RefDataCommandManager: Exception thrown when deserialising message on topic [{}] to a RefDataCommandResponse object - what: ", msg.topic, errMsg );
+		Log( Module::NATS ).error( "RD::CommandManager: Exception thrown when deserialising message on topic [{}] to a CommandResponse object - what: ", msg.topic, errMsg );
 
 	m_owner.onCommandResponse( resp );
 }

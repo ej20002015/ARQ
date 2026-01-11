@@ -30,7 +30,7 @@ std::shared_ptr<Serialiser> SerialiserFactory::create( const SerialiserImpl impl
 	auto newSerialiser = std::make_shared<Serialiser>();
 	registerTypesFunc( newSerialiser.get() );
 
-	return s_serialisers.emplace( impl, newSerialiser ).first->second;
+	return s_serialisers.emplace( impl, std::move( newSerialiser ) ).first->second;
 }
 
 }

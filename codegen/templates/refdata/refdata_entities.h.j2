@@ -8,71 +8,42 @@
 #pragma once
 
 #include <ARQUtils/error.h>
+#include <ARQUtils/types.h>
 #include <ARQUtils/time.h>
+#include <ARQUtils/id.h>
+#include <ARQCore/type_registry.h>
 
 #include <string>
 #include <cstdint>
-#include <concepts>
 #include <string_view>
 #include <array>
 #include <utility>
-#include <optional>
 
-namespace ARQ
+namespace ARQ::RD
 {
-namespace RDEntities
-{
+
+#pragma region Common RefData Functionality
 
 /*
-****************************************************
-* Common functionality for Reference Data Entities *
-****************************************************
+*********************************************
+* Common functionality for RefData Entities *
+*********************************************
 */
 
-// Base struct for all reference data entities
-struct RDEntity
-{
-    bool _isActive = true;
-    Time::DateTime _lastUpdatedTs;
-    std::string _lastUpdatedBy;
-    uint32_t _version = 0;
-};
-
-template<typename T>
-concept c_RDEntity = std::is_base_of_v<RDEntity, T>;
-
-enum class Type
-{
-    _NOTSET_ = -1,
-    {% for entity in entities %}
-    {{ entity.type_string }},
-    {% endfor %}
-};
-
-inline std::string_view typeToStr( const Type type)
-{
-    switch( type )
-    {
-        {% for entity in entities %}
-        case Type::{{ entity.type_string }}: return "{{ entity.type_string }}";
-        {% endfor %}
-        default:
-            ARQ_ASSERT( false ); return "Unknown";
-    }
-}
+ARQ_DEFINE_TYPE_CATEGORY( RefData );
 
 // Traits class to get compile-time metadata about an entity
-template<c_RDEntity T>
-class Traits
+template<c_RefData T>
+class Traits {};
+
+enum class IndexType
 {
-public:
-    static constexpr std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static constexpr std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static constexpr std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static constexpr Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
-    static constexpr std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    None,
+    Unique,   // 1-to-1
+    NonUnique // 1-to-Many
 };
 
+// Records metadata about each member in a RD type
 struct MemberInfo
 {
     /// Name of the C++ member variable
@@ -81,26 +52,54 @@ struct MemberInfo
     std::string_view comment;
     /// The language agnostic type as a string
     std::string_view type;
-    /// The C++ type as a string
-    std::string_view cppType;
-    /// The ClickHouse type as a string
-    std::string_view clickhouseType;
-    /// The FlatBuffers type as a string
-    std::string_view flatbufferType;
+    // Indicates if member is an index, and what type
+    IndexType        indexType;
 };
 
+/// Metadata header common to all Reference Data records
+struct RecordHeader
+{
+    /// The immutable, globally unique system identifier (Machine Key)
+    ID::UUID       uuid;
+    /// Indicates if the record is still active - false means it's been 'tombstoned'
+    bool           isActive;
+    /// The timestamp of the last successful commit
+    Time::DateTime lastUpdatedTs;
+    /// The user who last updated the record
+    std::string    lastUpdatedBy;
+    /// Optimistic Concurrency Control (OCC) version number
+    uint32_t       version;
+};
+
+/// The generic storage container for all Reference Data entities
+template<c_RefData T>
+struct Record
+{
+    /// Entity metadata
+    RecordHeader header;
+    /// The actual entity data
+    T            data;
+};
+
+#pragma endregion
+
+#pragma region RefData Entities
+
 /*
-********************************************
-*            Entity Definitions            *
-********************************************
+***********************************
+* Definitions of RefData entities *
+***********************************
 */
 
-{# We loop over each entity defined in the TOML file #}
 {% for entity in entities %}
 
+// -------------------- {{ entity.name }} RefData entity --------------------
+
 /// {{ entity.comment | default('Represents ' + entity.name + ' reference data.') }}
-struct {{ entity.name }} : public RDEntity
+struct {{ entity.name }}
 {
+    /// The immutable, globally unique system identifier (Machine Key)
+    ID::UUID uuid;
     {# Loop over the members of the current entity #}
     {% for member in entity.members -%}
     {% if member.comment %}    /// {{ member.comment }}
@@ -109,50 +108,40 @@ struct {{ entity.name }} : public RDEntity
     {% endfor %}
 };
 
-// Traits specialization for {{ entity.name }}
+ARQ_REGISTER_CATEGORY( RefData, {{ entity.name }} )
+
 template<>
 class Traits<{{ entity.name }}>
 {
 public:
-    static constexpr std::string_view const name()      { return "{{ entity.name }}"; }
-    static constexpr std::string_view const type()      { return "{{ entity.type_string }}"; }
-    static constexpr Type             const typeEnum()  { return Type::{{ entity.type_string }}; }
-    static constexpr std::string_view const tableName() { return "{{ entity.table_name }}"; }
-    static constexpr std::string_view const key()       { return "{{ entity.key }}"; }
+    static constexpr std::string_view const name() { return "{{ entity.name }}"; }
 
-    using KeyType = {{ types[entity.key_type].cpp }};
-
-    static KeyType getKeyVal( const {{ entity.name }}& entity ) { return entity.{{ entity.key }}; }
-
-    // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, {{ entity.members | length }}> membersInfo =
     {{ '{' }}
         {% for member in entity.members %}
         MemberInfo {
-            /*name            = */ "{{ member.name }}",
-            /*comment         = */ "{{ member.comment | default('') }}",
-            /*type            = */ "{{ member.type }}",
-            /*cpp_type        = */ "{{ types[member.type].cpp }}",
-            /*clickhouse_type = */ "{{ types[member.type].clickhouse }}",
-            /*flatbuffer_type = */ "{{ types[member.type].flatbuffer }}"
+            .name      = "{{ member.name }}",
+            .comment   = "{{ member.comment | default('') }}",
+            .type      = "{{ member.type }}",
+            .indexType = IndexType::{{ member.index_type | default('None') }}
         }{% if not loop.last %},
         {% endif %}
         {% endfor %}
     
     {{ '}' }};
-
-    // A compile-time helper function to look up info for a specific member.
-    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
-    {
-        for( const auto& info : membersInfo )
-        {
-            if( info.name == memberName )
-                return info;
-        }
-        return std::nullopt;
-    }
 };
 
 {% endfor %}
+
+#pragma endregion
+
 }
-}
+
+#pragma region RefData Type Registration
+
+// Must register outside namespace
+{% for entity in entities %}
+ARQ_REG_TYPE( ARQ::RD::{{ entity.name }} );
+{% endfor %}
+
+#pragma endregion

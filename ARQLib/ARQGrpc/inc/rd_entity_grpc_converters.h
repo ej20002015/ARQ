@@ -13,7 +13,6 @@ namespace Grpc
 {
 namespace RefData
 {
-// TODO: Add tests
 
 // --- Converters for Currency (CCY) ---
 

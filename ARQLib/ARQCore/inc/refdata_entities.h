@@ -4,69 +4,42 @@
 #pragma once
 
 #include <ARQUtils/error.h>
+#include <ARQUtils/types.h>
 #include <ARQUtils/time.h>
+#include <ARQUtils/id.h>
+#include <ARQCore/type_registry.h>
 
 #include <string>
 #include <cstdint>
-#include <concepts>
 #include <string_view>
 #include <array>
 #include <utility>
-#include <optional>
 
-namespace ARQ
+namespace ARQ::RD
 {
-namespace RDEntities
-{
+
+#pragma region Common RefData Functionality
 
 /*
-****************************************************
-* Common functionality for Reference Data Entities *
-****************************************************
+*********************************************
+* Common functionality for RefData Entities *
+*********************************************
 */
 
-// Base struct for all reference data entities
-struct RDEntity
-{
-    bool _isActive = true;
-    Time::DateTime _lastUpdatedTs;
-    std::string _lastUpdatedBy;
-    uint32_t _version = 0;
-};
-
-template<typename T>
-concept c_RDEntity = std::is_base_of_v<RDEntity, T>;
-
-enum class Type
-{
-    _NOTSET_ = -1,
-    CCY,
-    USER,
-};
-
-inline std::string_view typeToStr( const Type type)
-{
-    switch( type )
-    {
-        case Type::CCY: return "CCY";
-        case Type::USER: return "USER";
-        default:
-            ARQ_ASSERT( false ); return "Unknown";
-    }
-}
+ARQ_DEFINE_TYPE_CATEGORY( RefData );
 
 // Traits class to get compile-time metadata about an entity
-template<c_RDEntity T>
-class Traits
+template<c_RefData T>
+class Traits {};
+
+enum class IndexType
 {
-public:
-    static constexpr std::string_view const name()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static constexpr std::string_view const type()      { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static constexpr std::string_view const tableName() { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
-    static constexpr Type             const typeEnum()  { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return Type::USER; }
-    static constexpr std::string_view const key()       { static_assert( false, "Missing RDEntities::Traits specialization for this type" ); return ""; }
+    None,
+    Unique,   // 1-to-1
+    NonUnique // 1-to-Many
 };
 
+// Records metadata about each member in a RD type
 struct MemberInfo
 {
     /// Name of the C++ member variable
@@ -75,24 +48,53 @@ struct MemberInfo
     std::string_view comment;
     /// The language agnostic type as a string
     std::string_view type;
-    /// The C++ type as a string
-    std::string_view cppType;
-    /// The ClickHouse type as a string
-    std::string_view clickhouseType;
-    /// The FlatBuffers type as a string
-    std::string_view flatbufferType;
+    // Indicates if member is an index, and what type
+    IndexType        indexType;
 };
 
+/// Metadata header common to all Reference Data records
+struct RecordHeader
+{
+    /// The immutable, globally unique system identifier (Machine Key)
+    ID::UUID       uuid;
+    /// Indicates if the record is still active - false means it's been 'tombstoned'
+    bool           isActive;
+    /// The timestamp of the last successful commit
+    Time::DateTime lastUpdatedTs;
+    /// The user who last updated the record
+    std::string    lastUpdatedBy;
+    /// Optimistic Concurrency Control (OCC) version number
+    uint32_t       version;
+};
+
+/// The generic storage container for all Reference Data entities
+template<c_RefData T>
+struct Record
+{
+    /// Entity metadata
+    RecordHeader header;
+    /// The actual entity data
+    T            data;
+};
+
+#pragma endregion
+
+#pragma region RefData Entities
+
 /*
-********************************************
-*            Entity Definitions            *
-********************************************
+***********************************
+* Definitions of RefData entities *
+***********************************
 */
 
 
+// -------------------- Currency RefData entity --------------------
+
 /// Represents an ISO 4217 currency and its conventions.
-struct Currency : public RDEntity
+struct Currency
 {
+    /// The immutable, globally unique system identifier (Machine Key)
+    ID::UUID uuid;
     /// The 3-letter ISO 4217 currency code (e.g., USD).
     std::string ccyID;
     /// The full currency name (e.g., US Dollar).
@@ -103,74 +105,51 @@ struct Currency : public RDEntity
     uint8_t settlementDays;
 };
 
-// Traits specialization for Currency
+ARQ_REGISTER_CATEGORY( RefData, Currency )
+
 template<>
 class Traits<Currency>
 {
 public:
-    static constexpr std::string_view const name()      { return "Currency"; }
-    static constexpr std::string_view const type()      { return "CCY"; }
-    static constexpr Type             const typeEnum()  { return Type::CCY; }
-    static constexpr std::string_view const tableName() { return "Currencies"; }
-    static constexpr std::string_view const key()       { return "ccyID"; }
+    static constexpr std::string_view const name() { return "Currency"; }
 
-    using KeyType = std::string;
-
-    static KeyType getKeyVal( const Currency& entity ) { return entity.ccyID; }
-
-    // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, 4> membersInfo =
     {
         MemberInfo {
-            /*name            = */ "ccyID",
-            /*comment         = */ "The 3-letter ISO 4217 currency code (e.g., USD).",
-            /*type            = */ "string",
-            /*cpp_type        = */ "std::string",
-            /*clickhouse_type = */ "String",
-            /*flatbuffer_type = */ "string"
+            .name      = "ccyID",
+            .comment   = "The 3-letter ISO 4217 currency code (e.g., USD).",
+            .type      = "string",
+            .indexType = IndexType::None
         },
         MemberInfo {
-            /*name            = */ "name",
-            /*comment         = */ "The full currency name (e.g., US Dollar).",
-            /*type            = */ "string",
-            /*cpp_type        = */ "std::string",
-            /*clickhouse_type = */ "String",
-            /*flatbuffer_type = */ "string"
+            .name      = "name",
+            .comment   = "The full currency name (e.g., US Dollar).",
+            .type      = "string",
+            .indexType = IndexType::None
         },
         MemberInfo {
-            /*name            = */ "decimalPlaces",
-            /*comment         = */ "Number of decimal places for standard formatting.",
-            /*type            = */ "uint8",
-            /*cpp_type        = */ "uint8_t",
-            /*clickhouse_type = */ "UInt8",
-            /*flatbuffer_type = */ "ubyte"
+            .name      = "decimalPlaces",
+            .comment   = "Number of decimal places for standard formatting.",
+            .type      = "uint8",
+            .indexType = IndexType::None
         },
         MemberInfo {
-            /*name            = */ "settlementDays",
-            /*comment         = */ "Standard number of days for spot settlement (commonly 2).",
-            /*type            = */ "uint8",
-            /*cpp_type        = */ "uint8_t",
-            /*clickhouse_type = */ "UInt8",
-            /*flatbuffer_type = */ "ubyte"
+            .name      = "settlementDays",
+            .comment   = "Standard number of days for spot settlement (commonly 2).",
+            .type      = "uint8",
+            .indexType = IndexType::None
         }    
     };
-
-    // A compile-time helper function to look up info for a specific member.
-    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
-    {
-        for( const auto& info : membersInfo )
-        {
-            if( info.name == memberName )
-                return info;
-        }
-        return std::nullopt;
-    }
 };
 
 
+// -------------------- User RefData entity --------------------
+
 /// Represents an individual user of the system.
-struct User : public RDEntity
+struct User
 {
+    /// The immutable, globally unique system identifier (Machine Key)
+    ID::UUID uuid;
     /// The unique system user ID.
     std::string userID;
     /// The user's full name for display purposes.
@@ -181,69 +160,52 @@ struct User : public RDEntity
     std::string tradingDesk;
 };
 
-// Traits specialization for User
+ARQ_REGISTER_CATEGORY( RefData, User )
+
 template<>
 class Traits<User>
 {
 public:
-    static constexpr std::string_view const name()      { return "User"; }
-    static constexpr std::string_view const type()      { return "USER"; }
-    static constexpr Type             const typeEnum()  { return Type::USER; }
-    static constexpr std::string_view const tableName() { return "Users"; }
-    static constexpr std::string_view const key()       { return "userID"; }
+    static constexpr std::string_view const name() { return "User"; }
 
-    using KeyType = std::string;
-
-    static KeyType getKeyVal( const User& entity ) { return entity.userID; }
-
-    // A compile-time array holding metadata for all members.
     static constexpr std::array<MemberInfo, 4> membersInfo =
     {
         MemberInfo {
-            /*name            = */ "userID",
-            /*comment         = */ "The unique system user ID.",
-            /*type            = */ "string",
-            /*cpp_type        = */ "std::string",
-            /*clickhouse_type = */ "String",
-            /*flatbuffer_type = */ "string"
+            .name      = "userID",
+            .comment   = "The unique system user ID.",
+            .type      = "string",
+            .indexType = IndexType::None
         },
         MemberInfo {
-            /*name            = */ "fullName",
-            /*comment         = */ "The user's full name for display purposes.",
-            /*type            = */ "string",
-            /*cpp_type        = */ "std::string",
-            /*clickhouse_type = */ "String",
-            /*flatbuffer_type = */ "string"
+            .name      = "fullName",
+            .comment   = "The user's full name for display purposes.",
+            .type      = "string",
+            .indexType = IndexType::None
         },
         MemberInfo {
-            /*name            = */ "email",
-            /*comment         = */ "The user's contact email address.",
-            /*type            = */ "string",
-            /*cpp_type        = */ "std::string",
-            /*clickhouse_type = */ "String",
-            /*flatbuffer_type = */ "string"
+            .name      = "email",
+            .comment   = "The user's contact email address.",
+            .type      = "string",
+            .indexType = IndexType::None
         },
         MemberInfo {
-            /*name            = */ "tradingDesk",
-            /*comment         = */ "The primary trading desk the user belongs to.",
-            /*type            = */ "string",
-            /*cpp_type        = */ "std::string",
-            /*clickhouse_type = */ "String",
-            /*flatbuffer_type = */ "string"
+            .name      = "tradingDesk",
+            .comment   = "The primary trading desk the user belongs to.",
+            .type      = "string",
+            .indexType = IndexType::None
         }    
     };
-
-    // A compile-time helper function to look up info for a specific member.
-    static constexpr std::optional<MemberInfo> getMemberInfo( const std::string_view memberName )
-    {
-        for( const auto& info : membersInfo )
-        {
-            if( info.name == memberName )
-                return info;
-        }
-        return std::nullopt;
-    }
 };
 
+
+#pragma endregion
+
 }
-}
+
+#pragma region RefData Type Registration
+
+// Must register outside namespace
+ARQ_REG_TYPE( ARQ::RD::Currency );
+ARQ_REG_TYPE( ARQ::RD::User );
+
+#pragma endregion

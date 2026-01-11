@@ -5,15 +5,15 @@
 #include "proto_gen/id.pb.h"
 #include "proto_gen/command_manager.pb.h"
 
-namespace ARQ
+namespace ARQ::Proto::RD
 {
 
 void registerMiscTypeSerialisers( Serialiser& serialiser )
 {
-	serialiser.registerHandler<RefDataCommandResponse>( std::make_unique<ProtobufTypeSerialiser_RefDataCommandResponse>() );
+	serialiser.registerHandler<ARQ::RD::CommandResponse>( std::make_unique<ProtobufTypeSerialiser_RDCommandResponse>() );
 }
 
-Buffer ProtobufTypeSerialiser_RefDataCommandResponse::serialise( const RefDataCommandResponse& obj ) const
+Buffer ProtobufTypeSerialiser_RDCommandResponse::serialise( const ARQ::RD::CommandResponse& obj ) const
 {
 	ARQ::Proto::RefDataCommandResponse resp;
 
@@ -30,13 +30,13 @@ Buffer ProtobufTypeSerialiser_RefDataCommandResponse::serialise( const RefDataCo
 	return respBuf;
 }
 
-void ProtobufTypeSerialiser_RefDataCommandResponse::deserialise( const BufferView buf, RefDataCommandResponse& objOut ) const
+void ProtobufTypeSerialiser_RDCommandResponse::deserialise( const BufferView buf, ARQ::RD::CommandResponse& objOut ) const
 {
 	ARQ::Proto::RefDataCommandResponse resp;
 	resp.ParseFromArray( buf.data, buf.size );
 
-	objOut.corrID = ID::UUID::fromString( resp.corr_id().id() );
-	const auto statusOpt = Enum::enum_cast<RefDataCommandResponse::Status>( resp.status() );
+	objOut.corrID = ARQ::ID::UUID::fromString( resp.corr_id().id() );
+	const auto statusOpt = Enum::enum_cast<ARQ::RD::CommandResponse::Status>( resp.status() );
 	if( statusOpt )
 		objOut.status = statusOpt.value();
 	else

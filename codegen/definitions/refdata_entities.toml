@@ -33,6 +33,8 @@
 #   { name = "<member2_name>", type = "<type_alias>" },
 #   # Add an optional comment for each member (e.g., for column comments).
 #   { name = "<member3_name>", type = "<type_alias>", comment = "<A description of this member>" },
+#   # Add an optional index type for a member ("Unique" or "NonUnique")
+#   { name = "<member4_name>", type = "<type_alias>", index_type = "Unique" },
 # ]
 # ##
 # ##############################################################################
@@ -42,10 +44,9 @@ name = "Currency"
 name_plural = "Currencies"
 type_string = "CCY"
 table_name = "Currencies"
-key = "ccyID"
 comment = "Represents an ISO 4217 currency and its conventions."
 members = [
-    { name = "ccyID",          type = "string", comment = "The 3-letter ISO 4217 currency code (e.g., USD)." },
+    { name = "ccyID",          type = "string", comment = "The 3-letter ISO 4217 currency code (e.g., USD).", index_type = "Unique" },
     { name = "name",           type = "string", comment = "The full currency name (e.g., US Dollar)." },
     { name = "decimalPlaces",  type = "uint8",  comment = "Number of decimal places for standard formatting." },
     { name = "settlementDays", type = "uint8",  comment = "Standard number of days for spot settlement (commonly 2)." },
@@ -56,11 +57,10 @@ name = "User"
 name_plural = "Users"
 type_string = "USER"
 table_name = "Users"
-key = "userID"
 comment = "Represents an individual user of the system."
 members = [
-    { name = "userID",        type = "string", comment = "The unique system user ID."},
+    { name = "userID",        type = "string", comment = "The unique system user ID.", index_type = "Unique" },
     { name = "fullName",      type = "string", comment = "The user's full name for display purposes." },
     { name = "email",         type = "string", comment = "The user's contact email address." },
-    { name = "tradingDesk",   type = "string", comment = "The primary trading desk the user belongs to.", clickhouse_modifier = "LowCardinality(String)" },
+    { name = "tradingDesk",   type = "string", comment = "The primary trading desk the user belongs to.", index_type = "NonUnique", clickhouse_modifier = "LowCardinality(String)" },
 ]

@@ -10,7 +10,7 @@
 #include <vector>
 #include <chrono>
 
-namespace ARQ
+namespace ARQ::RD
 {
 
 class IRefDataSource
@@ -19,16 +19,16 @@ public:
 	virtual ~IRefDataSource() = default;
 
     // --- Methods for Currency (CCY) ---
-    [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::Currency> fetchCurrencies() = 0;
-    [[nodiscard]] ARQCore_API virtual std::optional<RDEntities::Currency> fetchCurrency( const RDEntities::Traits<RDEntities::Currency>::KeyType& ccyID ) = 0;
-    [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::Currency> fetchAsOfCurrencies( const Time::DateTime asof ) = 0;
-    ARQCore_API virtual void upsertCurrencies( const std::vector<RDEntities::Currency>& data ) = 0;
+    [[nodiscard]] ARQCore_API virtual std::vector<Currency> fetchCurrencies() = 0;
+    [[nodiscard]] ARQCore_API virtual std::optional<Currency> fetchCurrency( const ID::UUID uuid ) = 0;
+    [[nodiscard]] ARQCore_API virtual std::vector<Currency> fetchAsOfCurrencies( const Time::DateTime asof ) = 0;
+    ARQCore_API virtual void upsertCurrencies( const std::vector<Currency>& data ) = 0;
 
     // --- Methods for User (USER) ---
-    [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::User> fetchUsers() = 0;
-    [[nodiscard]] ARQCore_API virtual std::optional<RDEntities::User> fetchUser( const RDEntities::Traits<RDEntities::User>::KeyType& userID ) = 0;
-    [[nodiscard]] ARQCore_API virtual std::vector<RDEntities::User> fetchAsOfUsers( const Time::DateTime asof ) = 0;
-    ARQCore_API virtual void upsertUsers( const std::vector<RDEntities::User>& data ) = 0;
+    [[nodiscard]] ARQCore_API virtual std::vector<User> fetchUsers() = 0;
+    [[nodiscard]] ARQCore_API virtual std::optional<User> fetchUser( const ID::UUID uuid ) = 0;
+    [[nodiscard]] ARQCore_API virtual std::vector<User> fetchAsOfUsers( const Time::DateTime asof ) = 0;
+    ARQCore_API virtual void upsertUsers( const std::vector<User>& data ) = 0;
 
 };
 

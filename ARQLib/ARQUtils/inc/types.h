@@ -38,4 +38,19 @@ private:
 
 #define ARQDefer Defer d([&]()
 
+// Generates classes and helpers to define type categories
+#define ARQ_DEFINE_TYPE_CATEGORY( NAME )                                   \
+    /* The Trait Struct (Default: False) */                                \
+    template<typename T> struct Is##NAME : std::false_type {};             \
+                                                                           \
+    /* The Value Helper */                                                 \
+    template<typename T> constexpr bool is##NAME##_v = Is##NAME<T>::value; \
+                                                                           \
+    /* The Concept */                                                      \
+    template<typename T> concept c_##NAME = is##NAME##_v<T>;
+
+// Macro to register a type as belonging to a category
+#define ARQ_REGISTER_CATEGORY( TRAIT, TYPE ) \
+    template<> struct Is##TRAIT<TYPE> : std::true_type {};
+
 }
