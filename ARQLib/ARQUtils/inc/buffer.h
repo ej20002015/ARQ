@@ -21,6 +21,12 @@ struct BufferView
 		: data( data )
 		, size( size )
 	{}
+
+	// Construct BufferView from raw void* data pointer
+	explicit BufferView( const void* data, const size_t size )
+		: data( reinterpret_cast<const uint8_t*>( data ) )
+		, size( size )
+	{}
 };
 
 struct Buffer

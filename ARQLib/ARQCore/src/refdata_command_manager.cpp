@@ -12,7 +12,7 @@ void CommandManager::init( const Config& config )
 {
 	m_config           = config;
 	m_messagingService = MessagingServiceFactory::create( m_config.messagingServiceDSH );
-	m_streamProducer   = StreamingServiceFactory::createProducer( m_config.streamingServiceDSH, StreamProducerOptions::OPTIMISE_LATENCY );
+	m_streamProducer   = StreamingServiceFactory::createProducer( m_config.streamingServiceDSH, StreamProducerOptions( "RD::CommandManager", StreamProducerOptions::Preset::LowLatency ) );
 	m_subTopicPattern  = SUB_TOPIC_PFX + ID::getSessionID().toString();
 	m_subHandler       = std::make_shared<SubHandler>( *this );
 }
@@ -93,7 +93,7 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 	// Register in-flight command before sending to avoid race
 	createInFlightCommand( corrID, callback, timeout );
 
-	m_streamProducer->send( msg, [=] ( const StreamProducerMessageMetadata& messageMetadata, std::optional<std::string> error )
+	m_streamProducer->send( msg, [=] ( const StreamProducerMessageMetadata& messageMetadata, std::optional<StreamError> error )
 	{
 		Log::Context::Thread::Scoped logCtx( logContext );
 
@@ -107,7 +107,7 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 		}
 		else
 		{
-			std::string errMsg = std::format( "RD::CommandManager: Failed to send command message to streaming topic {}: {}", messageMetadata.topic, *error );
+			std::string errMsg = std::format( "RD::CommandManager: Failed to send command message to streaming topic {}: {}", messageMetadata.topic, error->message );
 			Log( Module::REFDATA ).error( "{}", errMsg );
 			onCommandResponse( CommandResponse{ .corrID = corrID, .status = CommandResponse::ERROR, .message = errMsg } );
 		}

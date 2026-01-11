@@ -7,11 +7,8 @@
 namespace ARQ
 {
 
-const StreamProducerOptions StreamProducerOptions::OPTIMISE_LATENCY( StreamProducerOptions::Preset::OPTIMISE_LATENCY );
-const StreamProducerOptions StreamProducerOptions::OPTIMISE_THROUGHPUT( StreamProducerOptions::Preset::OPTIMISE_THROUGHPUT );
-const StreamProducerOptions StreamProducerOptions::DEFAULT( StreamProducerOptions::Preset::DEFAULT );
-
 std::unordered_map<std::string, std::shared_ptr<IStreamProducer>, TransparentStringHash, std::equal_to<>> StreamingServiceFactory::s_customStreamProducers;
+std::unordered_map<std::string, std::shared_ptr<IStreamConsumer>, TransparentStringHash, std::equal_to<>> StreamingServiceFactory::s_customStreamConsumers;
 
 std::shared_ptr<IStreamProducer> StreamingServiceFactory::createProducer( const std::string_view dsh, const StreamProducerOptions& options )
 {
@@ -34,6 +31,27 @@ std::shared_ptr<IStreamProducer> StreamingServiceFactory::createProducer( const 
 	return std::shared_ptr<IStreamProducer>( createFunc( dsc.dsh, options ) );
 }
 
+std::shared_ptr<IStreamConsumer> StreamingServiceFactory::createConsumer( const std::string_view dsh, const StreamConsumerOptions& options )
+{
+	if( const auto it = s_customStreamConsumers.find( dsh ); it != s_customStreamConsumers.end() )
+		return it->second;
+
+	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
+
+	std::string dynaLibName;
+	switch( dsc.type )
+	{
+		case DataSourceType::Kafka: dynaLibName = "ARQKafka"; break;
+		default:
+			ARQ_ASSERT( false );
+	}
+
+	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+
+	const auto createFunc = lib.getFunc<CreateStreamConsumerFunc>( "createStreamConsumer" );
+	return std::shared_ptr<IStreamConsumer>( createFunc( dsc.dsh, options ) );
+}
+
 void StreamingServiceFactory::addCustomStreamProducer( const std::string_view dsh, const std::shared_ptr<IStreamProducer>& streamProducer )
 {
 	s_customStreamProducers.emplace( dsh, streamProducer );
@@ -45,6 +63,19 @@ void StreamingServiceFactory::delCustomStreamProducer( const std::string_view ds
 		s_customStreamProducers.erase( it );
 	else
 		throw ARQException( std::format( "Cannot find custom stream producer with dsh={} to delete", dsh ) );
+}
+
+ARQCore_API void StreamingServiceFactory::addCustomStreamConsumer( const std::string_view dsh, const std::shared_ptr<IStreamConsumer>& streamConsumer )
+{
+	s_customStreamConsumers.emplace( dsh, streamConsumer );
+}
+
+ARQCore_API void StreamingServiceFactory::delCustomStreamConsumer( const std::string_view dsh )
+{
+	if( const auto it = s_customStreamConsumers.find( dsh ); it != s_customStreamConsumers.end() )
+		s_customStreamConsumers.erase( it );
+	else
+		throw ARQException( std::format( "Cannot find custom stream consumer with dsh={} to delete", dsh ) );
 }
 
 }

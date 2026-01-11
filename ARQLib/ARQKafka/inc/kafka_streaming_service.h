@@ -8,5 +8,6 @@ namespace ARQ
 {
 
 extern "C" ARQKafka_API IStreamProducer* createStreamProducer( const std::string_view dsh, const StreamProducerOptions& options );
+extern "C" ARQKafka_API IStreamConsumer* createStreamConsumer( const std::string_view dsh, const StreamConsumerOptions& options );
 
 }

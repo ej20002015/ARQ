@@ -10,4 +10,9 @@ IStreamProducer* createStreamProducer( const std::string_view dsh, const StreamP
 	return new KafkaStreamProducer( dsh, options );
 }
 
+IStreamConsumer* createStreamConsumer( const std::string_view dsh, const StreamConsumerOptions& options )
+{
+	return new KafkaStreamConsumer( dsh, options );
+}
+
 }
