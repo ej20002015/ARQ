@@ -10,56 +10,57 @@ using namespace std::string_view_literals; //temp
 
 #include <iostream> //temp
 #include <ARQUtils/enum.h> // Temp
+#include <atomic>
 
 TEST( DynaLibCacheTests, LoadARQClickHouse )
 {
     EXPECT_NO_THROW( const auto& t = DynaLibCache::inst().get( "ARQClickHouse" ) );
 }
 
-TEST( Tmp, tmp3 )
-{
-    static constexpr auto TOPIC = "ARQ.RefData.Commands.Upsert.Currency";
-
-    std::shared_ptr<IStreamConsumer> streamConsumer;
-	try
-	{
-		StreamConsumerOptions opts( "test", "ARQ.RefData.CommandConsumers", StreamConsumerOptions::FetchPreset::DEFAULT, StreamConsumerOptions::AutoCommitOffsets::Disabled );
-		streamConsumer = StreamingServiceFactory::createConsumer( "Kafka", opts );
-	}
-	catch(const ARQException& e)
-	{
-		std::cout << e.what() << std::endl;
-	}
-
-	streamConsumer->subscribe( { TOPIC } );
-	streamConsumer->seekToBeginning();
-	const auto messagesPtr = streamConsumer->poll( 100ms );
-	const auto& messages = *messagesPtr;
-
-	for( const StreamConsumerMessageView& msg : messages )
-	{
-		std::string headersStr;
-		for( const auto& [key, val] : msg.headers )
-			headersStr += std::format( "{}: {}, ", key, val );
-
-		std::cout << "Message consumed: "
-			<< ", Topic=" << msg.topic
-			<< ", Partition=" << msg.partition
-			<< ", Offset=" << msg.offset
-			<< ", Key=" << msg.key.value_or( "N/A" )
-			<< ", Timestamp=" << msg.timestamp.fmtISO8601()
-			<< ", headers=" << headersStr
-			<< ", Error" << ( msg.error ? msg.error->message : "N/A" );
-	}
-
-	streamConsumer->unsubscribe();
-}
+//TEST( Tmp, tmp3 )
+//{
+//    static constexpr auto TOPIC = "ARQ.RefData.Commands.Upsert.Currency";
+//
+//    std::shared_ptr<IStreamConsumer> streamConsumer;
+//	try
+//	{
+//		StreamConsumerOptions opts( "test", "ARQ.RefData.CommandConsumers", StreamConsumerOptions::FetchPreset::DEFAULT, StreamConsumerOptions::AutoCommitOffsets::Disabled );
+//		streamConsumer = StreamingServiceFactory::createConsumer( "Kafka", opts );
+//	}
+//	catch(const ARQException& e)
+//	{
+//		std::cout << e.what() << std::endl;
+//	}
+//
+//	streamConsumer->subscribe( { TOPIC } );
+//	streamConsumer->seekToBeginning();
+//	const auto messagesPtr = streamConsumer->poll( 100ms );
+//	const auto& messages = *messagesPtr;
+//
+//	for( const StreamConsumerMessageView& msg : messages )
+//	{
+//		std::string headersStr;
+//		for( const auto& [key, val] : msg.headers )
+//			headersStr += std::format( "{}: {}, ", key, val );
+//
+//		std::cout << "Message consumed: "
+//			<< ", Topic=" << msg.topic
+//			<< ", Partition=" << msg.partition
+//			<< ", Offset=" << msg.offset
+//			<< ", Key=" << msg.key.value_or( "N/A" )
+//			<< ", Timestamp=" << msg.timestamp.fmtISO8601()
+//			<< ", headers=" << headersStr
+//			<< ", Error" << ( msg.error ? msg.error->message : "N/A" );
+//	}
+//
+//	streamConsumer->unsubscribe();
+//}
 
 //TEST( Tmp, tmp2 )
 //{
 //	auto source = RD::SourceFactory::create( "ClickHouseDB" );
 //	RD::Record<RD::User> newUser;
-//	/*newUser.header.uuid = ID::UUID::create();
+//	newUser.header.uuid = ID::UUID::create();
 //	newUser.header.isActive = true;
 //	newUser.header.lastUpdatedTs = Time::DateTime::nowUTC();
 //	newUser.header.lastUpdatedBy = "Calum";
@@ -69,48 +70,52 @@ TEST( Tmp, tmp3 )
 //	newUser.data.fullName = "Calum Wallbridge";
 //	newUser.data.email = "calum.wallbridge@example.com";
 //	newUser.data.tradingDesk = "DOGE Trading";
-//	source->insert<RD::User>( { newUser } );*/
+//	source->insert<RD::User>( { newUser } );
 //	
 //
-//	RD::Repository repo( "ClickHouseDB" );
-//	auto userCache = repo.get<RD::User>();
-//	auto userOpt = userCache->getByIndex( "userID", "cwallbridge" ); // TODO: Make this a compile time thing. Maybe the index's can be enum values?
-//	auto userOpt2 = userCache->getByIndex( "userID", "ejames" );
-//	auto list = userCache->getByNonUniqIndex( "tradingDesk", "DOGE Trading" );
+//	//RD::Repository repo( "ClickHouseDB" );
+//	//auto userCache = repo.get<RD::User>();
+//	//auto userOpt = userCache->getByIndex( "userID", "cwallbridge" ); // TODO: Make this a compile time thing. Maybe the index's can be enum values?
+//	//auto userOpt2 = userCache->getByIndex( "userID", "ejames" );
+//	//auto list = userCache->getByNonUniqIndex( "tradingDesk", "DOGE Trading" );
 //
-//	
-//	std::vector<RD::Record<RD::Currency>> currencies = source->fetch<RD::Currency>();
+//	//
+//	//std::vector<RD::Record<RD::Currency>> currencies = source->fetch<RD::Currency>();
 //}
 
-//TEST( Tmp, tmp1 )
-//{
-//	RD::Cmd::Upsert<RD::Currency> cmd;
-//	cmd.expectedVersion = 0;
-//	cmd.updatedBy = "Evan";
-//	cmd.targetUUID = ID::UUID::create();
-//
-//	cmd.data.ccyID = "USD";
-//	cmd.data.name = "US Dollar";
-//	cmd.data.decimalPlaces = 2;
-//	cmd.data.settlementDays = 2;
-//
-//	RD::CommandManager cmdMgr;
-//	cmdMgr.init( RD::CommandManager::Config() );
-//	cmdMgr.start();
-//
-//	ID::UUID corrID = cmdMgr.sendCommand( cmd,
-//		[] ( const RD::CommandResponse& resp )
-//		{
-//			std::cout << "Command Response received: CorrID=" << resp.corrID
-//				<< ", Status=" << Enum::enum_name<RD::CommandResponse::Status>( resp.status )
-//				<< ", Message=" << ( resp.message ? *resp.message : "NULL" )
-//				<< std::endl;
-//		},
-//		Time::Milliseconds( 5000 )
-//	);
-//
-//	while( true );
-//}
+TEST( Tmp, tmp1 )
+{
+	RD::Cmd::Upsert<RD::Currency> cmd;
+	cmd.expectedVersion = 0;
+	cmd.updatedBy = "Evan";
+	cmd.targetUUID = /*ID::UUID::fromString( "019bd2b3-0f21-7b24-9dd2-09fca89e52a5" )*/ID::UUID::create();
+
+	cmd.data.uuid = cmd.targetUUID;
+	cmd.data.ccyID = "GBP";
+	cmd.data.name = "Great British Pound";
+	cmd.data.decimalPlaces = 2;
+	cmd.data.settlementDays = 2;
+
+	RD::CommandManager cmdMgr;
+	cmdMgr.init( RD::CommandManager::Config() );
+	cmdMgr.start();
+
+	std::atomic<bool> run = true;
+
+	ID::UUID corrID = cmdMgr.sendCommand( cmd,
+		[&run] ( const RD::CommandResponse& resp )
+		{
+			std::cout << "Command Response received: CorrID=" << resp.corrID
+				<< ", Status=" << Enum::enum_name<RD::CommandResponse::Status>( resp.status )
+				<< ", Message=" << ( resp.message ? *resp.message : "NULL" )
+				<< std::endl;
+			run = false;
+		},
+		Time::Milliseconds( 5000 )
+	);
+
+	while( run );
+}
 
 //TEST( Tmp, temp1 ) // Temp
 //{

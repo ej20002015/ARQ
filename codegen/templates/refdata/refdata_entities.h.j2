@@ -142,6 +142,7 @@ public:
 // Must register outside namespace
 {% for entity in entities %}
 ARQ_REG_TYPE( ARQ::RD::{{ entity.name }} );
+ARQ_REG_TYPE( ARQ::RD::Record<ARQ::RD::{{ entity.name }}> );
 {% endfor %}
 
 #pragma endregion

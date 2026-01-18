@@ -71,7 +71,7 @@ public:
 
     [[nodiscard]] std::optional<std::reference_wrapper<const Record<T>>> getRecordByIndex( const std::string_view indexName, const std::string_view indexValue ) const
     {
-		const auto it = std::find_if( m_uniqueIndices.begin(), m_uniqueIndices.end(), [indexName] ( const auto& pair ) { return pair.first == indexName; } );
+		const auto it = std::find( m_uniqueIndices.begin(), m_uniqueIndices.end(), [&] ( const auto& pair ) { return pair.first == indexName; } );
 		if( it == m_uniqueIndices.end() )
 			throw ARQException( std::format( "Cache::getRecordByIndex: Given field [{}] is not a unique index for RefData entity [{}]", indexName, Traits<T>::name() ) );
 
@@ -91,7 +91,7 @@ public:
 
     [[nodiscard]] std::vector<std::reference_wrapper<const Record<T>>> getRecordsByNonUniqIndex( const std::string_view indexName, const std::string_view indexValue ) const
     {
-        const auto it = std::find_if( m_nonUniqueIndices.begin(), m_nonUniqueIndices.end(), [&] ( const auto& pair ) { return pair.first == indexName; } );
+        const auto it = std::find( m_nonUniqueIndices.begin(), m_nonUniqueIndices.end(), [&] ( const auto& pair ) { return pair.first == indexName; } );
         if( it == m_nonUniqueIndices.end() )
             throw ARQException( std::format( "Cache::getRecordsByNonUniqIndex: Given field [{}] is not a non-unique index for RefData entity [{}]", indexName, Traits<T>::name() ) );
 

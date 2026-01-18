@@ -1,0 +1,2 @@
+ARQ_define_services_exe(RefDataCmdExecutor RefData)
+target_link_libraries(RefDataCmdExecutor PRIVATE ARQCore)

@@ -9,6 +9,7 @@
 
 #include <ARQUtils/id.h>
 #include <ARQProtobuf/rd_entity_proto_converters.h>
+#include "helpers.h"
 
 #include <proto_gen/refdata_commands.pb.h>
 
@@ -40,14 +41,6 @@ void setCommonProtoFields( ProtoType& protoObj, const CmdType& cmdObj )
 	*updatedByPtr = cmdObj.updatedBy;
 
 	protoObj.set_expected_version( cmdObj.expectedVersion );
-}
-
-template<typename ProtoType>
-Buffer serialiseToBuffer( const ProtoType& protoObj )
-{
-	Buffer buf( protoObj.ByteSizeLong() );
-	protoObj.SerializeToArray( buf.data.get(), buf.size );
-	return buf;
 }
 
 template<typename ProtoType, typename CmdType>

@@ -66,7 +66,7 @@ void CommandManager::checkInFlightCommands()
 	}
 }
 
-ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdAction, const std::string_view cmdEntity, const CommandCallback& callback, const Time::Milliseconds timeout )
+ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const CommandCallback& callback, const Time::Milliseconds timeout )
 {
 	ID::UUID corrID = ID::UUID::create();
 
@@ -86,7 +86,6 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 		key,
 		corrID,
 		cmdName,
-		cmdAction,
 		cmdEntity
 	);
 
@@ -116,10 +115,10 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 	return corrID;
 }
 
-StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdAction, const std::string_view cmdEntity )
+StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity )
 {
 	StreamProducerMessage msg;
-	msg.topic = getStreamTopic( cmdAction, cmdEntity );
+	msg.topic = getStreamTopic( cmdEntity );
 	msg.data  = SharedBuffer( std::move( buf ) ); // Get kafka to own the buffer
 	msg.key   = key;
 
@@ -130,9 +129,9 @@ StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::st
 	return msg;
 }
 
-std::string CommandManager::getStreamTopic( const std::string_view cmdAction, const std::string_view cmdEntity ) const
+std::string CommandManager::getStreamTopic( const std::string_view cmdEntity ) const
 {
-	return std::format( "ARQ.RefData.Commands.{}.{}", cmdAction, cmdEntity );
+	return std::format( "ARQ.RefData.Commands.{}", cmdEntity );
 }
 
 void RD::CommandManager::createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout )
@@ -147,7 +146,7 @@ void RD::CommandManager::createInFlightCommand( const ID::UUID& corrID, const Co
 
 	{
 		std::unique_lock<std::shared_mutex> ul( m_inFlightCommandsMut );
-		m_inFlightCommands.insert( std::make_pair( std::move( corrID ), std::move( command ) ) );
+		m_inFlightCommands.insert( std::make_pair( corrID, std::move( command ) ) );
 	}
 }
 

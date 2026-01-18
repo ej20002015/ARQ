@@ -92,7 +92,7 @@ public:
 	 * @brief Blocks until all messages in the local queue are sent to the broker.
 	 * @note Critical to call this before destroying the producer to prevent data loss.
 	 */
-	ARQCore_API virtual void flush( const std::chrono::milliseconds timeout = 10'000ms ) = 0;
+	ARQCore_API virtual void flush( const std::chrono::milliseconds timeout = 60s ) = 0;
 
 	// -----------------------------------------------------------------
 	// Transactional API (EOS)
@@ -103,13 +103,25 @@ public:
 	 * Must be called exactly once after startup if transactions are enabled.
 	 * Recovers any previous zombie transactions for this ID.
 	 */
-	ARQCore_API virtual void initTransactions( std::chrono::milliseconds timeout = 60s ) = 0;
+	ARQCore_API virtual void initTransactions( const std::chrono::milliseconds timeout = 60s ) = 0;
 
 	/**
 	 * @brief Marks the beginning of a new atomic transaction.
 	 * All 'send' calls after this are part of the transaction until committed/aborted.
 	 */
 	ARQCore_API virtual void beginTransaction() = 0;
+
+	/**
+	 * @brief Atomically commits all messages and offsets in the current transaction.
+	 * @throws ARQException if the commit failed (e.g., fencing error).
+	 */
+	ARQCore_API virtual void commitTransaction( const std::chrono::milliseconds timeout = 60s ) = 0;
+
+	/**
+	 * @brief Aborts the current transaction, discarding unsent messages and rolling back state.
+	 * @note Should be called in the catch block if any step of the "Consume-Process-Produce" loop fails.
+	 */
+	ARQCore_API virtual void abortTransaction( const std::chrono::milliseconds timeout = 60s ) = 0;
 
 	/**
 	 * @brief Links the Consumer's read position to this Producer's write transaction.
@@ -119,20 +131,9 @@ public:
 	 * (e.g., offsets[partition] = msg.offset + 1;)
 	 * @param offsets The map of TopicPartition -> Offset to commit.
 	 * @param groupMetadata The consumer's generation ID (From IStreamConsumer::getGroupMetadata).
-	 */
-	ARQCore_API virtual void sendOffsetsToTransaction( const std::map<StreamTopicPartition, int64_t>& offsets, const StreamGroupMetadata& groupMetadata, std::chrono::milliseconds timeout = 60s ) = 0;
+	*/
+	ARQCore_API virtual void sendOffsetsToTransaction( const std::map<StreamTopicPartition, int64_t>& offsets, const StreamGroupMetadata& groupMetadata, const std::chrono::milliseconds timeout = 60s ) = 0;
 
-	/**
-	 * @brief Atomically commits all messages and offsets in the current transaction.
-	 * @throws ARQException if the commit failed (e.g., fencing error).
-	 */
-	ARQCore_API virtual void commitTransaction( std::chrono::milliseconds timeout = 60s ) = 0;
-
-	/**
-	 * @brief Aborts the current transaction, discarding unsent messages and rolling back state.
-	 * @note Should be called in the catch block if any step of the "Consume-Process-Produce" loop fails.
-	 */
-	ARQCore_API virtual void abortTransaction( std::chrono::milliseconds timeout = 60s ) = 0;
 };
 
 class StreamConsumerMessageView
@@ -248,7 +249,7 @@ public:
 	 * @return A wrapper owning the memory of the message batch - size zero if no data.
 	 * @throws ARQException on failure.
 	 */
-	ARQCore_API virtual std::unique_ptr<IStreamConsumerMessageBatch> poll( std::chrono::milliseconds timeout, const StreamConsumerReadHeaders readHeaders = StreamConsumerReadHeaders::DEFAULT ) = 0;
+	ARQCore_API virtual std::unique_ptr<IStreamConsumerMessageBatch> poll( const std::chrono::milliseconds timeout, const StreamConsumerReadHeaders readHeaders = StreamConsumerReadHeaders::DEFAULT ) = 0;
 
 	// -----------------------------------------------------------------
 	// Offset Management
@@ -339,37 +340,49 @@ public:
 	 * @throws ARQException on failure.
 	 * @param timeout Max time to block waiting for the seek to complete.
 	 */
-	ARQCore_API virtual void seek( const StreamTopicPartition& partition, int64_t offset, std::chrono::milliseconds timeout = 60s ) = 0;
+	ARQCore_API virtual void seek( const StreamTopicPartition& partition, int64_t offset, const std::chrono::milliseconds timeout = 60s ) = 0;
 	/**
 	 * @brief Seeks to the earliest offsets in the current partition assignment.
 	 * Offsets will be used on the next poll().
 	 * @throws ARQException on failure.
 	 */
-	ARQCore_API virtual void seekToBeginning( std::chrono::milliseconds timeout = 60s ) = 0;
+	ARQCore_API virtual void seekToBeginning( const std::chrono::milliseconds timeout = 60s ) = 0;
 	/**
 	 * @brief Seeks to the earliest offset in the partitions.
 	 * Offset will be used on the next poll().
 	 * @throws ARQException on failure.
 	 */
-	ARQCore_API virtual void seekToBeginning( const std::set<StreamTopicPartition>& partitions, std::chrono::milliseconds timeout = 60s ) = 0;
+	ARQCore_API virtual void seekToBeginning( const std::set<StreamTopicPartition>& partitions, const std::chrono::milliseconds timeout = 60s ) = 0;
 	/**
 	 * @brief Seeks to the latest offsets in the current partition assignment (live tail).
 	 * Offsets will be used on the next poll().
 	 * @throws ARQException on failure.
 	 */
-	ARQCore_API virtual void seekToEnd( std::chrono::milliseconds timeout = 60s ) = 0;
+	ARQCore_API virtual void seekToEnd( const std::chrono::milliseconds timeout = 60s ) = 0;
 	/**
 	 * @brief Seeks to the latest offset in the partitions (live tail).
 	 * Offset will be used on the next poll().
 	 * @throws ARQException on failure.
 	 */
-	ARQCore_API virtual void seekToEnd( const std::set<StreamTopicPartition>& partitions, std::chrono::milliseconds timeout = 60s ) = 0;
+	ARQCore_API virtual void seekToEnd( const std::set<StreamTopicPartition>& partitions, const std::chrono::milliseconds timeout = 60s ) = 0;
 
 	/**
 	 * @brief Returns the current local offset position (the next offset to be fetched).
 	 * @throws ARQException on failure.
 	 */
 	ARQCore_API virtual int64_t position( const StreamTopicPartition& partition ) = 0;
+
+	/**
+	 * @brief Returns the first offset for the each of the given partitions
+	 * @throws ARQException on failure.
+	 */
+	ARQCore_API virtual std::map<StreamTopicPartition, int64_t> beginningOffsets( const std::set<StreamTopicPartition>& partitions, const std::chrono::milliseconds timeout = 60s ) = 0;
+
+	/**
+	 * @brief Returns the last offset (the offset of the upcoming message, i.e. the last available message + 1) for the each of the given partitions
+	 * @throws ARQException on failure.
+	 */
+	ARQCore_API virtual std::map<StreamTopicPartition, int64_t> endOffsets( const std::set<StreamTopicPartition>& partitions, const std::chrono::milliseconds timeout = 60s ) = 0;
 
 	/**
 	 * @brief Gets the opaque metadata required for transactional commits.

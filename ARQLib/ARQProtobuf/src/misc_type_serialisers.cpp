@@ -5,13 +5,16 @@
 #include "proto_gen/id.pb.h"
 #include "proto_gen/command_manager.pb.h"
 
-namespace ARQ::Proto::RD
+namespace ARQ::Proto
 {
 
 void registerMiscTypeSerialisers( Serialiser& serialiser )
 {
-	serialiser.registerHandler<ARQ::RD::CommandResponse>( std::make_unique<ProtobufTypeSerialiser_RDCommandResponse>() );
+	serialiser.registerHandler<ARQ::RD::CommandResponse>( std::make_unique<RD::ProtobufTypeSerialiser_RDCommandResponse>() );
 }
+
+namespace RD
+{
 
 Buffer ProtobufTypeSerialiser_RDCommandResponse::serialise( const ARQ::RD::CommandResponse& obj ) const
 {
@@ -43,6 +46,8 @@ void ProtobufTypeSerialiser_RDCommandResponse::deserialise( const BufferView buf
 		throw ARQException( std::format( "Cannot deserialise buffer into RefDataCommandResponse - status integer [{}] not a value in RefDataCommandResponse::Status enum", resp.status() ) );
 	if( resp.has_message() )
 		objOut.message = resp.message();
+}
+
 }
 
 }

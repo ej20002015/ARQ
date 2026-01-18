@@ -10,6 +10,9 @@ namespace ARQ::Proto::RD
 
 void toProto( const ARQ::RD::Currency& arqEntity, Currency* const protoEntity )
 {
+    std::string* uuidBufPtr = protoEntity->mutable_uuid()->mutable_id();
+	*uuidBufPtr = arqEntity.uuid.toString();
+
     protoEntity->set_ccy_id( arqEntity.ccyID );
     protoEntity->set_name( arqEntity.name );
     protoEntity->set_decimal_places( arqEntity.decimalPlaces );
@@ -18,6 +21,9 @@ void toProto( const ARQ::RD::Currency& arqEntity, Currency* const protoEntity )
 
 void toProto( ARQ::RD::Currency&& arqEntity, Currency* const protoEntity )
 {
+    std::string* uuidBufPtr = protoEntity->mutable_uuid()->mutable_id();
+	*uuidBufPtr = arqEntity.uuid.toString();
+
     protoEntity->set_ccy_id( std::move( arqEntity.ccyID ) );
     protoEntity->set_name( std::move( arqEntity.name ) );
     protoEntity->set_decimal_places( arqEntity.decimalPlaces );
@@ -27,6 +33,7 @@ void toProto( ARQ::RD::Currency&& arqEntity, Currency* const protoEntity )
 ARQ::RD::Currency fromProto( const Currency& protoEntity )
 {
     ARQ::RD::Currency arqEntity;
+    arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     arqEntity.ccyID = protoEntity.ccy_id();
     arqEntity.name = protoEntity.name();
     arqEntity.decimalPlaces = protoEntity.decimal_places();
@@ -37,6 +44,7 @@ ARQ::RD::Currency fromProto( const Currency& protoEntity )
 ARQ::RD::Currency fromProto( Currency&& protoEntity )
 {
     ARQ::RD::Currency arqEntity;
+    arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     arqEntity.ccyID = std::move( *protoEntity.mutable_ccy_id() );
     arqEntity.name = std::move( *protoEntity.mutable_name() );
     arqEntity.decimalPlaces = protoEntity.decimal_places();
@@ -48,6 +56,9 @@ ARQ::RD::Currency fromProto( Currency&& protoEntity )
 
 void toProto( const ARQ::RD::User& arqEntity, User* const protoEntity )
 {
+    std::string* uuidBufPtr = protoEntity->mutable_uuid()->mutable_id();
+	*uuidBufPtr = arqEntity.uuid.toString();
+
     protoEntity->set_user_id( arqEntity.userID );
     protoEntity->set_full_name( arqEntity.fullName );
     protoEntity->set_email( arqEntity.email );
@@ -56,6 +67,9 @@ void toProto( const ARQ::RD::User& arqEntity, User* const protoEntity )
 
 void toProto( ARQ::RD::User&& arqEntity, User* const protoEntity )
 {
+    std::string* uuidBufPtr = protoEntity->mutable_uuid()->mutable_id();
+	*uuidBufPtr = arqEntity.uuid.toString();
+
     protoEntity->set_user_id( std::move( arqEntity.userID ) );
     protoEntity->set_full_name( std::move( arqEntity.fullName ) );
     protoEntity->set_email( std::move( arqEntity.email ) );
@@ -65,6 +79,7 @@ void toProto( ARQ::RD::User&& arqEntity, User* const protoEntity )
 ARQ::RD::User fromProto( const User& protoEntity )
 {
     ARQ::RD::User arqEntity;
+    arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     arqEntity.userID = protoEntity.user_id();
     arqEntity.fullName = protoEntity.full_name();
     arqEntity.email = protoEntity.email();
@@ -75,6 +90,7 @@ ARQ::RD::User fromProto( const User& protoEntity )
 ARQ::RD::User fromProto( User&& protoEntity )
 {
     ARQ::RD::User arqEntity;
+    arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     arqEntity.userID = std::move( *protoEntity.mutable_user_id() );
     arqEntity.fullName = std::move( *protoEntity.mutable_full_name() );
     arqEntity.email = std::move( *protoEntity.mutable_email() );

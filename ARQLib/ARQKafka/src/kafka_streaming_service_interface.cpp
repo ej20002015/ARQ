@@ -152,7 +152,7 @@ void KafkaStreamProducer::send( const StreamProducerMessage& msg, const StreamPr
 	ProducerRecord& record = *recordOpt;
 	for( const auto& [headerKey, headerValue] : msg.headers )
 	{
-		kafka::Header::Value headerValueObj( headerValue.data(), headerValue.size() + 1 ); // +1 to include null terminator
+		kafka::Header::Value headerValueObj( headerValue.data(), headerValue.size() );
 		record.headers().emplace_back( headerKey, headerValueObj );
 	}
 
@@ -750,6 +750,30 @@ int64_t KafkaStreamConsumer::position( const StreamTopicPartition& partition )
 	}
 }
 
+std::map<StreamTopicPartition, int64_t> KafkaStreamConsumer::beginningOffsets( const std::set<StreamTopicPartition>& partitions, const std::chrono::milliseconds timeout )
+{
+	try
+	{
+		return m_kafkaConsumer->beginningOffsets( partitions, timeout );
+	}
+	catch( const kafka::KafkaException& e )
+	{
+		throw ARQException( std::format( "KafkaStreamConsumer[{}]: Failed to get beginning offsets for specified partitions: {}", m_options.name(), e.what() ) );
+	}
+}
+
+std::map<StreamTopicPartition, int64_t> KafkaStreamConsumer::endOffsets( const std::set<StreamTopicPartition>& partitions, const std::chrono::milliseconds timeout )
+{
+	try
+	{
+		return m_kafkaConsumer->endOffsets( partitions, timeout );
+	}
+	catch( const kafka::KafkaException& e )
+	{
+		throw ARQException( std::format( "KafkaStreamConsumer[{}]: Failed to get end offsets for specified partitions: {}", m_options.name(), e.what() ) );
+	}
+}
+
 // Group Metadata
 
 StreamGroupMetadata KafkaStreamConsumer::getGroupMetadata() const
@@ -829,7 +853,7 @@ kafka::Properties KafkaStreamConsumer::buildProperties()
 			break;
 		case StreamConsumerOptions::FetchPreset::HighThroughput:
 			props.put( "fetch.wait.max.ms", "500" );  // Get broker to wait up to 500ms for batch fill
-			props.put( "fetch.min.bytes", "102400" ); // Don't send unless batch size > ~100KB
+			props.put( "fetch.min.bytes", "102400" ); // Don't send unless batch size > ~100KB (or timeout)
 			break;
 		default:
 			ARQ_ASSERT( false ); // Unknown option

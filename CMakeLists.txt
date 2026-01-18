@@ -415,6 +415,7 @@ add_subdirectory(ARQLib/ARQKafka)
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataReader)
 add_subdirectory(services/RefData/RefDataGatekeeper)
+add_subdirectory(services/RefData/RefDataCmdExecutor)
 
 # Add tools subdirectories
 add_subdirectory(tools/aeron_publisher)

@@ -10,18 +10,35 @@ package ARQ.Proto.RD;
 
 import "id.proto";
 
+// Metadata header common to all Reference Data records
+message RecordHeader
+{
+    ARQ.Proto.ID.UUID uuid = 1;
+    bool is_active = 2;
+    uint64 last_updated_ts = 3;
+    string last_updated_by = 4;
+    uint32 version = 5;
+};
+
 /*
 ================== Entity Messages ==================
 */
 
 {% for entity in entities %}
-// Message for a {{ entity.name }} object
+// A {{ entity.name }} object
 message {{ entity.name }} 
 {
     ARQ.Proto.ID.UUID uuid = 1;
     {% for member in entity.members %}
     {{ types[member.type].protobuf }} {{ member.name | snake_case }} = {{ loop.index + 1 }};
     {% endfor %}
+}
+
+// A Record<{{ entity.name }}> object
+message {{ entity.name }}Record 
+{
+  RecordHeader header = 1;
+  {{ entity.name }} data = 2;
 }
 
 {% endfor %}

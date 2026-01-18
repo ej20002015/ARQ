@@ -6,11 +6,21 @@ package ARQ.Proto.RD;
 
 import "id.proto";
 
+// Metadata header common to all Reference Data records
+message RecordHeader
+{
+    ARQ.Proto.ID.UUID uuid = 1;
+    bool is_active = 2;
+    uint64 last_updated_ts = 3;
+    string last_updated_by = 4;
+    uint32 version = 5;
+};
+
 /*
 ================== Entity Messages ==================
 */
 
-// Message for a Currency object
+// A Currency object
 message Currency 
 {
     ARQ.Proto.ID.UUID uuid = 1;
@@ -20,7 +30,14 @@ message Currency
     uint32 settlement_days = 5;
 }
 
-// Message for a User object
+// A Record<Currency> object
+message CurrencyRecord 
+{
+  RecordHeader header = 1;
+  Currency data = 2;
+}
+
+// A User object
 message User 
 {
     ARQ.Proto.ID.UUID uuid = 1;
@@ -28,5 +45,12 @@ message User
     string full_name = 3;
     string email = 4;
     string trading_desk = 5;
+}
+
+// A Record<User> object
+message UserRecord 
+{
+  RecordHeader header = 1;
+  User data = 2;
 }
 

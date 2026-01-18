@@ -119,7 +119,7 @@ public:
             .name      = "ccyID",
             .comment   = "The 3-letter ISO 4217 currency code (e.g., USD).",
             .type      = "string",
-            .indexType = IndexType::None
+            .indexType = IndexType::Unique
         },
         MemberInfo {
             .name      = "name",
@@ -174,7 +174,7 @@ public:
             .name      = "userID",
             .comment   = "The unique system user ID.",
             .type      = "string",
-            .indexType = IndexType::None
+            .indexType = IndexType::Unique
         },
         MemberInfo {
             .name      = "fullName",
@@ -192,7 +192,7 @@ public:
             .name      = "tradingDesk",
             .comment   = "The primary trading desk the user belongs to.",
             .type      = "string",
-            .indexType = IndexType::None
+            .indexType = IndexType::NonUnique
         }    
     };
 };
@@ -206,6 +206,8 @@ public:
 
 // Must register outside namespace
 ARQ_REG_TYPE( ARQ::RD::Currency );
+ARQ_REG_TYPE( ARQ::RD::Record<ARQ::RD::Currency> );
 ARQ_REG_TYPE( ARQ::RD::User );
+ARQ_REG_TYPE( ARQ::RD::Record<ARQ::RD::User> );
 
 #pragma endregion

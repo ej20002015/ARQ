@@ -67,7 +67,7 @@ struct Buffer
 	~Buffer() = default;
 
 	Buffer( const Buffer& other )
-		: Buffer( size )
+		: Buffer( other.size )
 	{
 		if( other.data )
 			std::copy_n( other.data.get(), size, data.get() );

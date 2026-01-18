@@ -15,6 +15,9 @@ namespace ARQ::Proto::RD
 
 void toProto( const ARQ::RD::{{ entity.name }}& arqEntity, {{ entity.name }}* const protoEntity )
 {
+    std::string* uuidBufPtr = protoEntity->mutable_uuid()->mutable_id();
+	*uuidBufPtr = arqEntity.uuid.toString();
+
     {% for member in entity.members %}
     {% if member.type == "datetime" %}
     protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }}.microsecondsSinceEpoch() );
@@ -26,6 +29,9 @@ void toProto( const ARQ::RD::{{ entity.name }}& arqEntity, {{ entity.name }}* co
 
 void toProto( ARQ::RD::{{ entity.name }}&& arqEntity, {{ entity.name }}* const protoEntity )
 {
+    std::string* uuidBufPtr = protoEntity->mutable_uuid()->mutable_id();
+	*uuidBufPtr = arqEntity.uuid.toString();
+
     {% for member in entity.members %}
     {% if member.type == "datetime" %}
     protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }}.microsecondsSinceEpoch() );
@@ -40,6 +46,7 @@ void toProto( ARQ::RD::{{ entity.name }}&& arqEntity, {{ entity.name }}* const p
 ARQ::RD::{{ entity.name }} fromProto( const {{ entity.name }}& protoEntity )
 {
     ARQ::RD::{{ entity.name }} arqEntity;
+    arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     {% for member in entity.members %}
     {% if member.type == "datetime" %}
     arqEntity.{{ member.name }} = Time::DateTime( Time::Microseconds( protoEntity.{{ member.name | snake_case }}() ) );
@@ -53,6 +60,7 @@ ARQ::RD::{{ entity.name }} fromProto( const {{ entity.name }}& protoEntity )
 ARQ::RD::{{ entity.name }} fromProto( {{ entity.name }}&& protoEntity )
 {
     ARQ::RD::{{ entity.name }} arqEntity;
+    arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     {% for member in entity.members %}
     {% if member.type == "datetime" %}
     arqEntity.{{ member.name }} = Time::DateTime( Time::Microseconds( protoEntity.{{ member.name | snake_case }}() ) );
