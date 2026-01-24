@@ -38,6 +38,23 @@ std::string join( R&& range, std::string_view delimiter = "," )
     return result;
 }
 
+/**
+* @brief Computes a compile-time FNV-1a hash for a given string view.
+* @param str The input string view to hash.
+* @return The computed 64-bit hash value.
+ */
+constexpr uint64_t constexprHash( const std::string_view str )
+{
+	// FNV-1a 64-bit hash
+    uint64_t hash = 14695981039346656037ull;
+    for( char c : str )
+    {
+        hash ^= static_cast<uint64_t>( c );
+        hash *= 1099511628211ull;
+    }
+    return hash;
+}
+
 }
 
 }

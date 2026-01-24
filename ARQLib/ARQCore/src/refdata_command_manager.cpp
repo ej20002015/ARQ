@@ -66,7 +66,7 @@ void CommandManager::checkInFlightCommands()
 	}
 }
 
-ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const CommandCallback& callback, const Time::Milliseconds timeout )
+ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction, const CommandCallback& callback, const Time::Milliseconds timeout )
 {
 	ID::UUID corrID = ID::UUID::create();
 
@@ -86,7 +86,8 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 		key,
 		corrID,
 		cmdName,
-		cmdEntity
+		cmdEntity,
+		cmdAction
 	);
 
 	// Register in-flight command before sending to avoid race
@@ -115,7 +116,7 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 	return corrID;
 }
 
-StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity )
+StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction )
 {
 	StreamProducerMessage msg;
 	msg.topic = getStreamTopic( cmdEntity );
@@ -124,6 +125,7 @@ StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::st
 
 	msg.headers["ARQ_CorrID"]        = corrID.toString();
 	msg.headers["ARQ_Type"]          = std::string( cmdName );
+	msg.headers["ARQ_CmdAction"]     = std::string( cmdAction );
 	msg.headers["ARQ_ResponseTopic"] = m_subTopicPattern;
 
 	return msg;

@@ -1,7 +1,7 @@
 #pragma once
 #include <ARQCore/dll.h>
 
-#include <ARQUtils/core.h>
+#include <ARQUtils/types.h>
 #include <ARQUtils/error.h>
 
 #include <chrono>

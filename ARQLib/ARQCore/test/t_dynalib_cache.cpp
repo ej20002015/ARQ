@@ -85,16 +85,27 @@ TEST( DynaLibCacheTests, LoadARQClickHouse )
 
 TEST( Tmp, tmp1 )
 {
-	RD::Cmd::Upsert<RD::Currency> cmd;
+	//RD::Cmd::Upsert<RD::Currency> cmd;
+	//cmd.expectedVersion = 0;
+	//cmd.updatedBy = "Evan";
+	//cmd.targetUUID = /*ID::UUID::fromString( "019bd2b3-0f21-7b24-9dd2-09fca89e52a5" )*/ID::UUID::create();
+
+	//cmd.data.uuid = cmd.targetUUID;
+	//cmd.data.ccyID = "GBP";
+	//cmd.data.name = "Great British Pound";
+	//cmd.data.decimalPlaces = 2;
+	//cmd.data.settlementDays = 2;
+
+	RD::Cmd::Upsert<RD::User> cmd;
 	cmd.expectedVersion = 0;
 	cmd.updatedBy = "Evan";
 	cmd.targetUUID = /*ID::UUID::fromString( "019bd2b3-0f21-7b24-9dd2-09fca89e52a5" )*/ID::UUID::create();
 
 	cmd.data.uuid = cmd.targetUUID;
-	cmd.data.ccyID = "GBP";
-	cmd.data.name = "Great British Pound";
-	cmd.data.decimalPlaces = 2;
-	cmd.data.settlementDays = 2;
+	cmd.data.userID = "ejames";
+	cmd.data.fullName = "Evan James";
+	cmd.data.email = "evan.james@example.com";
+	cmd.data.tradingDesk = "EQ Trading";
 
 	RD::CommandManager cmdMgr;
 	cmdMgr.init( RD::CommandManager::Config() );

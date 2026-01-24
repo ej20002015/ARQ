@@ -74,6 +74,7 @@ public:
 			std::move( key ),
 			Cmd::Traits<T>::name(),
 			Cmd::Traits<T>::entity(),
+			Cmd::Traits<T>::action(),
 			callback,
 			timeout
 		);
@@ -107,8 +108,8 @@ private: // Worker thread function
 	void checkInFlightCommands();
 
 private: // Helpers
-	ID::UUID              sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const CommandCallback& callback, const Time::Milliseconds timeout );
-	StreamProducerMessage formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity );
+	ID::UUID              sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction, const CommandCallback& callback, const Time::Milliseconds timeout );
+	StreamProducerMessage formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction );
 	std::string           getStreamTopic( const std::string_view cmdEntity ) const;
 	void                  createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout );
 

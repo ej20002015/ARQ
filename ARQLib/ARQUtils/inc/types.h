@@ -25,6 +25,16 @@ private:
 	T m_val;
 };
 
+enum class DoThrow
+{
+	NO,
+	YES
+};
+
+struct Empty
+{
+};
+
 template<std::invocable OnDtr>
 class Defer
 {
@@ -50,7 +60,7 @@ private:
     template<typename T> concept c_##NAME = is##NAME##_v<T>;
 
 // Macro to register a type as belonging to a category
-#define ARQ_REGISTER_CATEGORY( TRAIT, TYPE ) \
+#define ARQ_REG_CATEGORY( TRAIT, TYPE ) \
     template<> struct Is##TRAIT<TYPE> : std::true_type {};
 
 }

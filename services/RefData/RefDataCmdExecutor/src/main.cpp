@@ -6,6 +6,7 @@
 #include <ARQCore/logger.h>
 #include <ARQCore/refdata_commands.h>
 #include <ARQCore/refdata_command_manager.h>
+#include <ARQCore/refdata_meta.h>
 #include <ARQCore/serialiser.h>
 
 #include <csignal>
@@ -22,8 +23,10 @@ std::shared_ptr<IStreamConsumer> consumer;
 std::shared_ptr<IStreamProducer> producer;
 
 using VersionMap = std::unordered_map<ID::UUID, uint32_t>;
+using LatestSerialisedRecordMap = std::unordered_map<ID::UUID, SharedBuffer>;
 
 VersionMap versionMap;
+LatestSerialisedRecordMap latestSerialisedRecordMap;
 
 struct BatchOutput
 {
@@ -36,6 +39,48 @@ struct BatchOutput
 void handleSIGINT( int signum )
 {
 	running = false;
+}
+
+static std::string_view getEntityFromUpdateTopic( const std::string_view topic )
+{
+	static std::vector<std::pair<std::string, std::string_view>> topicAndEntityNames;
+	if( topicAndEntityNames.empty() )
+	{
+		for( const auto& meta : RD::Meta::getAll() )
+		{
+			std::string updateTopic = std::format( "ARQ.RefData.Updates.{}", meta.name );
+			topicAndEntityNames.emplace_back( std::move( updateTopic ), meta.name );
+		}
+	}
+
+	auto it = std::find_if( topicAndEntityNames.begin(), topicAndEntityNames.end(),
+		[&topic]( const auto& pair ) { return pair.first == topic; } );
+
+	if( it != topicAndEntityNames.end() )
+		return it->second;
+	else
+		throw ARQException( std::format( "Unknown RefData update topic: {}", topic ) );
+}
+
+static std::string_view getEntityFromCmdTopic( const std::string_view topic )
+{
+	static std::vector<std::pair<std::string, std::string_view>> topicAndEntityNames;
+	if( topicAndEntityNames.empty() )
+	{
+		for( const auto& meta : RD::Meta::getAll() )
+		{
+			std::string cmdTopic = std::format( "ARQ.RefData.Commands.{}", meta.name );
+			topicAndEntityNames.emplace_back( std::move( cmdTopic ), meta.name );
+		}
+	}
+
+	auto it = std::find_if( topicAndEntityNames.begin(), topicAndEntityNames.end(),
+		[&topic] ( const auto& pair ) { return pair.first == topic; } );
+
+	if( it != topicAndEntityNames.end() )
+		return it->second;
+	else
+		throw ARQException( std::format( "Unknown RefData command topic: {}", topic ) );
 }
 
 void onRebalance( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& topicPartitions )
@@ -59,8 +104,11 @@ void onRebalance( StreamRebalanceEventType eventType, const std::set<StreamTopic
 	std::shared_ptr<IStreamConsumer> updateConsumer = StreamingServiceFactory::createConsumer( "Kafka", opts );
 
 	std::set<StreamTopicPartition> equivalentUpdatePartitions;
-	for( const auto& [_, partition] : topicPartitions )
-		equivalentUpdatePartitions.insert( std::make_pair( "ARQ.RefData.Updates.Currency", partition ) );
+	for( const auto& [topic, partition] : topicPartitions )
+	{
+		const std::string_view entityName = getEntityFromCmdTopic( topic );
+		equivalentUpdatePartitions.insert( std::make_pair( std::format( "ARQ.RefData.Updates.{}", entityName ), partition ) );
+	}
 
 	std::set<StreamTopicPartition> topicPartitionsToConsume;
 	std::map<StreamTopicPartition, int64_t> highWatermarks;
@@ -99,10 +147,27 @@ void onRebalance( StreamRebalanceEventType eventType, const std::set<StreamTopic
 		{
 			try
 			{
-				auto record = serialiser->deserialise<RD::Record<RD::Currency>>( msg.data );
-				versionMap[record.header.uuid] = record.header.version;
+				const std::string_view entityName = getEntityFromUpdateTopic( msg.topic );
+				RD::dispatch( entityName, [&msg] <RD::c_RefData T> ()
+				{
+					auto record = serialiser->deserialise<RD::Record<T>>( msg.data );
+					versionMap[record.header.uuid] = record.header.version;
+					latestSerialisedRecordMap[record.header.uuid] = Buffer( msg.data.data, msg.data.size );
+				} );
 			}
-			catch( ... ) { /* Ignore malformed data in history */ }
+			catch( ARQException& e ) 
+			{
+				Log( Module::REFDATA ).error( "Error during state hydration for message so skipping it: {}/{}: {}", msg.topic, msg.offset, e.what() );
+			}
+			catch( std::exception& e )
+			{
+				Log( Module::REFDATA ).error( "Error during state hydration for message so skipping it: {}/{}: {}", msg.topic, msg.offset, e.what() );
+			}
+			catch( ... )
+			{
+				Log( Module::REFDATA ).error( "Unknown error during state hydration for message so skipping it: {}/{}", msg.topic, msg.offset );
+			}
+
 		}
 
 		auto it = highWatermarks.begin();
@@ -140,9 +205,10 @@ void sendCommandResponse( const RD::CommandResponse& cmdRes, std::string_view to
 	msgSvc->publish( topic, msg );
 }
 
-void processMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
+template<RD::c_RefData T>
+void processUpsertCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
 {
- 	const auto upsertCmd = serialiser->deserialise<RD::Cmd::Upsert<RD::Currency>>( msg.data );
+ 	const auto upsertCmd = serialiser->deserialise<RD::Cmd::Upsert<T>>( msg.data );
 
 	std::optional<uint32_t> curVer;
 	VersionMap::iterator it;
@@ -160,20 +226,20 @@ void processMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOut
 		const uint32_t newVersion = curVer.value_or( 0 ) + 1;
 		batchOutput.versionMapUpdates[upsertCmd.targetUUID] = newVersion;
 
-		RD::Record<RD::Currency> newCurrencyRecord;
-		newCurrencyRecord.data = upsertCmd.data;
-		newCurrencyRecord.header.isActive = true;
-		newCurrencyRecord.header.lastUpdatedBy = upsertCmd.updatedBy;
-		newCurrencyRecord.header.lastUpdatedTs = Time::DateTime::nowUTC();
-		newCurrencyRecord.header.version = newVersion;
-		newCurrencyRecord.header.uuid = upsertCmd.targetUUID;
+		RD::Record<T> newRecord;
+		newRecord.data = upsertCmd.data;
+		newRecord.header.isActive = true;
+		newRecord.header.lastUpdatedBy = upsertCmd.updatedBy;
+		newRecord.header.lastUpdatedTs = Time::DateTime::nowUTC();
+		newRecord.header.version = newVersion;
+		newRecord.header.uuid = upsertCmd.targetUUID;
 
-		Buffer payload = serialiser->serialise<RD::Record<RD::Currency>>( newCurrencyRecord );
+		Buffer payload = serialiser->serialise<RD::Record<T>>( newRecord );
 
 		producer->send( StreamProducerMessage{
-			.topic = "ARQ.RefData.Updates.Currency",
+			.topic = std::format( "ARQ.RefData.Updates.{}", RD::Traits<T>::name() ),
 			.id = msg.offset,
-			.key = newCurrencyRecord.header.uuid.toString(),
+			.key = newRecord.header.uuid.toString(),
 			.data = SharedBuffer( std::move( payload ) )
 		} );
 
@@ -182,6 +248,61 @@ void processMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOut
 	else
 	{
 		std::string msg = std::format( "Incorrect expectedVersion given in command - curVer={}, expectedVersion={}", curVer.value_or( 0 ), upsertCmd.expectedVersion );
+		Log( Module::REFDATA ).warn( "{}", msg );
+		resp.status = RD::CommandResponse::REJECTED;
+		resp.message = msg;
+	}
+
+	const std::string_view respTopic = msg.headers.at( "ARQ_ResponseTopic" );
+	batchOutput.responses.push_back( std::make_pair( resp, respTopic ) );
+}
+
+template<RD::c_RefData T>
+void processDeactivateCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
+{
+	const auto deactivateCmd = serialiser->deserialise<RD::Cmd::Deactivate<T>>( msg.data );
+
+	std::optional<uint32_t> curVer;
+	VersionMap::iterator it;
+	if( it = batchOutput.versionMapUpdates.find( deactivateCmd.targetUUID ); it != batchOutput.versionMapUpdates.end() )
+		curVer = it->second;
+	else if( it = versionMap.find( deactivateCmd.targetUUID ); it != versionMap.end() )
+		curVer = it->second;
+
+	RD::CommandResponse resp;
+	resp.corrID = ID::UUID::fromString( msg.headers.at( "ARQ_CorrID" ) );
+
+	if( curVer && deactivateCmd.expectedVersion == *curVer ) // Existing entity with correct expected version
+	{
+		const uint32_t newVersion = curVer.value_or( 0 ) + 1;
+		batchOutput.versionMapUpdates[deactivateCmd.targetUUID] = newVersion;
+
+		RD::Record<T> newRecord;
+		LatestSerialisedRecordMap::iterator latestIt = latestSerialisedRecordMap.find( deactivateCmd.targetUUID );
+		if( latestIt != latestSerialisedRecordMap.end() )
+			newRecord.data = serialiser->deserialise<RD::Record<T>>( latestIt->second ).data;
+		else
+			throw ARQException( std::format( "Unable to find latest record for existing {} with UUID {}", RD::Traits<T>::name(), deactivateCmd.targetUUID ) );
+		newRecord.header.isActive = false;
+		newRecord.header.lastUpdatedBy = deactivateCmd.updatedBy;
+		newRecord.header.lastUpdatedTs = Time::DateTime::nowUTC();
+		newRecord.header.version = newVersion;
+		newRecord.header.uuid = deactivateCmd.targetUUID;
+
+		Buffer payload = serialiser->serialise<RD::Record<T>>( newRecord );
+
+		producer->send( StreamProducerMessage{
+			.topic = std::format( "ARQ.RefData.Updates.{}", RD::Traits<T>::name() ),
+			.id = msg.offset,
+			.key = newRecord.header.uuid.toString(),
+			.data = SharedBuffer( std::move( payload ) )
+		} );
+
+		resp.status = RD::CommandResponse::SUCCESS;
+	}
+	else
+	{
+		std::string msg = std::format( "Incorrect expectedVersion given in command - curVer={}, expectedVersion={}", curVer.value_or( 0 ), deactivateCmd.expectedVersion ); // TODO: Error better (e.g. give better error if given entity doesn't exist)
 		Log( Module::REFDATA ).warn( "{}", msg );
 		resp.status = RD::CommandResponse::REJECTED;
 		resp.message = msg;
@@ -206,7 +327,11 @@ int main()
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
 								StreamConsumerOptions::AutoOffsetReset::Earliest );
 	consumer = StreamingServiceFactory::createConsumer( "Kafka", opts );
-	consumer->subscribe( { "ARQ.RefData.Commands.Currency" }, onRebalance );
+
+	const auto commandTopics = RD::Meta::getAll()
+		| std::views::transform( [] ( const auto& entityMeta ) { return std::format( "ARQ.RefData.Commands.{}", entityMeta.name ); } )
+		| std::ranges::to<std::set>();
+	consumer->subscribe( commandTopics, onRebalance );
 
 	StreamProducerOptions prodOpts( "RefDataCmdExecutor::UpdateProducer",
 									StreamProducerOptions::Preset::HighThroughput );
@@ -238,8 +363,8 @@ int main()
 
 			for( const StreamConsumerMessageView& msg : *msgBatch )
 			{
-				std::string headersStr;
-				/*for( const auto& [key, val] : msg.headers )
+				/*std::string headersStr;
+				for( const auto& [key, val] : msg.headers )
 					headersStr += std::format( "{}: {}, ", key, val );
 				Log( Module::REFDATA ).info( "Message consumed: "
 					"Topic={}, Partition={}, Offset={}, Key={}, Timestamp={}, Headers=[{}], Error={}",
@@ -254,7 +379,16 @@ int main()
 
 				try
 				{
-					processMessage( msg, batchOutput );
+					const std::string_view cmdAction = msg.headers.at( "ARQ_CmdAction" );
+					RD::dispatch( getEntityFromCmdTopic( msg.topic ), [&msg, &cmdAction, &batchOutput] <RD::c_RefData T> ()
+					{
+						if( cmdAction == "Upsert" )
+							processUpsertCmdMessage<T>( msg, batchOutput );
+						else if( cmdAction == "Deactivate" )
+							processDeactivateCmdMessage<T>( msg, batchOutput );
+						else
+							throw ARQException( std::format( "Received refdata command with unknown action [{}]", cmdAction ) );
+					} );
 				}
 				catch( ... )
 				{

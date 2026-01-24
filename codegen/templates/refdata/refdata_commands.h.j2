@@ -35,7 +35,7 @@ struct Upsert
 };
 
 {% for entity in entities %}
-ARQ_REGISTER_CATEGORY( Command, Upsert<{{ entity.name }}> )
+ARQ_REG_CATEGORY( Command, Upsert<{{ entity.name }}> )
 {% endfor %}
 
 template<c_RefData T>
@@ -67,7 +67,7 @@ struct Deactivate
 };
 
 {% for entity in entities %}
-ARQ_REGISTER_CATEGORY( Command, Deactivate<{{ entity.name }}> )
+ARQ_REG_CATEGORY( Command, Deactivate<{{ entity.name }}> )
 {% endfor %}
 
 template<c_RefData T>

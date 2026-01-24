@@ -7,6 +7,7 @@
 #include <ARQUtils/types.h>
 #include <ARQUtils/time.h>
 #include <ARQUtils/id.h>
+#include <ARQUtils/str.h>
 #include <ARQCore/type_registry.h>
 
 #include <string>
@@ -18,11 +19,11 @@
 namespace ARQ::RD
 {
 
-#pragma region Common RefData Functionality
+#pragma region Common RefData Types
 
 /*
 *********************************************
-* Common functionality for RefData Entities *
+*    Common types for RefData Entities      *
 *********************************************
 */
 
@@ -105,7 +106,7 @@ struct Currency
     uint8_t settlementDays;
 };
 
-ARQ_REGISTER_CATEGORY( RefData, Currency )
+ARQ_REG_CATEGORY( RefData, Currency )
 
 template<>
 class Traits<Currency>
@@ -160,7 +161,7 @@ struct User
     std::string tradingDesk;
 };
 
-ARQ_REGISTER_CATEGORY( RefData, User )
+ARQ_REG_CATEGORY( RefData, User )
 
 template<>
 class Traits<User>
@@ -197,6 +198,43 @@ public:
     };
 };
 
+
+#pragma endregion
+
+#pragma region RefData Helpers
+
+/*
+*********************************************
+*   Helper functions for RefData Entities   *
+*********************************************
+*/
+
+/**
+ * @brief Dispatches to the concrete type T based on entity name.
+ * @param entityName The name of the RefData entity.
+ * @param visitor A callable object with a templated operator()<T>() method.
+ * @param doThrow Whether to throw an exception on unknown entity name.
+ * @returns whatever the visitor returns.
+ * @throws ARQException if entityName is unknown.
+ */
+template<typename F>
+decltype(auto) dispatch( const std::string_view entityName, F&& visitor, const DoThrow doThrow = DoThrow::YES )
+{
+    switch( Str::constexprHash( entityName ) )
+    {
+        case Str::constexprHash( "Currency" ):
+            if (entityName == "Currency") 
+                return visitor.template operator()<Currency>();
+            break;
+        case Str::constexprHash( "User" ):
+            if (entityName == "User") 
+                return visitor.template operator()<User>();
+            break;
+    }
+
+    if( doThrow == DoThrow::YES )
+        throw ARQException( std::format( "Unknown RefData entity name [{}] - cannot dispatch to function", entityName ) );
+}
 
 #pragma endregion
 

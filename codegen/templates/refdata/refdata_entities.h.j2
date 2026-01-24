@@ -11,6 +11,7 @@
 #include <ARQUtils/types.h>
 #include <ARQUtils/time.h>
 #include <ARQUtils/id.h>
+#include <ARQUtils/str.h>
 #include <ARQCore/type_registry.h>
 
 #include <string>
@@ -22,11 +23,11 @@
 namespace ARQ::RD
 {
 
-#pragma region Common RefData Functionality
+#pragma region Common RefData Types
 
 /*
 *********************************************
-* Common functionality for RefData Entities *
+*    Common types for RefData Entities      *
 *********************************************
 */
 
@@ -108,7 +109,7 @@ struct {{ entity.name }}
     {% endfor %}
 };
 
-ARQ_REGISTER_CATEGORY( RefData, {{ entity.name }} )
+ARQ_REG_CATEGORY( RefData, {{ entity.name }} )
 
 template<>
 class Traits<{{ entity.name }}>
@@ -132,6 +133,41 @@ public:
 };
 
 {% endfor %}
+
+#pragma endregion
+
+#pragma region RefData Helpers
+
+/*
+*********************************************
+*   Helper functions for RefData Entities   *
+*********************************************
+*/
+
+/**
+ * @brief Dispatches to the concrete type T based on entity name.
+ * @param entityName The name of the RefData entity.
+ * @param visitor A callable object with a templated operator()<T>() method.
+ * @param doThrow Whether to throw an exception on unknown entity name.
+ * @returns whatever the visitor returns.
+ * @throws ARQException if entityName is unknown.
+ */
+template<typename F>
+decltype(auto) dispatch( const std::string_view entityName, F&& visitor, const DoThrow doThrow = DoThrow::YES )
+{
+    switch( Str::constexprHash( entityName ) )
+    {
+        {% for entity in entities %}
+        case Str::constexprHash( "{{ entity.name }}" ):
+            if (entityName == "{{ entity.name }}") 
+                return visitor.template operator()<{{ entity.name }}>();
+            break;
+        {% endfor %}
+    }
+
+    if( doThrow == DoThrow::YES )
+        throw ARQException( std::format( "Unknown RefData entity name [{}] - cannot dispatch to function", entityName ) );
+}
 
 #pragma endregion
 

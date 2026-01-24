@@ -30,8 +30,8 @@ struct Upsert
     uint32_t    expectedVersion;
 };
 
-ARQ_REGISTER_CATEGORY( Command, Upsert<Currency> )
-ARQ_REGISTER_CATEGORY( Command, Upsert<User> )
+ARQ_REG_CATEGORY( Command, Upsert<Currency> )
+ARQ_REG_CATEGORY( Command, Upsert<User> )
 
 template<c_RefData T>
 struct Traits<Upsert<T>>
@@ -61,8 +61,8 @@ struct Deactivate
     uint32_t    expectedVersion;
 };
 
-ARQ_REGISTER_CATEGORY( Command, Deactivate<Currency> )
-ARQ_REGISTER_CATEGORY( Command, Deactivate<User> )
+ARQ_REG_CATEGORY( Command, Deactivate<Currency> )
+ARQ_REG_CATEGORY( Command, Deactivate<User> )
 
 template<c_RefData T>
 struct Traits<Deactivate<T>>

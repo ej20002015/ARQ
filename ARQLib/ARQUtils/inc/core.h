@@ -8,16 +8,6 @@
 namespace ARQ
 {
 
-enum class DoThrow
-{
-	NO,
-	YES
-};
-
-struct Empty
-{
-};
-
 enum class Module
 {
 	// ARQ Components
