@@ -379,8 +379,9 @@ int main()
 
 				try
 				{
-					const std::string_view cmdAction = msg.headers.at( "ARQ_CmdAction" );
-					RD::dispatch( getEntityFromCmdTopic( msg.topic ), [&msg, &cmdAction, &batchOutput] <RD::c_RefData T> ()
+					const std::string_view cmdAction  = msg.headers.at( "ARQ_CmdAction" );
+					const std::string_view entityName = getEntityFromCmdTopic( msg.topic );
+					RD::dispatch( entityName, [&msg, &cmdAction, &batchOutput] <RD::c_RefData T> ()
 					{
 						if( cmdAction == "Upsert" )
 							processUpsertCmdMessage<T>( msg, batchOutput );
@@ -394,7 +395,7 @@ int main()
 				{
 					Log( Module::REFDATA ).error( "Error when processing message - sending to DMQ" );
 					producer->send( StreamProducerMessage{
-						.topic = "ARQ.RefData.Commands.Currency.DLQ",
+						.topic = "ARQ.RefData.Commands.DLQ",
 						.id = msg.offset,
 						.key = msg.key->data(),
 						.data = msg.data
