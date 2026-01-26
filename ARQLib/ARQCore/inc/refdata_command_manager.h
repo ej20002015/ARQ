@@ -32,7 +32,7 @@ struct CommandResponse
 		_NOTSET_ = -1,
 		SUCCESS,
 		REJECTED,
-		ERROR,
+		ERRO,
 		TIMEOUT
 	};
 

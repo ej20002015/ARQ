@@ -3,6 +3,7 @@
 #include <ARQUtils/os.h>
 #include <ARQUtils/time.h>
 #include <ARQUtils/enum.h>
+#include <ARQUtils/str.h>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/async.h>
@@ -14,6 +15,22 @@
 
 namespace ARQ
 {
+
+LogLevel spdlogLevelToARQ( const spdlog::level::level_enum level )
+{
+	switch( level )
+	{
+		case spdlog::level::critical: return LogLevel::CRITICAL; break;
+		case spdlog::level::err:      return LogLevel::ERRO;     break;
+		case spdlog::level::warn:     return LogLevel::WARN;     break;
+		case spdlog::level::info:     return LogLevel::INFO;     break;
+		case spdlog::level::debug:    return LogLevel::DEBUG;    break;
+		case spdlog::level::trace:    return LogLevel::TRACE;    break;
+		default:
+			ARQ_ASSERT( false );
+			return LogLevel::CRITICAL;
+	}
+}
 
 spdlog::level::level_enum ARQLevelToSpdlog( const LogLevel level )
 {
@@ -36,8 +53,9 @@ Logger::Logger( const LoggerConfig& cfg )
 {
 	try
 	{
-		m_procName = OS::procName();
-		m_procID   = OS::procID();
+		m_procName     = OS::procName();
+		m_procID       = OS::procID();
+		m_exeModuleStr = Str::toUpper( std::filesystem::path( m_procName ).stem().string() );
 
 		std::vector<spdlog::sink_ptr> logSinks;
 		if( !m_cfg.disableConsoleLogger )
@@ -73,6 +91,7 @@ Logger::Logger( const LoggerConfig& cfg )
 
 		m_logger = std::make_shared<spdlog::async_logger>( m_cfg.loggerName, logSinks.begin(), logSinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block );
 		m_logger->flush_on( ARQLevelToSpdlog( m_cfg.flushLevel ) );
+		m_logger->set_level( ARQLevelToSpdlog( m_cfg.globalLoggerLevel ) );
 		spdlog::register_logger( m_logger );
 	}
 	catch( ARQException& e )
@@ -105,9 +124,24 @@ bool Logger::shouldLog( const LogLevel level )
 	return m_logger->should_log( ARQLevelToSpdlog( level ) );
 }
 
+LogLevel Logger::getLevel() const
+{
+	return spdlogLevelToARQ( m_logger->sinks()[0]->level() );
+}
+
+LogLevel Logger::getLevel2() const
+{
+	return spdlogLevelToARQ( m_logger->sinks()[1]->level() );
+}
+
 void Logger::setLevel( const LogLevel level )
 {
-	m_logger->set_level( ARQLevelToSpdlog( level ) );
+	m_logger->sinks()[0]->set_level( ARQLevelToSpdlog( level ) );
+}
+
+void Logger::setLevel2( const LogLevel level )
+{
+	m_logger->sinks()[1]->set_level( ARQLevelToSpdlog( level ) );
 }
 
 void Logger::flush()
@@ -131,12 +165,12 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 		// Create the full log entry (use OrderedJSON to preserve order of keys)
 		OrderedJSON logEntry;
 		logEntry["timestamp"]      = Time::DateTime::nowUTC().fmtISO8601();
-		logEntry["level"]          = LOG_LEVEL_STRS[static_cast<size_t>( level )];
+		logEntry["level"]          = Enum::enum_name( level );
 		logEntry["proc_id"]        = m_procID;
 		logEntry["proc_name"]      = m_procName;
 		logEntry["thread_id"]      = OS::threadID();
 		logEntry["thread_name"]    = OS::threadName();
-		logEntry["module"]         = Enum::enum_name( module );
+		logEntry["module"]         = module == Module::EXE ? m_exeModuleStr : Enum::enum_name( module );
 		logEntry["source"]         = {
 			{ "file",     loc.file_name() },
 			{ "line",     loc.line() },
@@ -212,10 +246,32 @@ bool Log::shouldLog( const LogLevel level )
 	return false;
 }
 
+LogLevel Log::getLevel()
+{
+	if( s_globalLogger )
+		return s_globalLogger->getLevel();
+
+	return LogLevel::CRITICAL;
+}
+
+ARQCore_API LogLevel Log::getLevel2()
+{
+	if( s_globalLogger )
+		return s_globalLogger->getLevel2();
+
+	return LogLevel::CRITICAL;
+}
+
 void Log::setLevel( const LogLevel level )
 {
 	if( s_globalLogger )
 		s_globalLogger->setLevel( level );
+}
+
+void Log::setLevel2( const LogLevel level )
+{
+	if( s_globalLogger )
+		s_globalLogger->setLevel2( level );
 }
 
 void Log::flush()

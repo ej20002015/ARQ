@@ -31,9 +31,8 @@ enum class LogLevel
 	_SIZE
 };
 
-static constexpr const char* const LOG_LEVEL_STRS[static_cast<size_t>( LogLevel::_SIZE )] = { "CRITICAL", "ERRO", "WARN", "INFO", "DEBUG", "TRACE" };
-
-static constexpr auto DEFAULT_LOGGER_NAME = "ARQLib";
+static constexpr LogLevel DEFAULT_LOG_LEVEL   = LogLevel::INFO;
+static constexpr auto     DEFAULT_LOGGER_NAME = "ARQLib";
 
 struct LoggerConfig
 {
@@ -42,8 +41,9 @@ struct LoggerConfig
 	bool disableConsoleLogger = false;
 	bool disableFileLogger    = false;
 
-	LogLevel consoleLoggerLevel = LogLevel::DEBUG;
-	LogLevel fileLoggerLevel    = LogLevel::DEBUG;
+	LogLevel consoleLoggerLevel = DEFAULT_LOG_LEVEL;
+	LogLevel fileLoggerLevel    = DEFAULT_LOG_LEVEL;
+	LogLevel globalLoggerLevel  = LogLevel::TRACE;
 
 	LogLevel flushLevel         = LogLevel::ERRO;
 
@@ -80,7 +80,10 @@ public:
 
 	[[nodiscard]] bool shouldLog( const LogLevel level );
 
+	LogLevel getLevel() const;
+	LogLevel getLevel2() const;
 	void setLevel( const LogLevel level );
+	void setLevel2( const LogLevel level );
 
 	void flush();
 
@@ -93,7 +96,8 @@ private:
 	std::shared_ptr<spdlog::logger> m_logger;
 
 	std::string m_procName;
-	int32_t m_procID;
+	int32_t     m_procID;
+	std::string m_exeModuleStr;
 };
 
 inline static bool s_initLoggerThread = true;
@@ -106,7 +110,10 @@ public:
 
 	[[nodiscard]] ARQCore_API static bool shouldLog( const LogLevel level );
 
+	ARQCore_API static LogLevel getLevel();
+	ARQCore_API static LogLevel getLevel2();
 	ARQCore_API static void setLevel( const LogLevel level );
+	ARQCore_API static void setLevel2( const LogLevel level );
 
 	ARQCore_API static void flush();
 

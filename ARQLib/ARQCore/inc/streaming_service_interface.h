@@ -3,6 +3,7 @@
 
 #include <ARQUtils/buffer.h>
 #include <ARQUtils/time.h>
+#include <ARQUtils/error.h>
 
 #include <string>
 #include <optional>
@@ -147,6 +148,17 @@ public:
 	Time::DateTime                  timestamp;
 	StreamHeaderMapView             headers;
 	std::optional<StreamError>      error;
+
+	std::string idStr() const { return std::format( "{}-{}:{}", topic, partition, offset ); }
+
+	std::string_view tryGetHeaderValue( const std::string_view headerKey ) const
+	{
+		auto it = headers.find( headerKey );
+		if( it != headers.end() )
+			return it->second;
+		else
+			throw ARQException( std::format( "Header key [{}] not found in message {}", headerKey, idStr() ) );
+	}
 };
 
 enum class StreamConsumerReadHeaders
@@ -405,6 +417,6 @@ struct std::formatter<ARQ::StreamTopicPartition>
 	template<typename FormatContext>
 	auto format( const ARQ::StreamTopicPartition& p, FormatContext& ctx ) const
 	{
-		return std::format_to( ctx.out(), "{}:{}", p.first, p.second );
+		return std::format_to( ctx.out(), "{}-{}", p.first, p.second );
 	}
 };

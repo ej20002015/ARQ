@@ -109,7 +109,7 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 		{
 			std::string errMsg = std::format( "RD::CommandManager: Failed to send command message to streaming topic {}: {}", messageMetadata.topic, error->message );
 			Log( Module::REFDATA ).error( "{}", errMsg );
-			onCommandResponse( CommandResponse{ .corrID = corrID, .status = CommandResponse::ERROR, .message = errMsg } );
+			onCommandResponse( CommandResponse{ .corrID = corrID, .status = CommandResponse::ERRO, .message = errMsg } );
 		}
 	} );
 

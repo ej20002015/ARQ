@@ -182,7 +182,7 @@ void DataSourceConfigManager::parseConfig( const std::string_view tomlCfg )
 				it->second = std::move( cfg );
 			}
 
-			Log( Module::CORE ).debug( "Parsed config for data source [{}]", dsh );
+			Log( Module::CORE ).trace( "Parsed config for data source [{}]", dsh );
 		}
 		catch( const ARQException& specificError )
 		{

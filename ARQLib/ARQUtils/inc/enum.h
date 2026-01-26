@@ -132,7 +132,7 @@
 #endif
 
 // Rename to be more consistent with rest of ARQUtils naming scheme
-namespace Enum {
+namespace ARQ::Enum {
 
 // If need another optional type, define the macro MAGIC_ENUM_USING_ALIAS_OPTIONAL.
 #if defined(MAGIC_ENUM_USING_ALIAS_OPTIONAL)

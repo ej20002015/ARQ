@@ -36,6 +36,8 @@ ARQ_REG_CATEGORY( Command, Upsert<User> )
 template<c_RefData T>
 struct Traits<Upsert<T>>
 {
+    using EntityType = T;
+
     static std::string_view name()
     {
         static std::string nameStr = std::string( "Upsert<" ) + std::string( RD::Traits<T>::name() ) + ">";
@@ -67,6 +69,8 @@ ARQ_REG_CATEGORY( Command, Deactivate<User> )
 template<c_RefData T>
 struct Traits<Deactivate<T>>
 {
+    using EntityType = T;
+
     static std::string_view name()
     {
         static std::string nameStr = std::string( "Deactivate<" ) + std::string( RD::Traits<T>::name() ) + ">";
