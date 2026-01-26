@@ -32,8 +32,6 @@ int ServiceRunner::tryRunImpl( int argc, char* argv[] )
 
 int ServiceRunner::runImpl( int argc, char* argv[] )
 {
-	Log( Module::EXE ).info( "Executing service runner" );
-
 	m_service.m_healthy   = true;
 	m_service.m_shouldRun = true;
 

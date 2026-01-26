@@ -133,7 +133,7 @@ void RefDataCmdExecutorService::run()
 			throw;
 		}
 
-		// After batch successfully commited to update log, apply version map updates and send responses
+		// After batch successfully commited to update log, apply map updates and send responses
 
 		for( const auto& [uuid, newVer] : batchOutput.versionMapUpdates )
 			m_versionMap[uuid] = newVer;

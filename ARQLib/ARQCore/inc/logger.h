@@ -27,8 +27,6 @@ enum class LogLevel
 	INFO,
 	DEBUG,
 	TRACE,
-
-	_SIZE
 };
 
 static constexpr LogLevel DEFAULT_LOG_LEVEL   = LogLevel::INFO;

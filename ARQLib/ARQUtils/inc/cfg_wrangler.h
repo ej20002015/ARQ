@@ -4,6 +4,7 @@
 #include <ARQUtils/cli.h>
 #include <ARQUtils/core.h>
 #include <ARQUtils/enum.h>
+#include <ARQUtils/str.h>
 
 namespace ARQ::Cfg
 {
@@ -31,8 +32,12 @@ public:
     {
         std::map<std::string, int32_t> intMap;
 
-        for( const auto& enumVal : Enum::enum_values<T>() )
-            intMap[std::string( Enum::enum_name( enumVal ) )] = static_cast<int32_t>( enumVal );
+        for( const auto& [enumVal, enumName] : Enum::enum_entries<T>() )
+        {
+			if( Str::contains( enumName, "0x" ) )
+                continue; // magic_enum can give garbage entries - skip these
+            intMap[enumName.data()] = static_cast<int32_t>( enumVal );
+        }
 
         const auto setter = [&val]( const int32_t& intVal )
         {
