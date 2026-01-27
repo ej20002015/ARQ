@@ -68,6 +68,7 @@ std::string join( R&& range, std::string_view delimiter = "," )
  */
 template<std::ranges::input_range R>
     requires std::formattable<std::ranges::range_reference_t<R>, char>
+             && ( !std::convertible_to<std::ranges::range_reference_t<R>, std::string_view> )
 std::string join( R&& range, std::string_view delimiter = "," )
 {
     std::string result;

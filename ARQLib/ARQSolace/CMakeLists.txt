@@ -1,3 +1,0 @@
-ARQ_define_dynalib(ARQSolace)
-
-ARQ_define_dynalib_tests(ARQSolace)

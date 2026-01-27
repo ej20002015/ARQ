@@ -1,2 +1,0 @@
-ARQ_define_services_exe(RefDataReader RefData)
-target_link_libraries(RefDataReader PRIVATE ARQUtils ARQGrpc ${PROTO_GRPC_LINK_LIB})

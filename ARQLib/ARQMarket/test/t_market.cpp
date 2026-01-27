@@ -4,7 +4,6 @@
 
 #include <ARQUtils/error.h>
 #include <ARQUtils/os.h>
-#include <ARQSerialisation/ser_mktdata_entities.h>
 
 using namespace ARQ;
 using namespace ARQ::Time;

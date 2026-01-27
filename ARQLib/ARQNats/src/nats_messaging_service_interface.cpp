@@ -7,7 +7,7 @@
 #include <ARQCore/data_source_config.h>
 #include <ARQCore/logger.h>
 
-using namespace Enum::bitwise_operators;
+using namespace ARQ::Enum::bitwise_operators;
 
 namespace ARQ
 {

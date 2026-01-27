@@ -366,20 +366,10 @@ set(CLICKHOUSE_CPP_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp")
 set(CLICKHOUSE_CPP_CONTRIB_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp/contrib/absl")
 set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
 
-# Flatbuffers setup
-set(CMAKE_FOLDER "vendor/flatbuffers")
-set(FLATBUFFERS_BUILD_SHAREDLIB ON CACHE BOOL "Build flatbuffers as shared library" FORCE)
-set(FLATBUFFERS_BUILD_FLATLIB OFF CACHE BOOL "Don't build static flatbuffers library" FORCE)
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Export all symbols on Windows (dllexport not setup in flatbuffers library)
-add_subdirectory(vendor/flatbuffers ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-unset(FLATBUFFERS_BUILD_SHAREDLIB)
-unset(CMAKE_FOLDER)
-set(FLATBUFFERS_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/flatbuffers/include")
-set(FLATBUFFERS_LINK_LIB "flatbuffers_shared")
-
-# spdlog setup
+# spdlog setup (TODO: Move to just using the header - much simpler and calls are bastracted behind ARQ logger anyway so build times not a concern)
 set(CMAKE_FOLDER "vendor/spdlog")
 set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog" FORCE)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Export all symbols on Windows (dllexport not setup properly in spdlog library)
 add_subdirectory(vendor/spdlog)
 set(SPDLOG_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/spdlog/include")
 set(SPDLOG_LINK_LIB "spdlog")
@@ -403,18 +393,13 @@ set(MODERN_CPP_KAFKA_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/modern-cpp-kafka/incl
 add_subdirectory(ARQLib/ARQCore)
 add_subdirectory(ARQLib/ARQUtils)
 add_subdirectory(ARQLib/ARQMarket)
-add_subdirectory(ARQLib/ARQSolace)
-add_subdirectory(ARQLib/ARQMessaging)
 add_subdirectory(ARQLib/ARQClickHouse)
 add_subdirectory(ARQLib/ARQGrpc)
-add_subdirectory(ARQLib/ARQSerialisation)
 add_subdirectory(ARQLib/ARQProtobuf)
 add_subdirectory(ARQLib/ARQNats)
 add_subdirectory(ARQLib/ARQKafka)
 
 # Add services subdirectories
-add_subdirectory(services/RefData/RefDataReader)
-add_subdirectory(services/RefData/RefDataGatekeeper)
 add_subdirectory(services/RefData/RefDataCmdExecutor)
 
 # Add tools subdirectories

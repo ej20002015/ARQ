@@ -16,3 +16,5 @@ TEST( StrUtilsTest, ConvertStr2WStr )
     const std::wstring wstr = Str::str2Wstr( str );
     ASSERT_EQ( wstr, L"hello" );
 }
+
+// TODO: need to add tests for join, toUpper and contains

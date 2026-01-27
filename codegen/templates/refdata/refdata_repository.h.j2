@@ -18,6 +18,7 @@
 #include <optional>
 #include <atomic>
 #include <memory>
+#include <algorithm>
 
 namespace ARQ::RD
 {
@@ -74,7 +75,7 @@ public:
 
     [[nodiscard]] std::optional<std::reference_wrapper<const Record<T>>> getRecordByIndex( const std::string_view indexName, const std::string_view indexValue ) const
     {
-		const auto it = std::find( m_uniqueIndices.begin(), m_uniqueIndices.end(), [] ( const auto& pair ) { return pair.first == indexName; } );
+		const auto it = std::find( m_uniqueIndices.begin(), m_uniqueIndices.end(), [&] ( const auto& pair ) { return pair.first == indexName; } );
 		if( it == m_uniqueIndices.end() )
 			throw ARQException( std::format( "Cache::getRecordByIndex: Given field [{}] is not a unique index for RefData entity [{}]", indexName, Traits<T>::name() ) );
 

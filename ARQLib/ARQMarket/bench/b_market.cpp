@@ -1,8 +1,8 @@
-#include <benchmark/benchmark.h>
-#include <ARQMarket/market.h>
-
-#include <random>
-
+//#include <benchmark/benchmark.h>
+//#include <ARQMarket/market.h>
+//
+//#include <random>
+//
 //using namespace ARQ;
 //
 //constexpr int NUM_ENTRIES = 100;
@@ -17,22 +17,21 @@
 //    for( int i = 0; i < NUM_ENTRIES; ++i )
 //    {
 //        const std::string rateID = "FX_" + std::to_string(i);
-//        FXRate rate;
-//        rate.instrumentID = rateID;
-//        rate.rate = dist( rng );
+//        ARQ::MDEntities::FXRate rate;
+//        rate.ID = rateID;
+//        rate.mid = dist( rng );
 //        rate.ask = dist( rng );
 //        rate.bid = dist( rng );
-//        market.set( rate );
+//        market.setFXRate( rate );
 //
 //        const std::string eqID = "EQ_" + std::to_string( i );
-//        EQ eq;
-//        eq.instrumentID = eqID;
-//        eq.price = dist( rng );
-//        eq.high = dist( rng );
-//        eq.low = dist( rng );
+//        ARQ::MDEntities::EQPrice eq;
+//        eq.ID = eqID;
+//        eq.ask = dist( rng );
+//        eq.bid = dist( rng );
 //        eq.open = dist( rng );
 //        eq.close = dist( rng );
-//        market.set( eq );
+//        market.setEQPrice( eq );
 //    }
 //}
 //
@@ -44,7 +43,7 @@
 //    for( auto _ : state )
 //    {
 //        const std::string id = "FX_" + std::to_string( idDist( rng ) );
-//        benchmark::DoNotOptimize(market.get<FXRate>( id ));
+//        benchmark::DoNotOptimize( market.getFXRate( id ) );
 //    }
 //}
 //BENCHMARK(BenchmarkFXRead);
@@ -58,12 +57,12 @@
 //    for( auto _ : state )
 //    {
 //        const std::string id = "FX_" + std::to_string( state.iterations() % NUM_ENTRIES );
-//        FXRate rate;
-//        rate.instrumentID = id;
-//        rate.rate = dist( rng );
+//        ARQ::MDEntities::FXRate rate;
+//        rate.ID = id;
+//        rate.mid = dist( rng );
 //        rate.ask = dist( rng );
 //        rate.bid = dist( rng );
-//        market.set( rate );
+//        market.setFXRate( rate );
 //    }
 //}
 //BENCHMARK( BenchmarkFXWrite );

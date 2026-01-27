@@ -5,15 +5,15 @@ using namespace ARQ;
 
 TEST( SerialiserTest, RefDataCommandResponse )
 {
-	ProtobufTypeSerialiser_RefDataCommandResponse typeSerialiser;
+	Proto::RD::ProtobufTypeSerialiser_RDCommandResponse typeSerialiser;
 
-	RefDataCommandResponse resp;
-	resp.status = RefDataCommandResponse::SUCCESS;
+	RD::CommandResponse resp;
+	resp.status = RD::CommandResponse::SUCCESS;
 	resp.corrID = ID::UUID::create();
 	resp.message = "Hello there";
 
 	const Buffer buf = typeSerialiser.serialise( resp );
-	RefDataCommandResponse desResp;
+	RD::CommandResponse desResp;
 	typeSerialiser.deserialise( buf, desResp );
 	
 	ASSERT_EQ( resp.status, desResp.status );

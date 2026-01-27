@@ -31,13 +31,13 @@ function(ARQ_define_swig_wrapper LANGUAGE)
     target_include_directories(${SWIG_MODULE_TARGET} PRIVATE ${MASTER_INC_DIR})
 
     if(${LANGUAGE} STREQUAL "python")
-        swig_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ${SWIG_LINK_LIBS} Python3::Python)
+        target_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ${SWIG_LINK_LIBS} Python3::Python)
         # Workaround: Undefine _DEBUG for the SWIG Python extension to avoid python38_d.lib link errors
         #if (MSVC)
             #target_compile_definitions(${SWIG_MODULE_TARGET} PRIVATE SWIG_PYTHON_INTERPRETER_NO_DEBUG)
         #endif()
     elseif(${LANGUAGE} STREQUAL "csharp")
-        swig_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ${SWIG_LINK_LIBS})
+        target_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ${SWIG_LINK_LIBS})
     endif()
 endfunction()
 
