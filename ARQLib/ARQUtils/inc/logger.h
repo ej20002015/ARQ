@@ -72,7 +72,7 @@ public:
 		logInternal( level, loc, module, contextArgs, std::move( msg ), exception );
 	}
 
-	ARQUtils_API [[nodiscard]] bool shouldLog( const LogLevel level );
+	[[nodiscard]] ARQUtils_API bool shouldLog( const LogLevel level );
 
 	ARQUtils_API LogLevel getLevel () const;
 	ARQUtils_API LogLevel getLevel2() const;
