@@ -4,6 +4,7 @@
 #include <ARQCore/refdata_meta.h>
 
 #include <algorithm>
+#include <ranges>
 
 void RefDataCmdExecutorService::onStartup()
 {

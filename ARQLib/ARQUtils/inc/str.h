@@ -8,6 +8,7 @@
 #include <span>
 #include <concepts>
 #include <format>
+#include <cstdint>
 
 namespace ARQ
 {

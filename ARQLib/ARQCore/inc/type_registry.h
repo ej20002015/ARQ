@@ -15,7 +15,7 @@ struct ARQType
 
 #define ARQ_REG_TYPE( T )                                          \
 template<>                                                         \
-struct ::ARQ::ARQType<T>                                           \
+struct ARQ::ARQType<T>                                             \
 {                                                                  \
 	inline static constexpr std::string_view name() { return #T; } \
 };

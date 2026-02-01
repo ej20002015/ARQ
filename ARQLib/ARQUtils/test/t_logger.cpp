@@ -159,9 +159,28 @@ TEST_F( LoggerTest, BasicLogging )
 
 TEST_F( LoggerTest, LogLevels )
 {
+    auto waitForLogs = [&]( size_t expectedCount, std::chrono::milliseconds timeout = std::chrono::seconds(2) ) 
+    {
+        auto start = std::chrono::steady_clock::now();
+        std::vector<JSON> currentLogs;
+
+        while ( std::chrono::steady_clock::now() - start < timeout )
+        {
+            currentLogs = getAllLogJson( "LogLevels" );
+            if ( currentLogs.size() >= expectedCount )
+                return currentLogs;
+            std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+        }
+        return currentLogs;
+    };
+
     Log( Module::CORE ).trace( "Trace message." ); // Should log
     Log( Module::CORE ).debug( "Debug message." ); // Should log
     Log( Module::CORE ).info( "Info message." );   // Should log
+
+    Log::logger().flush();
+
+    waitForLogs( 3 );
 
     // Dynamically change level to WARN using the public setLevel method
     ASSERT_NO_THROW( Log::logger().setLevelForSink( 0, LogLevel::WARN ) );
@@ -175,9 +194,8 @@ TEST_F( LoggerTest, LogLevels )
     Log( Module::CORE ).error( "Error message." );       // Should log
     Log( Module::CORE ).critical( "Critical message." ); // Should log
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Async logger so wait here
-
-    auto jsonLogs = getAllLogJson( "LogLevels" );
+    Log::logger().flush();
+    auto jsonLogs = waitForLogs( 6 );
     // Expected: trace, debug, info1, warn, error, critical
     ASSERT_EQ( jsonLogs.size(), 6 );
 
