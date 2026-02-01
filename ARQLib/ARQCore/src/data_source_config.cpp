@@ -4,7 +4,8 @@
 #include <ARQUtils/error.h>
 #include <ARQUtils/sys.h>
 #include <ARQUtils/toml.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
+#include <ARQCore/lib.h>
 
 #include <filesystem>
 #include <fstream>
@@ -43,7 +44,7 @@ void DataSourceConfigManager::iLoad( const std::optional<std::string_view> tomlC
 	{
 		// Need to read from file
 
-		const std::filesystem::path configFilepath = Sys::cfgDir() / "datasources" / std::format( "{}.toml", Sys::env() );
+		const std::filesystem::path configFilepath = Sys::cfgDir() / "datasources" / std::format( "{}.toml", LibContext::Inst().env() );
 
 		std::ifstream ifs( configFilepath );
 		if( !ifs.is_open() )

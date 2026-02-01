@@ -15,7 +15,7 @@ namespace ARQ
 namespace Time
 {
 
-uint64_t unixTimestampMillis() noexcept;
+ARQUtils_API uint64_t unixTimestampMillis() noexcept;
 
 template<typename Dur>
 concept c_Duration = requires {
@@ -79,8 +79,8 @@ public:
 	ARQUtils_API explicit Date( const std::chrono::year_month_day ymd );
 	Date() = default;
 
-	static Date now();
-	static Date nowUTC();
+	ARQUtils_API static Date now();
+	ARQUtils_API static Date nowUTC();
 
 	[[nodiscard]] inline bool isValid() const noexcept { return m_ymd.has_value() ? m_ymd->ok() : false; };
 
@@ -181,7 +181,7 @@ public:
 	ARQUtils_API explicit DateTime( const std::chrono::system_clock::time_point tp );
 	DateTime() = default;
 
-	static DateTime nowUTC();
+	ARQUtils_API static DateTime nowUTC();
 
 	// TODO: Provide timezone conversion functions
 
@@ -241,7 +241,7 @@ public:
 
 	ARQUtils_API friend std::ostream& operator<<( std::ostream& os, const DateTime& date );
 
-	std::string fmtISO8601() const;
+	ARQUtils_API std::string fmtISO8601() const;
 
 	friend struct std::formatter<DateTime>;
 

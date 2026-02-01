@@ -25,10 +25,10 @@ class DynaLib
 public:
 	ARQUtils_API DynaLib() = default;
 	ARQUtils_API explicit DynaLib( const std::string_view name );
-	~DynaLib();
+	ARQUtils_API ~DynaLib();
 
-	void load( const std::string_view name );
-	void unload();
+	ARQUtils_API void load( const std::string_view name );
+	ARQUtils_API void unload();
 
 	[[nodiscard]] ARQUtils_API bool isLoaded() const noexcept { return m_nativeHandle != nullptr; }
 

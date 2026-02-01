@@ -1,7 +1,7 @@
 #include "connection.h"
 
 #include <ARQUtils/error.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 #include <ARQCore/data_source_config.h>
 
 namespace ARQ

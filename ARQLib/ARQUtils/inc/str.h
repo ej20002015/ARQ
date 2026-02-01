@@ -1,4 +1,5 @@
 #pragma once
+#include <ARQUtils/dll.h>
 
 #include <ARQUtils/core.h>
 
@@ -14,8 +15,8 @@ namespace ARQ
 namespace Str
 {
 
-std::string wstr2Str( const std::wstring& wstr );
-std::wstring str2Wstr( const std::string& str );
+ARQUtils_API std::string wstr2Str( const std::wstring& wstr );
+ARQUtils_API std::wstring str2Wstr( const std::string& str );
 
 /**
  * @brief Checks if a substring exists within a string.
@@ -33,7 +34,7 @@ constexpr bool contains( std::string_view str, std::string_view subStr ) noexcep
  * @param str The input string view to convert.
  * @return A new string with all characters converted to uppercase.
  */
-std::string toUpper( const std::string_view str );
+ARQUtils_API std::string toUpper( const std::string_view str );
 
 /**
  * @brief Joins a range of strings into a single string with a specified delimiter.

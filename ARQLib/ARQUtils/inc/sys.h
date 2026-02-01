@@ -1,4 +1,5 @@
 #pragma once
+#include <ARQUtils/dll.h>
 
 #include <filesystem>
 #include <string>
@@ -9,11 +10,9 @@ namespace ARQ
 namespace Sys
 {
 
-const std::filesystem::path& tempDir();
-const std::filesystem::path& logDir();
-const std::filesystem::path& cfgDir();
-
-const std::string_view env();
+ARQUtils_API const std::filesystem::path& tempDir();
+ARQUtils_API const std::filesystem::path& logDir();
+ARQUtils_API const std::filesystem::path& cfgDir();
 
 }
 

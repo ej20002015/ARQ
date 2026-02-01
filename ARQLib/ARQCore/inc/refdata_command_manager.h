@@ -9,7 +9,7 @@
 #include <ARQCore/streaming_service.h>
 #include <ARQCore/type_registry.h>
 #include <ARQCore/serialiser.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 
 #include <map>
 #include <functional>

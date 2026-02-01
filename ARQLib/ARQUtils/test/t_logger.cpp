@@ -1,9 +1,10 @@
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 #include <gtest/gtest.h>
 
 #include <ARQUtils/json.h>
 #include <ARQUtils/error.h>
 
+#define SPDLOG_USE_STD_FORMAT
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/details/log_msg.h>
 
@@ -70,6 +71,7 @@ class LoggerTest : public ::testing::Test
 {
 protected:
     std::shared_ptr<TestSink_mt> m_testSink;
+    std::unique_ptr<Logger>      m_loggerInst;
 
     void SetUp() override
     {
@@ -77,26 +79,24 @@ protected:
         m_testSink = std::make_shared<TestSink_mt>();
 
         // 2. Configure the logger specifically for testing
-        LoggerConfig cfg = {
-            .loggerName = "LoggerTest",
-            .disableConsoleLogger = true,
-            .disableFileLogger = true,
-            .flushLevel = LogLevel::TRACE,
-            .customSinks = { m_testSink },
-        };
+        LoggerConfig cfg;
+        cfg.primarySinkDest = "none";
+        cfg.secondarySinkDest = "none";
+        cfg.customSinks = { m_testSink };
 
-        ASSERT_NO_THROW( Log::init( cfg ) ) << "Log::init threw an exception during SetUp.";
-        Log::setLevel( LogLevel::TRACE );
+        m_loggerInst = std::make_unique<Logger>( cfg );
+
+        Logger::setGlobalInst( m_loggerInst.get() );
     }
 
     void TearDown() override
     {
-        ASSERT_NO_THROW( Log::fini() );
+        Logger::setGlobalInst( nullptr );
     }
 
     JSON getFirstLogJson( const std::string& context_msg = "" )
     {
-        Log::flush();
+        Log::logger().flush();
         std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
         auto messages = m_testSink->get_messages();
         if( messages.empty() )
@@ -110,7 +110,7 @@ protected:
 
     std::vector<JSON> getAllLogJson( const std::string& context_msg = "" )
     {
-        Log::flush();
+        Log::logger().flush();
         std::this_thread::sleep_for( std::chrono::milliseconds( 1 ) );
         auto messages = m_testSink->get_messages();
         std::vector<JSON> jsonObjects;
@@ -159,18 +159,16 @@ TEST_F( LoggerTest, BasicLogging )
 
 TEST_F( LoggerTest, LogLevels )
 {
-    GTEST_SKIP() << "Log levels not working properly atm - needs to be investigated how it's done properly per sink";
-
     Log( Module::CORE ).trace( "Trace message." ); // Should log
     Log( Module::CORE ).debug( "Debug message." ); // Should log
     Log( Module::CORE ).info( "Info message." );   // Should log
 
     // Dynamically change level to WARN using the public setLevel method
-    ASSERT_NO_THROW( Log::setLevel( LogLevel::WARN ) );
+    ASSERT_NO_THROW( Log::logger().setLevelForSink( 0, LogLevel::WARN ) );
 
     // Verify level change took effect (using shouldLog)
-    EXPECT_FALSE( Log::shouldLog( LogLevel::INFO ) );
-    EXPECT_TRUE( Log::shouldLog( LogLevel::WARN ) );
+    EXPECT_FALSE( Log::logger().shouldLog( LogLevel::INFO ) );
+    EXPECT_TRUE( Log::logger().shouldLog( LogLevel::WARN ) );
 
     Log( Module::CORE ).info( "Info message 2." );       // Should NOT log
     Log( Module::CORE ).warn( "Warn message." );         // Should log
@@ -409,7 +407,7 @@ TEST_F( LoggerTest, MultiThreadedBasic )
     EXPECT_EQ( errCount.load(), 0 ) << "Exceptions occurred in logging threads.";
 
     // Check total number of messages logged
-    Log::flush();
+    Log::logger().flush();
     size_t final_count = m_testSink->message_count();
     EXPECT_EQ( final_count, numThreads * logsPerThread )
         << "Incorrect total number of log messages received.";

@@ -1,4 +1,5 @@
 #pragma once
+#include <ARQUtils/dll.h>
 
 #include <format>
 #include <string>
@@ -25,8 +26,6 @@ namespace ARQ
 #endif
 
 // Based on Peter Muldoon's OmegaException class presented at CppCon 2023
-// TODO: add support for data
-// TODO: add stacktraces
 // https://www.youtube.com/watch?v=Oy-VTqz1_58&t=1579s
 
 class ARQException
@@ -44,7 +43,7 @@ public:
 
     const std::source_location& where() const { return m_location; }
 
-    std::string str() const;
+    ARQUtils_API std::string str() const;
 
     const std::stacktrace& stack() const { return backtrace; }
 private:

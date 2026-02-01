@@ -20,6 +20,8 @@ int main( int argc, char* argv[] )
         return 1;
     }
 
+    // TODO: Init ARQLib
+
     std::string dshId = argv[1];
     std::string targetTopic = argv[2];
 

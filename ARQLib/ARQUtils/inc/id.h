@@ -33,7 +33,7 @@ struct UUID
     std::string toString() const { return uuidToStr( *this ); }
 };
 
-std::ostream& operator<<( std::ostream& os, const UUID& uuid );
+ARQUtils_API std::ostream& operator<<( std::ostream& os, const UUID& uuid );
 
 }
 }

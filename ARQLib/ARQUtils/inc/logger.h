@@ -1,5 +1,5 @@
 #pragma once
-#include <ARQCore/dll.h>
+#include <ARQUtils/dll.h>
 
 #include <ARQUtils/core.h>
 #include <ARQUtils/error.h>
@@ -10,7 +10,7 @@
 #include <map>
 #include <shared_mutex>
 #include <optional>
-
+#include <atomic>
 
 // Fwd declare
 namespace spdlog { class logger; }
@@ -29,23 +29,15 @@ enum class LogLevel
 	TRACE,
 };
 
-static constexpr LogLevel DEFAULT_LOG_LEVEL   = LogLevel::INFO;
-static constexpr auto     DEFAULT_LOGGER_NAME = "ARQLib";
+static constexpr LogLevel DEFAULT_LOG_LEVEL = LogLevel::INFO;
+static constexpr auto     LOG_NAME          = "ARQLib";
 
 struct LoggerConfig
 {
-	std::string loggerName = DEFAULT_LOGGER_NAME;
-
-	bool disableConsoleLogger = false;
-	bool disableFileLogger    = false;
-
-	LogLevel consoleLoggerLevel = DEFAULT_LOG_LEVEL;
-	LogLevel fileLoggerLevel    = DEFAULT_LOG_LEVEL;
-	LogLevel globalLoggerLevel  = LogLevel::TRACE;
-
-	LogLevel flushLevel         = LogLevel::ERRO;
-
-	std::filesystem::path fileLoggerDir = Sys::logDir();
+	LogLevel    primarySinkLogLevel   = DEFAULT_LOG_LEVEL;
+	LogLevel    secondarySinkLogLevel = DEFAULT_LOG_LEVEL;
+	std::string primarySinkDest       = "stdout";
+	std::string secondarySinkDest     = ( Sys::logDir() / "ARQLib.log" ).string();
 
 	std::vector<std::shared_ptr<spdlog::sinks::sink>> customSinks;
 };
@@ -53,8 +45,12 @@ struct LoggerConfig
 class Logger
 {
 public:
-	ARQCore_API Logger( const LoggerConfig& cfg = LoggerConfig() );
-	ARQCore_API ~Logger();
+	static ARQUtils_API Logger* globalInst();
+	static ARQUtils_API void    setGlobalInst( Logger* const logger );
+
+public:
+	ARQUtils_API Logger( const LoggerConfig& cfg = LoggerConfig() );
+	ARQUtils_API ~Logger();
 
 	template<typename... Args>
 	void log( const LogLevel level, const std::source_location& loc, const Module module, const JSON& contextArgs, const std::format_string<Args...> fmt, Args&&... args )
@@ -76,22 +72,31 @@ public:
 		logInternal( level, loc, module, contextArgs, std::move( msg ), exception );
 	}
 
-	[[nodiscard]] bool shouldLog( const LogLevel level );
+	ARQUtils_API [[nodiscard]] bool shouldLog( const LogLevel level );
 
-	LogLevel getLevel() const;
-	LogLevel getLevel2() const;
-	void setLevel( const LogLevel level );
-	void setLevel2( const LogLevel level );
+	ARQUtils_API LogLevel getLevel () const;
+	ARQUtils_API LogLevel getLevel2() const;
+	ARQUtils_API LogLevel getLevelForSink( const size_t sinkIndex ) const;
+	ARQUtils_API void     setLevel ( const LogLevel level );
+	ARQUtils_API void     setLevel2( const LogLevel level );
+	ARQUtils_API void     setLevelForSink( const size_t sinkIndex, const LogLevel level );
 
-	void flush();
+	ARQUtils_API void flush();
 
 private:
-	void logInternal( const LogLevel level, const std::source_location& loc, const Module module, const JSON& contextArgs, std::string&& msg, const std::optional<std::reference_wrapper< const ARQException>> exception = std::nullopt );
+	std::shared_ptr<spdlog::sinks::sink> createSink( const std::string_view logDest, const LogLevel logLevel );
+
+	ARQUtils_API void logInternal( const LogLevel level, const std::source_location& loc, const Module module, const JSON& contextArgs, std::string&& msg, const std::optional<std::reference_wrapper< const ARQException>> exception = std::nullopt );
+
+private:
+	ARQUtils_API static std::atomic<Logger*> s_globalLoggerInstance;
 
 private:
 	LoggerConfig m_cfg;
 
-	std::shared_ptr<spdlog::logger> m_logger;
+	std::shared_ptr<spdlog::logger>      m_spdLogger;
+	std::shared_ptr<spdlog::sinks::sink> m_primarySink;
+	std::shared_ptr<spdlog::sinks::sink> m_secondarySink;
 
 	std::string m_procName;
 	int32_t     m_procID;
@@ -103,17 +108,7 @@ inline static bool s_initLoggerThread = true;
 class Log
 {
 public:
-	ARQCore_API static void init( const LoggerConfig& cfg = LoggerConfig() );
-	ARQCore_API static void fini();
-
-	[[nodiscard]] ARQCore_API static bool shouldLog( const LogLevel level );
-
-	ARQCore_API static LogLevel getLevel();
-	ARQCore_API static LogLevel getLevel2();
-	ARQCore_API static void setLevel( const LogLevel level );
-	ARQCore_API static void setLevel2( const LogLevel level );
-
-	ARQCore_API static void flush();
+	static ARQUtils_API Logger& logger();
 
 	Log( const Module module, const JSON& contextArgs = JSON::object(), const std::source_location& loc = std::source_location::current() )
 		: m_module( module )
@@ -125,75 +120,75 @@ public:
 	template<typename... Args>
 	void critical( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->log( LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void error( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->log( LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void warn( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->log( LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void info( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->log( LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void debug( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->log( LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void trace( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->log( LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->log( LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 
 	template<typename... Args>
 	void critical( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->logException( exception, LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void error( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->logException( exception, LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void warn( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->logException( exception, LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void info( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->logException( exception, LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void debug( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->logException( exception, LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void trace( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( s_globalLogger )
-			s_globalLogger->logException( exception, LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		if( Logger::globalInst() )
+			Logger::globalInst()->logException( exception, LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 
 public:
@@ -205,12 +200,12 @@ public:
 		class WriteLock
 		{
 		public:
-			ARQCore_API ~WriteLock();
+			ARQUtils_API ~WriteLock();
 			WriteLock( const WriteLock& ) = delete;
 			WriteLock& operator=( const WriteLock& ) = delete;
 
-			ARQCore_API JSON& operator->() { return *m_context; }
-			ARQCore_API JSON& operator*() { return *m_context; }
+			ARQUtils_API JSON& operator->() { return *m_context; }
+			ARQUtils_API JSON& operator*() { return *m_context; }
 
 		private:
 			WriteLock( JSON* const context, const std::function<void( void )>& onConstruction, const std::function<void( void )>& onDestruction );
@@ -225,12 +220,12 @@ public:
 		class ReadLock
 		{
 		public:
-			ARQCore_API ~ReadLock();
+			ARQUtils_API ~ReadLock();
 			ReadLock( const ReadLock& ) = delete;
 			ReadLock& operator=( const ReadLock& ) = delete;
 
-			ARQCore_API const JSON& operator->() const { return *m_context; }
-			ARQCore_API const JSON& operator*()  const { return *m_context; }
+			ARQUtils_API const JSON& operator->() const { return *m_context; }
+			ARQUtils_API const JSON& operator*()  const { return *m_context; }
 
 		private:
 			ReadLock( const JSON* const context, const std::function<void( void )>& onConstruction, const std::function<void( void )>& onDestruction );
@@ -251,8 +246,8 @@ public:
 			class Scoped
 			{
 			public:
-				ARQCore_API explicit Scoped( const JSON& contextArgs );
-				ARQCore_API ~Scoped();
+				ARQUtils_API explicit Scoped( const JSON& contextArgs );
+				ARQUtils_API ~Scoped();
 
 				Scoped( const Scoped& ) = delete;
 				Scoped& operator=( const Scoped& ) = delete;
@@ -261,8 +256,8 @@ public:
 				std::map<std::string, std::optional<JSON>> m_prevState;
 			};
 
-			[[nodiscard]] ARQCore_API static ReadLock  read();
-			[[nodiscard]] ARQCore_API static WriteLock write();
+			[[nodiscard]] ARQUtils_API static ReadLock  read();
+			[[nodiscard]] ARQUtils_API static WriteLock write();
 		};
 
 		class Thread
@@ -272,8 +267,8 @@ public:
 			class Scoped
 			{
 			public:
-				ARQCore_API explicit Scoped( const JSON& contextArgs );
-				ARQCore_API ~Scoped();
+				ARQUtils_API explicit Scoped( const JSON& contextArgs );
+				ARQUtils_API ~Scoped();
 
 				Scoped( const Scoped& ) = delete;
 				Scoped& operator=( const Scoped& ) = delete;
@@ -282,26 +277,24 @@ public:
 				std::map<std::string, std::optional<JSON>> m_prevState;
 			};
 
-			[[nodiscard]] ARQCore_API static ReadLock  read();
-			[[nodiscard]] ARQCore_API static WriteLock write();
+			[[nodiscard]] ARQUtils_API static ReadLock  read();
+			[[nodiscard]] ARQUtils_API static WriteLock write();
 		};
 
 	private:
 
-		ARQCore_API static              JSON s_global;
-		            static thread_local JSON t_thread;
+		ARQUtils_API static              JSON s_global;
+		             static thread_local JSON t_thread;
 
-		ARQCore_API static std::shared_mutex s_globalMut;
+		ARQUtils_API static std::shared_mutex s_globalMut;
 
 		friend class Logger;
 	};
 
 private:
-	ARQCore_API static std::unique_ptr<Logger> s_globalLogger;
-
-	Module m_module;
+	Module               m_module;
 	std::source_location m_loc;
-	JSON m_contextArgs;
+	JSON                 m_contextArgs;
 };
 
 }

@@ -3,8 +3,8 @@
 #include <ARQUtils/id.h>
 #include <ARQUtils/enum.h>
 #include <ARQUtils/str.h>
+#include <ARQUtils/logger.h>
 #include <ARQCore/data_source_config.h>
-#include <ARQCore/logger.h>
 
 #include <kafka/KafkaProducer.h>
 

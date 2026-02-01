@@ -48,6 +48,14 @@ public:
     }
 
     ARQUtils_API virtual void bindEnum( const std::string_view flag, const std::map<std::string, int>& map, std::function<void( const int32_t& )> setter, int32_t currentVal, const std::string_view& desc, const std::string_view& env, ArgPolicy policy ) = 0;
+
+    ARQUtils_API virtual bool parse( int argc, char* argv[] ) = 0;
+
+    ARQUtils_API virtual int printExitMsgAndGetRC() const = 0;
+
+    ARQUtils_API virtual std::string dump() const = 0;
+
+    ARQUtils_API virtual void allowExtras() = 0;
 };
 
 class ConfigWrangler : public IConfigWrangler
@@ -66,11 +74,13 @@ public: // IConfigWrangler overrides
     ARQUtils_API void bindEnum( const std::string_view flag, const std::map<std::string, int>& map, std::function<void( const int32_t& )> setter, int32_t currentVal, const std::string_view& help, const std::string_view& env, ArgPolicy policy ) override;
 
 public: // Methods
-	ARQUtils_API bool parse( int argc, char* argv[] );
+	ARQUtils_API bool parse( int argc, char* argv[] ) override;
 
-    ARQUtils_API int printExitMsgAndGetRC() const;
+    ARQUtils_API int printExitMsgAndGetRC() const override;
 
-    ARQUtils_API std::string dump() const;
+    ARQUtils_API std::string dump() const override;
+
+    ARQUtils_API void allowExtras() override;
 
 private:
     template<typename T>

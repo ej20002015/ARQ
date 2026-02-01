@@ -5,6 +5,7 @@
 #include <ARQUtils/str.h>
 
 #include <csignal>
+#include <regex>
 
 namespace ARQ
 {
@@ -23,9 +24,19 @@ int ServiceRunner::tryRunImpl( int argc, char* argv[] )
 		return runImpl( argc, argv );
 	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 	if( arqExc.what().size() )
-		Log( Module::EXE ).critical( arqExc, "Exiting after unhandled exception thrown in service runner" );
+	{
+		if( Logger::globalInst() )
+			Log( Module::EXE ).critical( arqExc, "Exiting after unhandled exception thrown in service runner" );
+		else
+			std::cerr << "Exiting after unhandled exception thrown in service runner - " << arqExc.what();
+	}
 	else if( errMsg.size() )
-		Log( Module::EXE ).critical( "Exiting after unhandled exception thrown in service runner - what: ", errMsg );
+	{
+		if( Logger::globalInst() )
+			Log( Module::EXE ).critical( "Exiting after unhandled exception thrown in service runner - what: ", errMsg );
+		else
+			std::cerr << "Exiting after unhandled exception thrown in service runner - what: " << errMsg;
+	}
 
 	return SvcExitCodes::UNKNOWN_ERROR;
 }
@@ -37,15 +48,12 @@ int ServiceRunner::runImpl( int argc, char* argv[] )
 
 	registerSignalHandlers();
 
-	// Register configuration options and parse
+	// Register configuration options and init library
 
 	addConfigOptions();
-	if( !m_cfgWrangler.parse( argc, argv ) )
-		return m_cfgWrangler.printExitMsgAndGetRC();
+	LibGuard guard( argc, argv, m_cfgWrangler );
 	
-	Log( Module::EXE ).info( "Service configuration:\n{}", m_cfgWrangler.dump() );
-	
-	applyCommonOptions();
+	logConfig();
 
 	// Set up and start admin HTTP server
 
@@ -96,13 +104,11 @@ void ServiceRunner::registerSignalHandlers()
 
 void ServiceRunner::addConfigOptions()
 {
-	Log( Module::EXE ).debug( "Adding service configuration options..." ); // TODO: this will never log because log level is not set yet so is still at default (INFO) - sort out setting of log level
+	Log( Module::EXE ).debug( "Adding service configuration options..." );
 
 	// Add common config options
 
-	m_cfgWrangler.add(     m_service.m_baseConfig.env,       "--env,-E",           "Set the ARQ environment",                    "ARQ_env"              );
-	m_cfgWrangler.addEnum( m_service.m_baseConfig.logLevel,  "--log.level,-L",     "Set the log level",                          "ARQ_log_level"        );
-	m_cfgWrangler.add(     m_service.m_baseConfig.adminPort, "--adminServer.port", "Set the port used by the http admin server", "ARQ_adminServer_port" );
+	m_cfgWrangler.add( m_service.m_baseConfig.adminPort, "--svc.adminServer.port", "Set the port used by the http admin server", "ARQ_svc_adminServer_port" );
 
 	// Add service-specific config options
 
@@ -111,12 +117,23 @@ void ServiceRunner::addConfigOptions()
 	Log( Module::EXE ).debug( "Finished adding service configuration options" );
 }
 
-void ServiceRunner::applyCommonOptions()
+void ARQ::ServiceRunner::logConfig()
 {
-	Log::setLevel(  m_service.m_baseConfig.logLevel  );
-	Log::setLevel2( m_service.m_baseConfig.logLevel2 );
+	const std::string configDump = m_cfgWrangler.dump();
+	Log( Module::EXE ).info( "Service Config: {}", configDump );
 
-	// TODO: Be able to set the env
+	// Also log each item indivdually to make it more human readable
+	std::stringstream ss( configDump );
+	std::string line;
+	while( std::getline( ss, line ) )
+	{
+		line.erase( std::remove( line.begin(), line.end(), '\"' ), line.end() );
+		line.erase( std::remove( line.begin(), line.end(), '\'' ), line.end() );
+		line = std::regex_replace( line, std::regex( R"(\\\\)" ), R"(\)" );
+
+		if( !line.empty() )
+			Log( Module::EXE ).info( "   {}", line );
+	}
 }
 
 void ServiceRunner::setUpAdminServer()
@@ -176,13 +193,22 @@ void ServiceRunner::setUpAdminServer()
 
 	m_adminServer.Get( "/admin/logLevel", [this]( const http::Request& req, http::Response& res )
 	{
-		LogLevel currentLevel = Log::getLevel();
-		res.set_content( std::format( "Current log level: {}", Enum::enum_name( currentLevel ) ), "text/plain" );
+		const LogLevel level = Log::logger().getLevel();
+		res.set_content( std::format( "LogLevel: {}", Enum::enum_name( level ) ), "text/plain" );
 		res.status = 200;
 	} );
 
-	m_adminServer.Post( "/admin/logLevel", [this]( const http::Request& req, http::Response& res )
+	m_adminServer.Get( "/admin/logLevel2", [this] ( const http::Request& req, http::Response& res )
 	{
+		const LogLevel level = Log::logger().getLevel2();
+		res.set_content( std::format( "LogLevel2: {}", Enum::enum_name( level ) ), "text/plain" );
+		res.status = 200;
+	} );
+
+	const auto setLevel = [this] ( const http::Request& req, http::Response& res, bool primaryLevel )
+	{
+		const std::string_view logLevelStr = primaryLevel ? "LogLevel" : "LogLevel2";
+
 		std::string levelStr = req.body;
 		std::optional<LogLevel> level = Enum::enum_cast<LogLevel>( Str::toUpper( levelStr ) );
 		if( !level )
@@ -192,12 +218,22 @@ void ServiceRunner::setUpAdminServer()
 		}
 		else
 		{
-			Log( Module::EXE ).info( "Received log level change request via admin endpoint, changing log level to {}", Enum::enum_name( *level ) );
-			Log::setLevel( *level );
+			Log( Module::EXE ).info( "Received {} change request via admin endpoint - changing to {}", logLevelStr, Enum::enum_name( *level ) );
+			primaryLevel ? Log::logger().setLevel( *level ) : Log::logger().setLevel2( *level );
 
-			res.set_content( std::format( "Log level updated to: {}", Enum::enum_name( *level ) ), "text/plain" );
+			res.set_content( std::format( "{} updated to: {}", logLevelStr, Enum::enum_name( *level ) ), "text/plain" );
 			res.status = 200;
 		}
+	};
+
+	m_adminServer.Post( "/admin/logLevel", [&setLevel] ( const http::Request& req, http::Response& res )
+	{
+		setLevel( req, res, true );
+	} );
+
+	m_adminServer.Post( "/admin/logLevel2", [&setLevel] ( const http::Request& req, http::Response& res )
+	{
+		setLevel( req, res, false );
 	} );
 
 	// Configuration dump endpoint

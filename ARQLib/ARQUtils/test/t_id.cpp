@@ -4,7 +4,7 @@
 #include <ARQUtils/error.h>
 
 #include <string>
-#include <set> // Used for a more robust uniqueness test
+#include <set>
 
 using namespace ARQ;
 using namespace ARQ::ID;

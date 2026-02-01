@@ -11,7 +11,7 @@ ConfigWrangler::ConfigWrangler( const std::string_view appDescription, const std
     if( appName.size() )
 	    m_cliApp.name( appName.data() );
 
-	m_cliApp.set_config( "--config,-c", "config.toml", "Read configuration from a toml or ini file" );
+	m_cliApp.set_config( "--config,-c", "app_config.toml", "Read configuration from a toml or ini file" );
 	m_cliApp.set_help_flag( "--help,-?", "Print help text" );
 }
 
@@ -83,6 +83,11 @@ int ConfigWrangler::printExitMsgAndGetRC() const
 std::string ConfigWrangler::dump() const
 {
     return m_cliApp.config_to_str( true );
+}
+
+void ConfigWrangler::allowExtras()
+{
+    m_cliApp.allow_extras();
 }
 
 template<typename T>

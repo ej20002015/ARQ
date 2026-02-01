@@ -28,7 +28,7 @@ struct Name
 		, date( date )
 	{}
 
-	std::string str() const;
+	ARQMarket_API std::string str() const;
 
 	ARQMarket_API static const Name LIVE;
 };
@@ -44,10 +44,10 @@ class MarketReadLock
 {
 public:
     // Lock all entities
-    explicit MarketReadLock( const Market& market );
+    ARQMarket_API explicit MarketReadLock( const Market& market );
     
     // Lock specific entities
-    explicit MarketReadLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
+    ARQMarket_API explicit MarketReadLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
     
     ~MarketReadLock() = default; // RAII handles unlock
     
@@ -65,10 +65,10 @@ class MarketWriteLock
 {
 public:
     // Lock all entities
-    explicit MarketWriteLock( const Market& market );
+    ARQMarket_API explicit MarketWriteLock( const Market& market );
     
     // Lock specific entities
-    explicit MarketWriteLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
+    ARQMarket_API explicit MarketWriteLock( const Market& market, const std::vector<MDEntities::Type>& entityTypes );
 
     ~MarketWriteLock() = default; // RAII handles unlock
     

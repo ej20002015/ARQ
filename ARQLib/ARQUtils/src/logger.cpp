@@ -1,10 +1,11 @@
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 
 #include <ARQUtils/os.h>
 #include <ARQUtils/time.h>
 #include <ARQUtils/enum.h>
 #include <ARQUtils/str.h>
 
+#define SPDLOG_USE_STD_FORMAT
 #include <spdlog/spdlog.h>
 #include <spdlog/async.h>
 #include <spdlog/async_logger.h>
@@ -48,6 +49,18 @@ spdlog::level::level_enum ARQLevelToSpdlog( const LogLevel level )
 	}
 }
 
+std::atomic<Logger*> Logger::s_globalLoggerInstance = nullptr;
+
+Logger* ARQ::Logger::globalInst()
+{
+	return s_globalLoggerInstance.load();
+}
+
+void ARQ::Logger::setGlobalInst( Logger* const logger )
+{
+	s_globalLoggerInstance.store( logger );
+}
+
 Logger::Logger( const LoggerConfig& cfg )
 	: m_cfg( cfg )
 {
@@ -58,41 +71,22 @@ Logger::Logger( const LoggerConfig& cfg )
 		m_exeModuleStr = Str::toUpper( std::filesystem::path( m_procName ).stem().string() );
 
 		std::vector<spdlog::sink_ptr> logSinks;
-		if( !m_cfg.disableConsoleLogger )
-		{
-			spdlog::sink_ptr consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-			consoleSink->set_level( ARQLevelToSpdlog( m_cfg.consoleLoggerLevel ) );
-			consoleSink->set_pattern( "%^%v%$" );
-			logSinks.push_back( consoleSink );
-		}
-		if( !m_cfg.disableFileLogger )
-		{
-			static constexpr size_t MAX_SIZE = 1024 * 1024 * 5; // 5 mebibytes
-			static constexpr size_t FILE_COUNT = 5;
-			if( !std::filesystem::exists( m_cfg.fileLoggerDir ) )
-				std::filesystem::create_directories( m_cfg.fileLoggerDir );
-			const std::filesystem::path filepath = m_cfg.fileLoggerDir / std::format( "{0}.log", m_cfg.loggerName );
-			spdlog::sink_ptr fileSink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( filepath.string(), MAX_SIZE, FILE_COUNT );
-			fileSink->set_level( ARQLevelToSpdlog( m_cfg.fileLoggerLevel ) );
-			fileSink->set_pattern( "%v" ); // File doesn't include colour info
-			logSinks.push_back( fileSink );
-		}
-		if( m_cfg.customSinks.size() )
-			logSinks.insert( logSinks.end(), m_cfg.customSinks.begin(), m_cfg.customSinks.end() );
-		if( logSinks.empty() )
-			std::cout << "WARNING: No sinks have been added to the logger";
+		m_primarySink   = createSink( m_cfg.primarySinkDest,   m_cfg.primarySinkLogLevel   );
+		m_secondarySink = createSink( m_cfg.secondarySinkDest, m_cfg.secondarySinkLogLevel );
+		if( m_primarySink )
+			logSinks.push_back( m_primarySink );
+		if( m_secondarySink )
+			logSinks.push_back( m_secondarySink );
+		logSinks.insert( logSinks.end(), m_cfg.customSinks.begin(), m_cfg.customSinks.end() );
 
 		// Create a global thread pool with queue size of 8192 and 1 worker thread
-		if( s_initLoggerThread )
-		{
+		if( spdlog::thread_pool() == nullptr )
 			spdlog::init_thread_pool( 8192, 1 );
-			s_initLoggerThread = false;
-		}
 
-		m_logger = std::make_shared<spdlog::async_logger>( m_cfg.loggerName, logSinks.begin(), logSinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block );
-		m_logger->flush_on( ARQLevelToSpdlog( m_cfg.flushLevel ) );
-		m_logger->set_level( ARQLevelToSpdlog( m_cfg.globalLoggerLevel ) );
-		spdlog::register_logger( m_logger );
+		m_spdLogger = std::make_shared<spdlog::async_logger>( LOG_NAME, logSinks.begin(), logSinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block );
+		m_spdLogger->flush_on( ARQLevelToSpdlog( LogLevel::ERRO ) );
+		m_spdLogger->set_level( ARQLevelToSpdlog( LogLevel::TRACE ) ); // Set to lowest level, individual sinks will filter
+		spdlog::register_logger( m_spdLogger );
 	}
 	catch( ARQException& e )
 	{
@@ -116,37 +110,97 @@ Logger::Logger( const LoggerConfig& cfg )
 
 Logger::~Logger()
 {
-	spdlog::drop( m_cfg.loggerName );
+	spdlog::drop( LOG_NAME );
 }
 
 bool Logger::shouldLog( const LogLevel level )
 {
-	return m_logger->should_log( ARQLevelToSpdlog( level ) );
+	return std::any_of( m_spdLogger->sinks().begin(), m_spdLogger->sinks().end(),
+						[level] ( spdlog::sink_ptr& sinkPtr ) { return sinkPtr->should_log( ARQLevelToSpdlog( level ) ); } );
 }
 
 LogLevel Logger::getLevel() const
 {
-	return spdlogLevelToARQ( m_logger->sinks()[0]->level() );
+	return spdlogLevelToARQ( m_primarySink->level() );
 }
 
 LogLevel Logger::getLevel2() const
 {
-	return spdlogLevelToARQ( m_logger->sinks()[1]->level() );
+	return spdlogLevelToARQ( m_secondarySink->level() );
+}
+
+LogLevel Logger::getLevelForSink( const size_t sinkIndex ) const
+{
+	const size_t numSinks = m_spdLogger->sinks().size();
+	if( sinkIndex >= numSinks )
+		throw ARQException( std::format( "Logger has {} sinks - no such sink at index {}", numSinks, sinkIndex ) );
+
+	if( m_spdLogger->sinks()[sinkIndex] )
+		return spdlogLevelToARQ( m_spdLogger->sinks()[sinkIndex]->level() );
+	else
+		throw ARQException( std::format( "Logger sink at index {} is a nullptr ", sinkIndex ) );
 }
 
 void Logger::setLevel( const LogLevel level )
 {
-	m_logger->sinks()[0]->set_level( ARQLevelToSpdlog( level ) );
+	m_primarySink->set_level( ARQLevelToSpdlog( level ) );
 }
 
 void Logger::setLevel2( const LogLevel level )
 {
-	m_logger->sinks()[1]->set_level( ARQLevelToSpdlog( level ) );
+	m_secondarySink->set_level( ARQLevelToSpdlog( level ) );
+}
+
+void Logger::setLevelForSink( const size_t sinkIndex, const LogLevel level )
+{
+	const size_t numSinks = m_spdLogger->sinks().size();
+	if( sinkIndex >= numSinks )
+		throw ARQException( std::format( "Logger has {} sinks - no such sink at index {}", numSinks, sinkIndex ) );
+
+	if( m_spdLogger->sinks()[sinkIndex] )
+		m_spdLogger->sinks()[sinkIndex]->set_level( ARQLevelToSpdlog( level ) );
+	else
+		throw ARQException( std::format( "Logger sink at index {} is a nullptr ", sinkIndex ) );
 }
 
 void Logger::flush()
 {
-	m_logger->flush();
+	m_spdLogger->flush();
+}
+
+std::shared_ptr<spdlog::sinks::sink> Logger::createSink( const std::string_view logDest, const LogLevel logLevel )
+{
+	std::shared_ptr<spdlog::sinks::sink> sink;
+
+	if( logDest == "stdout" )
+	{
+		sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+		sink->set_pattern( "%^%v%$" );
+	}
+	else if( logDest == "stderr" )
+	{
+		sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+		sink->set_pattern( "%^%v%$" );
+	}
+	else if( logDest == "none" )
+	{
+		sink = nullptr;
+	}
+	else
+	{
+		// Assume it's a file path
+		static constexpr size_t MAX_SIZE = 1024 * 1024 * 5; // 5 mebibytes
+		static constexpr size_t FILE_COUNT = 5;
+
+		sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>( logDest.data(), MAX_SIZE, FILE_COUNT);
+		sink->set_pattern( "%v" ); // File doesn't include colour info
+		
+	}
+
+	if( sink )
+		sink->set_level( ARQLevelToSpdlog( logLevel ) );
+
+	return sink;
 }
 
 void Logger::logInternal( const LogLevel level, const std::source_location& loc, const Module module, const JSON& contextArgs, std::string&& msg, const std::optional<std::reference_wrapper<const ARQException>> exception )
@@ -164,14 +218,14 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 
 		// Create the full log entry (use OrderedJSON to preserve order of keys)
 		OrderedJSON logEntry;
-		logEntry["timestamp"]      = Time::DateTime::nowUTC().fmtISO8601();
-		logEntry["level"]          = Enum::enum_name( level );
-		logEntry["proc_id"]        = m_procID;
-		logEntry["proc_name"]      = m_procName;
-		logEntry["thread_id"]      = OS::threadID();
-		logEntry["thread_name"]    = OS::threadName();
-		logEntry["module"]         = module == Module::EXE ? m_exeModuleStr : Enum::enum_name( module );
-		logEntry["source"]         = {
+		logEntry["timestamp"] = Time::DateTime::nowUTC().fmtISO8601();
+		logEntry["level"] = Enum::enum_name( level );
+		logEntry["proc_id"] = m_procID;
+		logEntry["proc_name"] = m_procName;
+		logEntry["thread_id"] = OS::threadID();
+		logEntry["thread_name"] = OS::threadName();
+		logEntry["module"] = module == Module::EXE ? m_exeModuleStr : Enum::enum_name( module );
+		logEntry["source"] = {
 			{ "file",     loc.file_name() },
 			{ "line",     loc.line() },
 			{ "function", loc.function_name() }
@@ -189,16 +243,16 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 			};
 		}
 		if( !ctx.empty() )
-			logEntry["context"]    = std::move( ctx );
-		logEntry["message"]        = std::move( msg );
+			logEntry["context"] = std::move( ctx );
+		logEntry["message"] = std::move( msg );
 
 		// Dispatch to spdlog
-		m_logger->log( spdlog::source_loc{}, ARQLevelToSpdlog( level ), logEntry.dump() );
+		m_spdLogger->log( spdlog::source_loc{}, ARQLevelToSpdlog( level ), logEntry.dump() );
 	}
 	catch( const ARQException& e )
 	{
 		// Log formatting/JSON error to stderr to avoid crashing application
-		std::cerr << fmtInternalErrStr( std::format( "Logger internal error: {0}",  e.what() ) ) << std::endl;
+		std::cerr << fmtInternalErrStr( std::format( "Logger internal error: {0}", e.what() ) ) << std::endl;
 	}
 	catch( const std::exception& e )
 	{
@@ -210,77 +264,16 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 	}
 }
 
-// TODO: Get rid of this guard!!!!!
-static struct LoggerGuard
+Logger& Log::logger()
 {
-	LoggerGuard()
-	{
-		Log::init();
-	}
+	ARQ_ASSERT( Logger::globalInst() );
+	if( !Logger::globalInst() )
+		throw ARQException( "Global logger not initialised" );
 
-	~LoggerGuard()
-	{
-		Log::fini();
-	}
-} lg;
-
-std::unique_ptr<Logger> Log::s_globalLogger;
-
-void Log::init( const LoggerConfig& cfg )
-{
-	s_globalLogger = std::make_unique<Logger>( cfg );
+	return *Logger::globalInst();
 }
 
-void Log::fini()
-{
-	//s_globalLogger.reset();
-	spdlog::shutdown();
-	s_initLoggerThread = true;
-}
-
-bool Log::shouldLog( const LogLevel level )
-{
-	if( s_globalLogger )
-		return s_globalLogger->shouldLog( level );
-
-	return false;
-}
-
-LogLevel Log::getLevel()
-{
-	if( s_globalLogger )
-		return s_globalLogger->getLevel();
-
-	return LogLevel::CRITICAL;
-}
-
-ARQCore_API LogLevel Log::getLevel2()
-{
-	if( s_globalLogger )
-		return s_globalLogger->getLevel2();
-
-	return LogLevel::CRITICAL;
-}
-
-void Log::setLevel( const LogLevel level )
-{
-	if( s_globalLogger )
-		s_globalLogger->setLevel( level );
-}
-
-void Log::setLevel2( const LogLevel level )
-{
-	if( s_globalLogger )
-		s_globalLogger->setLevel2( level );
-}
-
-void Log::flush()
-{
-	if( s_globalLogger )
-		s_globalLogger->flush();
-}
-
-JSON Log::Context::s_global = JSON::object();
+             JSON Log::Context::s_global = JSON::object();
 thread_local JSON Log::Context::t_thread = JSON::object();
 std::shared_mutex Log::Context::s_globalMut;
 
@@ -314,14 +307,14 @@ Log::Context::ReadLock::~ReadLock()
 
 Log::Context::WriteLock Log::Context::Global::write()
 {
-	auto getLock =  [] () { s_globalMut.lock(); };
+	auto getLock  = [] () { s_globalMut.lock(); };
 	auto freeLock = [] () { s_globalMut.unlock(); };
 	return WriteLock( &s_global, getLock, freeLock );
 }
 
 Log::Context::ReadLock Log::Context::Global::read()
 {
-	auto getLock =  [] () { s_globalMut.lock_shared(); };
+	auto getLock  = [] () { s_globalMut.lock_shared(); };
 	auto freeLock = [] () { s_globalMut.unlock_shared(); };
 	return ReadLock( &s_global, getLock, freeLock );
 }

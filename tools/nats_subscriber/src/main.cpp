@@ -63,6 +63,8 @@ int main( int argc, char* argv[] )
         return 1;
     }
 
+    // TODO: Init ARQLib
+
     std::string dsh = argv[1];
     std::string topicPattern = argv[2];
 

@@ -3,7 +3,7 @@
 #include <ARQCore/messaging_service.h>
 
 #include <ARQUtils/enum.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 
 namespace ARQ::RD
 {

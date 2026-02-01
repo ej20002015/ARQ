@@ -8,44 +8,38 @@ namespace fs = std::filesystem;
 namespace Sys
 {
 
-std::filesystem::path iTempDir()
+fs::path iTempDir()
 {
     return fs::current_path().root_path() / "tmp" / "ARQ";
 }
 
-const std::filesystem::path& tempDir()
+const fs::path& tempDir()
 {
-    static const std::filesystem::path dir = iTempDir();
+    static const fs::path dir = iTempDir();
     return dir;
 }
 
-std::filesystem::path iLogDir()
+fs::path iLogDir()
 {
     return tempDir() / "log";
 }
 
-const std::filesystem::path& logDir()
+const fs::path& logDir()
 {
-    static const std::filesystem::path dir = iLogDir();
+    static const fs::path dir = iLogDir();
     return dir;
 }
 
-std::filesystem::path iCfgDir()
+fs::path iCfgDir()
 {
     // TODO: Will be a place near the shipped binaries, but for now just put in temp dir
     return tempDir() / "config";
 }
 
-const std::filesystem::path& cfgDir()
+const fs::path& cfgDir()
 {
-    static const std::filesystem::path dir = iCfgDir();
+    static const fs::path dir = iCfgDir();
     return dir;
-}
-
-const std::string_view env()
-{
-    // TODO: Read from environment
-    return "PROD";
 }
 
 }

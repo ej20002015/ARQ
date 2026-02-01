@@ -1,4 +1,5 @@
 #pragma once
+#include <ARQCore/dll.h>
 
 #include <ARQCore/refdata_entities.h>
 
@@ -13,17 +14,17 @@ struct EntityMetadata
 };
 
 // Shorthand functions
-const EntityMetadata& get( const std::string_view entityName );
-const std::vector<EntityMetadata>& getAll();
+ARQCore_API const EntityMetadata& get( const std::string_view entityName );
+ARQCore_API const std::vector<EntityMetadata>& getAll();
 
 class EntityMetadataRegistry
 {
 public:
-	[[nodiscard]] static const EntityMetadataRegistry& inst();
+	[[nodiscard]] ARQCore_API static const EntityMetadataRegistry& inst();
 
-	const EntityMetadata& get( const std::string_view entityName ) const;
+	ARQCore_API const EntityMetadata& get( const std::string_view entityName ) const;
 
-	[[nodiscard]] const std::vector<EntityMetadata>& getAll() const { return m_metadataList; };
+	[[nodiscard]] ARQCore_API const std::vector<EntityMetadata>& getAll() const { return m_metadataList; };
 
 public:
 	template<c_RefData T>
@@ -40,7 +41,7 @@ public:
 	};
 
 private:
-	[[nodiscard]] static EntityMetadataRegistry& instMut();
+	[[nodiscard]] ARQCore_API static EntityMetadataRegistry& instMut();
 
 private:
 	std::vector<EntityMetadata> m_metadataList;

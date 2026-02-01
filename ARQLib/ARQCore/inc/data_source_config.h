@@ -32,7 +32,7 @@ struct DataSourceConfig
 	{
 
 		std::string hostname;
-		uint16_t port;
+		uint16_t    port;
 
 		std::optional<std::string> username;
 		std::optional<std::string> password;

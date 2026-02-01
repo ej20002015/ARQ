@@ -3,7 +3,8 @@
 
 #include <ARQUtils/http.h>
 #include <ARQUtils/cfg_wrangler.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
+#include <ARQCore/lib.h>
 
 #include <atomic>
 #include <thread>
@@ -95,9 +96,6 @@ public: // Optional overrides
 protected:
 	struct BaseConfig
 	{
-		std::string env       = "PROD";
-		LogLevel    logLevel  = DEFAULT_LOG_LEVEL;
-		LogLevel    logLevel2 = DEFAULT_LOG_LEVEL;
 		int32_t     adminPort = 8080;
 	} m_baseConfig;
 
@@ -170,7 +168,7 @@ private: // Singleton instance
 	ARQCore_API static ServiceRunner* s_instPtr;
 
 private:
-	ServiceRunner( ServiceBase& service );
+	ARQCore_API ServiceRunner( ServiceBase& service );
 
 	ARQCore_API int tryRunImpl( int argc, char* argv[] );
 	int runImpl( int argc, char* argv[] );
@@ -178,7 +176,7 @@ private:
 	void registerSignalHandlers();
 
 	void addConfigOptions();
-	void applyCommonOptions();
+	void logConfig();
 
 	void setUpAdminServer();
 	bool runAdminServer();

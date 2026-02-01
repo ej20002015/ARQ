@@ -366,14 +366,8 @@ set(CLICKHOUSE_CPP_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp")
 set(CLICKHOUSE_CPP_CONTRIB_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/clickhouse-cpp/contrib/absl")
 set(CLICKHOUSE_CPP_LINK_LIB "clickhouse-cpp-lib")
 
-# spdlog setup (TODO: Move to just using the header - much simpler and calls are bastracted behind ARQ logger anyway so build times not a concern)
-set(CMAKE_FOLDER "vendor/spdlog")
-set(SPDLOG_USE_STD_FORMAT ON CACHE BOOL "Use std::format for spdlog" FORCE)
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # Export all symbols on Windows (dllexport not setup properly in spdlog library)
-add_subdirectory(vendor/spdlog)
+# spdlog setup (just use the header - much simpler and calls are abstracted behind ARQ logger anyway so build times won't be too bad)
 set(SPDLOG_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/spdlog/include")
-set(SPDLOG_LINK_LIB "spdlog")
-unset(CMAKE_FOLDER)
 
 # nlohmann json setup
 set(CMAKE_FOLDER "vendor/nlohmann_json")

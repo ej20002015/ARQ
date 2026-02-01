@@ -1,7 +1,7 @@
 #include <ARQCore/refdata_source.h>
 
 #include <ARQCore/dynalib_cache.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 #include <ARQCore/data_source_config.h>
 
 namespace ARQ::RD

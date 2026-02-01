@@ -4,7 +4,7 @@
 #include <ARQMarket/managed_market.h>
 
 #include <ARQUtils/core.h>
-#include <ARQCore/logger.h>
+#include <ARQUtils/logger.h>
 #include <ARQCore/mktdata_source.h>
 
 #include <vector>

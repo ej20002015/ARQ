@@ -20,13 +20,13 @@ public:
 		NO
 	};
 
-	Timer( const StartOnConstruction soc = YES );
+	ARQUtils_API Timer( const StartOnConstruction soc = YES );
 
 	Timer( const Timer& ) = delete;
 	Timer& operator=( const Timer& ) = delete;
 
-	void start();
-	void stop();
+	ARQUtils_API void start();
+	ARQUtils_API void stop();
 
 	template<Time::c_Duration Duration = std::chrono::nanoseconds>
 	Duration duration()

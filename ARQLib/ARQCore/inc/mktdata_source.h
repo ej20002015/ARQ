@@ -16,7 +16,7 @@ using MktDataSourceCreateFunc = std::add_pointer<IMktDataSource*( const std::str
 class MktDataSourceFactory
 {
 public:
-	[[nodiscard]] static std::shared_ptr<IMktDataSource> create( const std::string_view dsh );
+	[[nodiscard]] ARQCore_API static std::shared_ptr<IMktDataSource> create( const std::string_view dsh );
 
 	// Not threadsafe but should only really be used on startup / for testing anyway
 	ARQCore_API static void addCustomSource( const std::string_view dsh, const std::shared_ptr<IMktDataSource>& source );
