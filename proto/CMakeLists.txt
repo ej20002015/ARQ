@@ -1,6 +1,7 @@
 file(GLOB_RECURSE PROTO_FILES "*.proto")
 
 set(PROTO_BINARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/proto_gen/proto_gen")
+file(MAKE_DIRECTORY ${PROTO_BINARY_DIR})
 set(PROTO_IMPORT_DIRS ".")
 
 get_target_property(PROTOC_EXE_PATH gRPC::protoc IMPORTED_LOCATION)

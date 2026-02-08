@@ -93,7 +93,7 @@ ID::UUID CommandManager::sendCommandImpl( Buffer&& buf, const std::string key, c
 	// Register in-flight command before sending to avoid race
 	createInFlightCommand( corrID, callback, timeout );
 
-	m_streamProducer->send( msg, [=] ( const StreamProducerMessageMetadata& messageMetadata, std::optional<StreamError> error )
+	m_streamProducer->send( msg, [=, this] ( const StreamProducerMessageMetadata& messageMetadata, std::optional<StreamError> error )
 	{
 		Log::Context::Thread::Scoped logCtx( logContext );
 

@@ -1,12 +1,6 @@
-[submodule "vendor/aeron"]
-	path = vendor/aeron
-	url = git@github.com:aeron-io/aeron.git
 [submodule "vendor/clickhouse-cpp"]
 	path = vendor/clickhouse-cpp
 	url = https://github.com/ClickHouse/clickhouse-cpp.git
-[submodule "vendor/flatbuffers"]
-	path = vendor/flatbuffers
-	url = git@github.com:google/flatbuffers.git
 [submodule "vendor/spdlog"]
 	path = vendor/spdlog
 	url = git@github.com:gabime/spdlog.git

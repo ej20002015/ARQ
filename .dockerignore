@@ -1,0 +1,17 @@
+# CMake output
+.build
+.install
+
+# VSCode
+.vs
+.vscode
+
+# Visual Studio C# and .NET
+bin/
+obj/
+
+# Codegen
+codegen/script/.codegen_cache.json
+
+# Python
+.venv

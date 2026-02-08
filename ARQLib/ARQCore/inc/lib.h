@@ -36,7 +36,7 @@ class LibContext
 public:
 	struct Config
 	{
-		std::string env       = "PROD";
+		std::string env       = "DEFAULT";
 		LogLevel    logLevel  = DEFAULT_LOG_LEVEL;
 		LogLevel    logLevel2 = DEFAULT_LOG_LEVEL;
 		std::string logDest   = "stdout";

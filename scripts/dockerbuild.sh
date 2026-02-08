@@ -1,7 +1,5 @@
 #!/bin/bash
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 pushd "$SCRIPT_DIR/.." > /dev/null
-cmake -B .build -S . -G "Ninja Multi-Config"
-ec=$?
+docker build -t arq:latest -f infra/docker/Dockerfile .
 popd > /dev/null
-exit $ec

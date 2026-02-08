@@ -434,34 +434,6 @@ endfunction()
 # Create protobuf/grpc files
 add_subdirectory(proto)
 
-# Aeron set up (TODO: Move to it's own ARQAeron project)
-
-set(CMAKE_FOLDER "vendor/aeron")
-add_subdirectory(vendor/aeron)
-unset(CMAKE_FOLDER)
-set(AERON_CLIENT_CPP_WRAPPER_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/aeron/aeron-client/src/main/cpp_wrapper")
-set(AERON_CLIENT_C_INC_PATH "${CMAKE_SOURCE_DIR}/vendor/aeron/aeron-client/src/main/c")
-set(AERON_CLIENT_CPP_WRAPPER_LINK_LIB "aeron_client_wrapper")
-set(AERON_CLIENT_C_LINK_LIB "aeron")
-add_definitions(-DCLIENT_SHARED)
-
-set(AERON_FILENAME "aeron.dll")
-# make copied file be dependent from one which is build.
-# Note, that DEPENDS here creates dependencies both from the target
-# and from the file it creates.
-add_custom_command(OUTPUT
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/${AERON_FILENAME}
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:aeron>
-        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}
-    DEPENDS aeron
-)
-# Create target which consume the command via DEPENDS.
-add_custom_target(copy_aeron_dll ALL
-    DEPENDS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR}/${AERON_FILENAME}
-)
-
-set_target_properties(copy_aeron_dll PROPERTIES FOLDER "custom_targets")
-
 # ClickHouse setup
 set(CMAKE_FOLDER "vendor/clickhouse-cpp")
 if(UNIX)
@@ -507,8 +479,6 @@ add_subdirectory(ARQLib/ARQKafka)
 add_subdirectory(services/RefData/RefDataCmdExecutor)
 
 # Add tools subdirectories
-add_subdirectory(tools/aeron_publisher)
-add_subdirectory(tools/aeron_subscriber)
 add_subdirectory(tools/kafka_example)
 add_subdirectory(tools/nats_publisher)
 add_subdirectory(tools/nats_subscriber)
