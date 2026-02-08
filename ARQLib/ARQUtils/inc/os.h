@@ -6,6 +6,7 @@
 
 #include <string>
 #include <cstdint>
+#include <filesystem>
 
 namespace ARQ
 {
@@ -13,12 +14,13 @@ namespace ARQ
 namespace OS
 {
 
-[[nodiscard]] ARQUtils_API std::string_view procName();
-[[nodiscard]] ARQUtils_API int32_t procID();
+[[nodiscard]] ARQUtils_API const std::filesystem::path& procPath();
+[[nodiscard]] ARQUtils_API std::string_view             procName();
+[[nodiscard]] ARQUtils_API int32_t                      procID();
 
 [[nodiscard]] ARQUtils_API std::string_view threadName();
-ARQUtils_API void setThreadName( const std::string_view name );
-[[nodiscard]] ARQUtils_API int32_t threadID();
+              ARQUtils_API void             setThreadName( const std::string_view name );
+[[nodiscard]] ARQUtils_API int32_t          threadID();
 
 class DynaLib
 {

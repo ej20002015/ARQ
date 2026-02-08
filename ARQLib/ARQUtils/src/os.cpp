@@ -14,7 +14,6 @@
 	#include <dlfcn.h>
 #endif
 
-#include <filesystem>
 #include <atomic>
 
 namespace ARQ
@@ -23,9 +22,9 @@ namespace ARQ
 namespace OS
 {
 
-std::string iProcName()
+static std::filesystem::path iProcPath()
 {
-	std::string procName;
+	std::filesystem::path procPath;
 
 	#ifdef _WIN32
 
@@ -34,10 +33,7 @@ std::string iProcName()
 	if( pathLen == 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER )
 		throw ARQException( "Could not get process name: GetModuleFileNameA failed" );
 	else
-	{
-		const std::filesystem::path fullExePath = buffer;
-		procName = fullExePath.filename().string();
-	}
+		procPath = buffer;
 
 	#else
 
@@ -48,22 +44,27 @@ std::string iProcName()
 	else
 	{
 		buffer[len] = '\0'; // Null-terminate the buffer
-		const std::filesystem::path fullExePath = buffer;
-		procName = fullExePath.filename().string();
+		procPath = buffer;
 	}
 
 	#endif
 
-	return procName;
+	return procPath;
+}
+
+const std::filesystem::path& procPath()
+{
+	static const std::filesystem::path procPath = iProcPath();
+	return procPath;
 }
 
 std::string_view procName()
 {
-	static const std::string procName = iProcName();
+	static const std::string procName = procPath().filename().string();
 	return procName;
 }
 
-int32_t iProcID()
+static int32_t iProcID()
 {
 	#ifdef _WIN32
 	return static_cast<int32_t>( GetCurrentProcessId() );
@@ -80,7 +81,7 @@ int32_t procID()
 
 static thread_local std::atomic<bool> t_updatedThreadName = false;
 
-std::string iThreadName()
+static std::string iThreadName()
 {
 	std::string threadName = "unnamed_thread";
 
@@ -141,7 +142,7 @@ void setThreadName( const std::string_view name )
 	t_updatedThreadName.store( true );
 }
 
-int32_t iThreadID()
+static int32_t iThreadID()
 {
 	#ifdef _WIN32
 	return static_cast<int32_t>( GetCurrentThreadId() );

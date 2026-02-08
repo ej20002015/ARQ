@@ -35,6 +35,24 @@ set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) # hack to prevent CTest adde
 
 include(FetchContent)
 
+# Handle ARQLib etc files
+
+set(CONFIG_SOURCE_DIR "${CMAKE_SOURCE_DIR}/ARQLib/etc")
+set(CONFIG_BUILD_DEST "${CMAKE_BINARY_DIR}/etc/ARQLib")
+
+# Create target to perform copy of config files
+add_custom_target(arq_config_copy
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${CONFIG_BUILD_DEST}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CONFIG_SOURCE_DIR}" "${CONFIG_BUILD_DEST}"
+    COMMENT "Updating build-tree config files..."
+    VERBATIM
+)
+set_target_properties(arq_config_copy PROPERTIES FOLDER "custom_targets")
+
+install(DIRECTORY "${CONFIG_SOURCE_DIR}/"
+    DESTINATION etc/ARQLib
+)
+
 # Download pre-built binaries / packages from ARQ_dependencies repo
 
 set(PACKAGES_DIR ${CMAKE_BINARY_DIR}/packages)
@@ -57,6 +75,68 @@ function(add_prebuilt_dependency NAME URL)
 
     # Set directory of extracted package variable in the PARENT_SCOPE, so the main script can access it.
     set(FETCHCONTENT_EXTRACTED_DIR_${NAME} ${LOCAL_SOURCE_DIR} PARENT_SCOPE)
+
+    # ------------- INSTALL -------------
+
+    # --- LINUX / UNIX (.so files in lib) ---
+    if(NOT WIN32)
+        # 1. Install DEBUG libraries (Only when building Debug)
+        if(EXISTS "${LOCAL_SOURCE_DIR}/debug/lib")
+            install(DIRECTORY "${LOCAL_SOURCE_DIR}/debug/lib/"
+                DESTINATION lib
+                CONFIGURATIONS Debug
+                USE_SOURCE_PERMISSIONS
+                FILES_MATCHING PATTERN "*.so*"
+                PATTERN "*.a" EXCLUDE
+            )
+        endif()
+
+        # 2. Install RELEASE libraries (For Release, RelWithDebInfo, MinSizeRel)
+        if(EXISTS "${LOCAL_SOURCE_DIR}/release/lib")
+            install(DIRECTORY "${LOCAL_SOURCE_DIR}/release/lib/"
+                DESTINATION lib
+                CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+                USE_SOURCE_PERMISSIONS
+                FILES_MATCHING PATTERN "*.so*"
+                PATTERN "*.a" EXCLUDE
+            )
+        endif()
+
+    # --- WINDOWS (.dll in bin, .lib in lib) ---
+    else()
+        # 1. Debug (DLLs + Libs)
+        if(EXISTS "${LOCAL_SOURCE_DIR}/debug/bin")
+            install(DIRECTORY "${LOCAL_SOURCE_DIR}/debug/bin/" 
+                DESTINATION bin 
+                CONFIGURATIONS Debug
+                FILES_MATCHING PATTERN "*.dll"
+            )
+        endif()
+        if(EXISTS "${LOCAL_SOURCE_DIR}/debug/lib")
+            install(DIRECTORY "${LOCAL_SOURCE_DIR}/debug/lib/" 
+                DESTINATION lib 
+                CONFIGURATIONS Debug
+                FILES_MATCHING PATTERN "*.lib"
+            )
+        endif()
+
+        # 2. Release (DLLs + Libs)
+        if(EXISTS "${LOCAL_SOURCE_DIR}/release/bin")
+            install(DIRECTORY "${LOCAL_SOURCE_DIR}/release/bin/" 
+                DESTINATION bin 
+                CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+                FILES_MATCHING PATTERN "*.dll"
+            )
+        endif()
+        if(EXISTS "${LOCAL_SOURCE_DIR}/release/lib")
+            install(DIRECTORY "${LOCAL_SOURCE_DIR}/release/lib/" 
+                DESTINATION lib 
+                CONFIGURATIONS Release RelWithDebInfo MinSizeRel
+                FILES_MATCHING PATTERN "*.lib"
+            )
+        endif()
+    endif()
+
 endfunction()
 
 set(ARQ_Dependencies_download_path "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha")
@@ -211,6 +291,20 @@ function(ARQ_define_dynalib TARGET)
     set_target_properties(${TARGET} PROPERTIES FOLDER "shared_libs")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
     source_group("inc" FILES ${INCLUDES})
+
+    # ------------- INSTALL -------------
+
+    install(TARGETS ${TARGET}
+        EXPORT ARQTargets
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+    )
+
+    # Setup RPATH for the library itself
+    # If this library loads OTHER libraries, it also needs to look in the same directory ($ORIGIN)
+    set_target_properties(${TARGET} PROPERTIES INSTALL_RPATH "$ORIGIN" )
+
 endfunction()
 
 function(ARQ_define_dynalib_tests DYNALIB_NAME)
@@ -285,6 +379,22 @@ function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
 
     set_target_properties(${EXE_NAME} PROPERTIES FOLDER ${FOLDER_NAME})
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
+
+    # ------------- INSTALL -------------
+
+    install(TARGETS ${EXE_NAME}
+        RUNTIME DESTINATION bin
+    )
+
+    # Set RPATH
+    if(NOT WIN32)
+        set_target_properties(${EXE_NAME} PROPERTIES
+            BUILD_WITH_INSTALL_RPATH FALSE
+            INSTALL_RPATH "$ORIGIN/../lib"
+            INSTALL_RPATH_USE_LINK_PATH FALSE
+        )
+    endif()
+
 endfunction()
 
 function(append_include_directories TARGET NEW_INCLUDES)

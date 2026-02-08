@@ -1,7 +1,12 @@
 #include <ARQCore/lib.h>
 
+#include <ARQUtils/os.h>
+
 namespace ARQ
 {
+
+// Static variables normally initialised by main thread
+const std::thread::id MAIN_THREAD_ID = std::this_thread::get_id();
 
 static void addLibOptions( Cfg::IConfigWrangler& cfgWrangler, LibContext::Config& cfg )
 {
@@ -66,6 +71,9 @@ LibContext& LibContext::Inst()
 LibContext::LibContext( const Config& cfg )
 	: m_config( cfg )
 {
+	if( std::this_thread::get_id() == MAIN_THREAD_ID )
+		OS::setThreadName( "Main" );
+
 	LoggerConfig logCfg{
 		.primarySinkLogLevel   = m_config.logLevel,
 		.secondarySinkLogLevel = m_config.logLevel2,

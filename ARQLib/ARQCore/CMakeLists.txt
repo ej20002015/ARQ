@@ -1,4 +1,5 @@
 ARQ_define_dynalib(ARQCore)
 target_link_libraries(ARQCore PUBLIC ARQUtils)
+add_dependencies(ARQCore arq_config_copy)
 
 ARQ_define_dynalib_tests(ARQCore)

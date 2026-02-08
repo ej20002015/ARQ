@@ -1,5 +1,6 @@
 # CMake output
 .build
+.install
 
 # VSCode
 .vs
