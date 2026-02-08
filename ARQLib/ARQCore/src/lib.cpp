@@ -2,6 +2,8 @@
 
 #include <ARQUtils/os.h>
 
+#include <thread>
+
 namespace ARQ
 {
 
