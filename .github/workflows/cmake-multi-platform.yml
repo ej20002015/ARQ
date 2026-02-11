@@ -81,24 +81,11 @@ jobs:
         fi
     
     # ----------------------------------------------------------------
-    # WINDOWS SETUP: Get Ninja and perform horrible cmake code patch for Zstd
+    # WINDOWS SETUP: Get Ninja
     # ----------------------------------------------------------------
     - name: Setup MSVC Dev Cmd (For Ninja)
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
-    # Patch the broken zstd vendor file to disable Assembly
-    - name: Patch Zstd for Ninja
-      if: matrix.os == 'windows-latest'
-      shell: pwsh
-      run: |
-        $path = "${{ github.workspace }}/vendor/clickhouse-cpp/contrib/zstd/zstd/CMakeLists.txt"
-        
-        if (Test-Path $path) {
-            echo "Patching $path to remove ASM_MASM..."
-            (Get-Content $path) -replace 'ASM_MASM', '' | Set-Content $path
-        } else {
-            echo "WARNING: Could not find zstd CMakeLists at $path. Check path if build fails."
-        }
 
     # ----------------------------------------------------------------
     # LINUX SETUP: Install Ninja, GCC 14 and Clang 18
@@ -149,7 +136,7 @@ jobs:
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
-        -DZSTD_ASM=OFF
+        -DZSTD_DISABLE_ASM=OFF
 
     - name: Configure CMake (Linux)
       if: matrix.os == 'ubuntu-latest'
