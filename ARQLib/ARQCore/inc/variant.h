@@ -27,18 +27,8 @@ public:
 	ARQCore_API VariantArr( VariantArr&& other ) noexcept;
 	ARQCore_API VariantArr& operator=( VariantArr&& other ) noexcept;
 
-	[[nodiscard]] const Variant& at( const uint32_t row, const uint32_t col = 0 ) const
-	{
-		if( row >= m_nRows || col >= m_nCols )
-			throw ARQException( "VariantArr: Out of bounds access" );
-
-		return m_data[row * m_nCols + col]; // Row-major ordering
-	}
-
-	[[nodiscard]] Variant& at( const uint32_t row, const uint32_t col = 0 )
-	{
-		return const_cast<Variant&>( const_cast<const VariantArr*>( this )->at( row, col ) );
-	}
+	[[nodiscard]] ARQCore_API const Variant& at( const uint32_t row, const uint32_t col = 0 ) const;
+	[[nodiscard]] ARQCore_API Variant&       at( const uint32_t row, const uint32_t col = 0 );
 
 	[[nodiscard]] uint32_t rows() const noexcept { return m_nRows; }
 	[[nodiscard]] uint32_t cols() const noexcept { return m_nCols; }
