@@ -81,11 +81,24 @@ jobs:
         fi
     
     # ----------------------------------------------------------------
-    # WINDOWS SETUP: Get Ninja
+    # WINDOWS SETUP: Get Ninja and patch Zstd to fix ASM build issue
     # ----------------------------------------------------------------
     - name: Setup MSVC Dev Cmd (For Ninja)
       if: matrix.os == 'windows-latest'
       uses: ilammy/msvc-dev-cmd@v1
+    - name: Patch Zstd for Ninja
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        $path = "${{ github.workspace }}/vendor/clickhouse-cpp/contrib/zstd/zstd/CMakeLists.txt"
+        if (Test-Path $path) {
+            echo "Patching $path..."
+            # 1. Remove ASM_MASM from project() calls
+            # 2. Comment out enable_language(ASM)
+            (Get-Content $path) -replace 'ASM_MASM', '' -replace 'enable_language\(ASM\)', '#enable_language(ASM)' | Set-Content $path
+        } else {
+            Write-Error "Could not find Zstd CMakeLists.txt at $path"
+        }
 
     # ----------------------------------------------------------------
     # LINUX SETUP: Install Ninja, GCC 14 and Clang 18
