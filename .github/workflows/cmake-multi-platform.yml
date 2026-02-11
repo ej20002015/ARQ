@@ -59,7 +59,7 @@ jobs:
     # Setup sccache for Windows
     - name: Setup sccache (Windows)
       if: matrix.os == 'windows-latest'
-      uses: Mozilla-Actions/sccache-action@v0.0.3
+      uses: Mozilla-Actions/sccache-action@v0.0.9
 
     # Setup ccache for Linux
     - name: Setup ccache (Linux)

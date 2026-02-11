@@ -16,15 +16,15 @@ namespace ARQ::Proto::RD
 ARQProtobuf_API void toProto( const ARQ::RD::Currency& arqEntity, Currency* const protoEntity );
 ARQProtobuf_API void toProto(ARQ::RD::Currency&& arqEntity, Currency* const protoEntity );
 
-ARQProtobuf_API [[nodiscard]] ARQ::RD::Currency fromProto( const Currency& protoEntity );
-ARQProtobuf_API [[nodiscard]] ARQ::RD::Currency fromProto( Currency&& protoEntity );
+[[nodiscard]] ARQProtobuf_API ARQ::RD::Currency fromProto( const Currency& protoEntity );
+[[nodiscard]] ARQProtobuf_API ARQ::RD::Currency fromProto( Currency&& protoEntity );
 
 // --- Converters for User (USER) ---
 
 ARQProtobuf_API void toProto( const ARQ::RD::User& arqEntity, User* const protoEntity );
 ARQProtobuf_API void toProto(ARQ::RD::User&& arqEntity, User* const protoEntity );
 
-ARQProtobuf_API [[nodiscard]] ARQ::RD::User fromProto( const User& protoEntity );
-ARQProtobuf_API [[nodiscard]] ARQ::RD::User fromProto( User&& protoEntity );
+[[nodiscard]] ARQProtobuf_API ARQ::RD::User fromProto( const User& protoEntity );
+[[nodiscard]] ARQProtobuf_API ARQ::RD::User fromProto( User&& protoEntity );
 
 }

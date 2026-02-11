@@ -21,8 +21,8 @@ namespace ARQ::Proto::RD
 ARQProtobuf_API void toProto( const ARQ::RD::{{ entity.name }}& arqEntity, {{ entity.name }}* const protoEntity );
 ARQProtobuf_API void toProto(ARQ::RD::{{ entity.name }}&& arqEntity, {{ entity.name }}* const protoEntity );
 
-ARQProtobuf_API [[nodiscard]] ARQ::RD::{{ entity.name }} fromProto( const {{ entity.name }}& protoEntity );
-ARQProtobuf_API [[nodiscard]] ARQ::RD::{{ entity.name }} fromProto( {{ entity.name }}&& protoEntity );
+[[nodiscard]] ARQProtobuf_API ARQ::RD::{{ entity.name }} fromProto( const {{ entity.name }}& protoEntity );
+[[nodiscard]] ARQProtobuf_API ARQ::RD::{{ entity.name }} fromProto( {{ entity.name }}&& protoEntity );
 
 {% endfor %}
 }
