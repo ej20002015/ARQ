@@ -86,12 +86,14 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y ninja-build
         
-        # If this leg of the matrix is GCC, install GCC-14 explicitly
+        # Install GCC-14 for everyone. 
+        # Even Clang needs this for the C++23 standard library headers (libstdc++).
+        sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+        sudo apt-get update
+        sudo apt-get install -y gcc-14 g++-14
+        
+        # If we are strictly using GCC, update the env vars to force version 14.
         if [ "${{ matrix.c_compiler }}" == "gcc" ]; then
-          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-          sudo apt-get update
-          sudo apt-get install -y gcc-14 g++-14
-          # Update the environment so CMake finds the specific version 14
           echo "CC=gcc-14" >> $GITHUB_ENV
           echo "CXX=g++-14" >> $GITHUB_ENV
         fi
