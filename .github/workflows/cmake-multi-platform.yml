@@ -148,11 +148,6 @@ jobs:
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }} --output-on-failure -C ${{ matrix.build_type }}
 
-    - name: Show sccache stats
-      if: always() # Run even if tests fail
-      shell: bash
-      run: sccache --show-stats
-
   # =========================================================
   # JOB 2: DOCKER PUBLISH (Only if tests pass)
   # =========================================================
