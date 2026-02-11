@@ -196,7 +196,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/arq-service
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/ARQ
           tags: |
             type=ref,event=branch
             type=semver,pattern={{version}}
