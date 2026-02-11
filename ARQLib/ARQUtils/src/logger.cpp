@@ -210,7 +210,7 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 		// Work out context
 		JSON ctx;
 		{
-			std::shared_lock<std::shared_mutex> l( Log::Context::s_globalMut );
+			std::shared_lock<std::shared_mutex> sl( Log::Context::s_globalMut );
 			ctx = Log::Context::s_global;
 		}
 		ctx.update( Log::Context::t_thread, true );
@@ -331,7 +331,7 @@ Log::Context::ReadLock Log::Context::Thread::read()
 
 Log::Context::Global::Scoped::Scoped( const JSON& contextArgs )
 {
-	std::unique_lock<std::shared_mutex>( s_globalMut );
+	std::unique_lock<std::shared_mutex> sl( s_globalMut );
 	JSON& targetJson = s_global;
 
 	for( const auto& [key, newValue] : contextArgs.items() )
@@ -348,7 +348,7 @@ Log::Context::Global::Scoped::Scoped( const JSON& contextArgs )
 
 Log::Context::Global::Scoped::~Scoped()
 {
-	std::unique_lock<std::shared_mutex>( s_globalMut );
+	std::unique_lock<std::shared_mutex> sl( s_globalMut );
 	JSON& targetJson = s_global;
 
 	for( const auto& [key, prevValue] : m_prevState )

@@ -136,6 +136,7 @@ jobs:
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
+        -DZSTD_ASM=OFF
 
     - name: Configure CMake (Linux)
       if: matrix.os == 'ubuntu-latest'
