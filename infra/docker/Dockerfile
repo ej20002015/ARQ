@@ -29,8 +29,8 @@ WORKDIR /src
 COPY . .
 
 # Install other dependencies using scripts
-RUN infra/docker/install_gcc.sh
-RUN infra/docker/install_ninja.sh
+RUN bash infra/docker/install_gcc.sh
+RUN bash infra/docker/install_ninja.sh
 
 # Tell cmake to use ccache
 ENV CMAKE_CXX_COMPILER_LAUNCHER=ccache

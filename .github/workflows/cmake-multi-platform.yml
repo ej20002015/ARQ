@@ -79,6 +79,13 @@ jobs:
           echo "CMAKE_CXX_COMPILER_LAUNCHER=ccache" >> $GITHUB_ENV
           echo "CMAKE_C_COMPILER_LAUNCHER=ccache" >> $GITHUB_ENV
         fi
+    
+    # ----------------------------------------------------------------
+    # WINDOWS SETUP: Get Ninja
+    # ----------------------------------------------------------------
+    - name: Setup MSVC Dev Cmd (For Ninja)
+      if: matrix.os == 'windows-latest'
+      uses: ilammy/msvc-dev-cmd@v1
 
     # ----------------------------------------------------------------
     # LINUX SETUP: Install Ninja, GCC 14 and Clang 18
@@ -124,9 +131,11 @@ jobs:
       run: >
         cmake -S ${{ github.workspace }}
         -B ${{ steps.strings.outputs.build-output-dir }}
+        -G "Ninja Multi-Config"
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
 
     - name: Configure CMake (Linux)
       if: matrix.os == 'ubuntu-latest'
