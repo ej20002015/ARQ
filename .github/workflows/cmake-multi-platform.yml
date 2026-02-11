@@ -81,7 +81,7 @@ jobs:
         fi
 
     # ----------------------------------------------------------------
-    # LINUX SETUP: Install Ninja, GCC 14 and Clang 17
+    # LINUX SETUP: Install Ninja, GCC 14 and Clang 18
     # ----------------------------------------------------------------
     - name: Install Dependencies (Linux)
       if: matrix.os == 'ubuntu-latest'
@@ -103,17 +103,16 @@ jobs:
           echo "CXX=g++-14" >> $GITHUB_ENV
         fi
 
-        # 3. Install & Configure Clang 17
+        # 3. Install & Configure Clang 18
         if [ "${{ matrix.c_compiler }}" == "clang" ]; then
           # Download the official LLVM install script
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          # Run it asking for version 17
-          sudo ./llvm.sh 17
+          sudo ./llvm.sh 18
           
           # Force the environment to use the new version
-          echo "CC=clang-17" >> $GITHUB_ENV
-          echo "CXX=clang++-17" >> $GITHUB_ENV
+          echo "CC=clang-18" >> $GITHUB_ENV
+          echo "CXX=clang++-18" >> $GITHUB_ENV
         fi
 
     # ----------------------------------------------------------------
