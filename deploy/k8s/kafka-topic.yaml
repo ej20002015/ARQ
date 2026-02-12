@@ -1,0 +1,15 @@
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: refdata-commands
+  labels:
+    # IMPORTANT: This label must match the label selector of the Kafka cluster
+    # configured in 'chatto'. Check apps/kafka/kafka.yaml in the chatto repo 
+    # to see what label it expects (often 'strimzi.io/cluster: my-cluster').
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 7200000  # 2 hours
+    segment.bytes: 1073741824

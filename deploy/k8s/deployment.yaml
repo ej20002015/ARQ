@@ -14,13 +14,13 @@ spec:
       labels:
         app: refdata-cmd-executor
     spec:
+      imagePullSecrets:
+        - name: arq-dockerhub-cred
       containers:
         - name: refdata-cmd-executor
           # This matches the image your CI pipeline just built
           image: ej20002011/arq:master
           imagePullPolicy: Always
-          imagePullSecrets:
-            - name: arq-dockerhub-cred
           resources:
             limits:
               memory: "2G"
