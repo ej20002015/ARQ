@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: refdata-cmd-executor
+  labels:
+    app: refdata-cmd-executor
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: refdata-cmd-executor
+  template:
+    metadata:
+      labels:
+        app: refdata-cmd-executor
+    spec:
+      containers:
+        - name: refdata-cmd-executor
+          # This matches the image your CI pipeline just built
+          image: ej20002011/arq:master
+          imagePullPolicy: Always
+          imagePullSecrets:
+            - name: arq-dockerhub-cred
+          resources:
+            limits:
+              memory: "2G"
+              cpu: "2"
+            requests:
+              memory: "512MG"
+              cpu: "500m"
