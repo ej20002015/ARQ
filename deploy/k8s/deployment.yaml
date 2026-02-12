@@ -21,6 +21,7 @@ spec:
           # This matches the image your CI pipeline just built
           image: ej20002011/arq:master
           imagePullPolicy: Always
+          command: ["RefDataCmdExecutor"]
           resources:
             limits:
               memory: "2G"
