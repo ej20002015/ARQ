@@ -6,4 +6,4 @@ commonLabels:
 
 resources:
   - deployment.yaml
-  #- kafka-topic.yaml
+  - kafka-rd-topics.yaml
