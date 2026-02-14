@@ -9,7 +9,7 @@
 # - 3 replicas and 2 in-sync for strong durability
 # ===================================
 
-apiVersion: kafka.strimzi.io/v1
+apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
   name: arq-refdata-updates-currency
@@ -25,7 +25,7 @@ spec:
 
 ---
 
-apiVersion: kafka.strimzi.io/v1
+apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
   name: arq-refdata-updates-user
@@ -48,7 +48,7 @@ spec:
 # - Retain for 30 days
 # - 2 replicas for some durability
 # ===================================
-apiVersion: kafka.strimzi.io/v1
+apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
   name: arq-refdata-commands-currency
@@ -64,7 +64,7 @@ spec:
 
 ---
 
-apiVersion: kafka.strimzi.io/v1
+apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
   name: arq-refdata-commands-user
