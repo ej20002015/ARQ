@@ -22,6 +22,32 @@ spec:
           image: ej20002011/arq:master
           imagePullPolicy: Always
           command: ["RefDataCmdExecutor"]
+
+          ports:
+            - name: admin-port
+              containerPort: 8080
+
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: admin-port
+            failureThreshold: 100 # 100 * 3 = 300 seconds = 5 minutes to give for startup
+            periodSeconds: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 5
+
           resources:
             limits:
               memory: "2G"
