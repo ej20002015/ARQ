@@ -6,4 +6,4 @@ commonLabels:
 
 resources:
   - deployment.yaml
-  #- kafka-rd-topics.yaml #Temproarily don't include to force deletion of topics
+  - kafka-rd-topics.yaml
