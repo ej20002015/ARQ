@@ -8,7 +8,7 @@
 # ===================================
 #           Update Topics           
 # ===================================
-# - 20 partitions
+# - 4 partitions
 # - Retain forever
 # - 3 replicas and 2 in-sync for strong durability
 # ===================================
@@ -27,7 +27,7 @@ metadata:
     strimzi.io/cluster: kafka-cluster
 spec:
   topicName: ARQ.RefData.Updates.{{ entity.name }}
-  partitions: 20
+  partitions: 4
   replicas: 3
   config:
     retention.ms: -1
@@ -39,7 +39,7 @@ spec:
 # ===================================
 #           Command Topics
 # ===================================
-# - 20 partitions (co-partitioned with Update topics so must be the same)
+# - 4 partitions (co-partitioned with Update topics so must be the same)
 # - Retain for 30 days
 # - 2 replicas for some durability
 # ===================================
@@ -57,7 +57,7 @@ metadata:
     strimzi.io/cluster: kafka-cluster
 spec:
   topicName: ARQ.RefData.Commands.{{ entity.name }}
-  partitions: 20
+  partitions: 4
   replicas: 2
   config:
     retention.ms: 2592000000
