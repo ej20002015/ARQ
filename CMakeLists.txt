@@ -54,25 +54,31 @@ install(DIRECTORY "${CONFIG_SOURCE_DIR}/"
 )
 
 # Download pre-built binaries / packages from ARQ_dependencies repo
+set(ARQ_Dependencies_download_path "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha")
 
 set(PACKAGES_DIR ${CMAKE_BINARY_DIR}/packages)
 
+# optionally use a local deps root to avoid FetchContent downloads
+# Example usage:
+#   cmake -DARQ_DEPS_ROOT=/path/to/deps ..
+set(ARQ_DEPS_ROOT "" CACHE PATH "Path to prebuilt dependencies")
+
 function(add_prebuilt_dependency NAME URL)
-    message(STATUS "Downloading pre-built dependency: ${NAME}")
-
-    set(LOCAL_SOURCE_DIR "${PACKAGES_DIR}/${NAME}")
-
-    FetchContent_Declare(
-        ${NAME}
-        URL ${URL}
-        SOURCE_DIR "${LOCAL_SOURCE_DIR}"
-        DOWNLOAD_EXTRACT_TIMESTAMP true # Stamp extracted files with download time rather than original time
-    )
-
-    # This performs the download and extraction.
-    FetchContent_MakeAvailable(${NAME})
-    message(STATUS "Downloaded and extracted ${NAME} to location: ${LOCAL_SOURCE_DIR}")
-
+    if (ARQ_DEPS_ROOT AND EXISTS "${ARQ_DEPS_ROOT}/${NAME}")
+        message(STATUS "Using local dependency: ${NAME} from ${ARQ_DEPS_ROOT}/${NAME}")
+        set(LOCAL_SOURCE_DIR "${ARQ_DEPS_ROOT}/${NAME}")
+    else()
+        message(STATUS "Downloading pre-built dependency: ${NAME}")
+        set(LOCAL_SOURCE_DIR "${PACKAGES_DIR}/${NAME}")
+        FetchContent_Declare(
+            ${NAME}
+            URL ${URL}
+            SOURCE_DIR "${LOCAL_SOURCE_DIR}"
+            DOWNLOAD_EXTRACT_TIMESTAMP true
+        )
+        FetchContent_MakeAvailable(${NAME})
+        message(STATUS "Downloaded and extracted ${NAME} to location: ${LOCAL_SOURCE_DIR}")
+    endif()
     # Set directory of extracted package variable in the PARENT_SCOPE, so the main script can access it.
     set(FETCHCONTENT_EXTRACTED_DIR_${NAME} ${LOCAL_SOURCE_DIR} PARENT_SCOPE)
 
@@ -138,8 +144,6 @@ function(add_prebuilt_dependency NAME URL)
     endif()
 
 endfunction()
-
-set(ARQ_Dependencies_download_path "https://github.com/ej20002015/ARQ_dependencies/releases/download/1.0.0-alpha")
 
 if(WIN32)
     add_prebuilt_dependency(openssl-v3.6.0 "${ARQ_Dependencies_download_path}/openssl-v3.6.0-windows-x64.zip")
