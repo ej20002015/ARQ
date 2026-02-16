@@ -2,6 +2,7 @@
 #include <ARQUtils/enum.h>
 #include <ARQUtils/time.h>
 #include <ARQCore/messaging_service.h>
+#include <ARQCore/lib.h>
 
 #include <iostream>
 #include <string>
@@ -13,23 +14,21 @@ using namespace ARQ;
 
 int main( int argc, char* argv[] )
 {
-    if( argc < 3 )
-    {
-        std::cerr << "Usage: " << argv[0] << " <DSH> <TOPIC>" << std::endl;
-        std::cerr << "Example: " << argv[0] << " NATS quotes.us" << std::endl;
-        return 1;
-    }
+    Cfg::ConfigWrangler cfg( "Tool for publishing to NATS using the ARQ Messaging API" );
+    
+    std::string dsh = "NATS";
+    std::string topic = "test";
 
-    // TODO: Init ARQLib
+    cfg.add( dsh, "--dsh", "dsh for nats" );
+    cfg.add( topic, "--topic,-t", "topic to publish to" );
 
-    std::string dshId = argv[1];
-    std::string targetTopic = argv[2];
+    LibGuard guard( argc, argv, cfg );
 
     std::cout << "Initializing NATS Publisher..." << std::endl;
-    std::cout << "DSH: " << dshId << " | Topic: " << targetTopic << std::endl;
+    std::cout << "DSH: " << dsh << " | Topic: " << topic << std::endl;
     std::shared_ptr<IMessagingService> msgServ;
     ARQ_DO_IN_TRY( arqExc, errMsg );
-        msgServ = MessagingServiceFactory::create( "NATS" );
+    msgServ = MessagingServiceFactory::create( dsh );
     ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
     if( arqExc.what().size() )
         std::cout << "Error creating nats messaging service - what: " << arqExc.what();
@@ -73,15 +72,15 @@ int main( int argc, char* argv[] )
 
         // Construct the Message
         Message msg;
-        msg.topic = targetTopic;
+        msg.topic = topic;
         msg.data = std::move( payload );
 
         // Add Headers
-        msg.headers["Sender-DSH"].push_back( dshId );
+        msg.headers["Sender-DSH"].push_back( dsh );
         msg.headers["Timestamp"].push_back( Time::DateTime::nowUTC().fmtISO8601() );
 
         ARQ_DO_IN_TRY( arqExc, errMsg );
-            msgServ->publish( targetTopic, msg );
+            msgServ->publish( topic, msg );
             std::cout << " [Sent]" << std::endl;
         ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 

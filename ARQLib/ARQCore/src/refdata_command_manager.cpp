@@ -26,7 +26,7 @@ void CommandManager::start()
 
 void CommandManager::stop()
 {
-	m_subscription->blockOnDrainAndUnsubscribe();
+	m_subscription->drain();
 	m_running.store( false );
 	if( m_commandCheckerThread.joinable() )
 		m_commandCheckerThread.join();

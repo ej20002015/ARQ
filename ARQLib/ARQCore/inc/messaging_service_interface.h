@@ -8,9 +8,12 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <chrono>
 
 namespace ARQ
 {
+
+using namespace std::chrono_literals;
 
 using HeaderMap = std::map<std::string, std::vector<std::string>>;
 
@@ -65,13 +68,12 @@ class ISubscription
 public:
 	virtual ~ISubscription() = default;
 
-	[[nodiscard]] ARQCore_API virtual int64_t          getID()                      = 0;
-	[[nodiscard]] ARQCore_API virtual std::string_view getTopic()                   = 0;
-	[[nodiscard]] ARQCore_API virtual bool             isValid()                    = 0;
-	[[nodiscard]] ARQCore_API virtual SubStats         getStats()                   = 0;
-	              ARQCore_API virtual void             unsubscribe()                = 0;
-	              ARQCore_API virtual void             drainAndUnsubscribe()        = 0;
-	              ARQCore_API virtual void             blockOnDrainAndUnsubscribe() = 0;
+	[[nodiscard]] ARQCore_API virtual int64_t          getID()                                                   = 0;
+	[[nodiscard]] ARQCore_API virtual std::string_view getTopic()                                                = 0;
+	[[nodiscard]] ARQCore_API virtual bool             isValid()                                                 = 0;
+	[[nodiscard]] ARQCore_API virtual SubStats         getStats()                                                = 0;
+	              ARQCore_API virtual void             unsubscribe()                                             = 0;
+				  ARQCore_API virtual void             drain( const std::chrono::milliseconds timeout = 5000ms ) = 0;
 };
 
 struct GlobalStats

@@ -17,6 +17,11 @@ const std::vector<EntityMetadata>& getAll()
     return EntityMetadataRegistry::inst().getAll();
 }
 
+const std::vector<std::string_view>& getAllNames()
+{
+    return EntityMetadataRegistry::inst().getAllNames();
+}
+
 const EntityMetadataRegistry& EntityMetadataRegistry::inst()
 {
     return instMut();

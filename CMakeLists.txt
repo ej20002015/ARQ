@@ -477,11 +477,13 @@ add_subdirectory(ARQLib/ARQKafka)
 
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataCmdExecutor)
+add_subdirectory(services/RefData/RefDataAuditProjector)
 
 # Add tools subdirectories
 add_subdirectory(tools/kafka_example)
 add_subdirectory(tools/nats_publisher)
 add_subdirectory(tools/nats_subscriber)
+add_subdirectory(tools/rd_cmd_publisher)
 
 # Add SWIG wrappers
 add_subdirectory(ARQLib/SWIG)

@@ -17,4 +17,4 @@ TEST( StrUtilsTest, ConvertStr2WStr )
     ASSERT_EQ( wstr, L"hello" );
 }
 
-// TODO: need to add tests for join, toUpper and contains
+// TODO: need to add tests for join, toUpper, contains and split

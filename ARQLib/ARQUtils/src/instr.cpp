@@ -19,7 +19,7 @@ void Timer::start()
 
 void Timer::stop()
 {
-	if( m_tEnd != std::chrono::steady_clock::time_point() )
+	if( m_tEnd == std::chrono::steady_clock::time_point() )
 		m_tEnd = std::chrono::steady_clock::now();
 }
 

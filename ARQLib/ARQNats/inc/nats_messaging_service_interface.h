@@ -20,13 +20,15 @@ public:
 	}
 	~NatsSubscription();
 
-	[[nodiscard]] ARQNats_API int64_t          getID()                      override;
-	[[nodiscard]] ARQNats_API std::string_view getTopic()                   override;
-	[[nodiscard]] ARQNats_API bool             isValid()                    override;
-	[[nodiscard]] ARQNats_API SubStats         getStats()                   override;
-	              ARQNats_API void             unsubscribe()                override;
-	              ARQNats_API void             drainAndUnsubscribe()        override;
-	              ARQNats_API void             blockOnDrainAndUnsubscribe() override;
+	[[nodiscard]] ARQNats_API int64_t          getID()                                                   override;
+	[[nodiscard]] ARQNats_API std::string_view getTopic()                                                override;
+	[[nodiscard]] ARQNats_API bool             isValid()                                                 override;
+	[[nodiscard]] ARQNats_API SubStats         getStats()                                                override;
+	              ARQNats_API void             unsubscribe()                                             override;
+				  ARQNats_API void             drain( const std::chrono::milliseconds timeout = 5000ms ) override;
+
+private:
+	void checkPtr() const;
 
 private:
 	natsSubscription* m_natsSub;

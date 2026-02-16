@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+    <Type Name="ARQ::ID::UUID">
+        <DisplayString>
+            {bytes[0],nvoxb}{bytes[1],nvoxb}{bytes[2],nvoxb}{bytes[3],nvoxb}-{bytes[4],nvoxb}{bytes[5],nvoxb}-{bytes[6],nvoxb}{bytes[7],nvoxb}-{bytes[8],nvoxb}{bytes[9],nvoxb}-{bytes[10],nvoxb}{bytes[11],nvoxb}{bytes[12],nvoxb}{bytes[13],nvoxb}{bytes[14],nvoxb}{bytes[15],nvoxb}
+        </DisplayString>
+        <Expand>
+            <Item Name="[Raw Bytes]">bytes</Item>
+        </Expand>
+    </Type>
+</AutoVisualizer>

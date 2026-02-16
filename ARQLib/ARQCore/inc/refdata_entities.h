@@ -8,6 +8,7 @@
 #include <ARQUtils/time.h>
 #include <ARQUtils/id.h>
 #include <ARQUtils/str.h>
+#include <ARQUtils/tuple_vector.h>
 #include <ARQCore/type_registry.h>
 
 #include <string>
@@ -72,6 +73,8 @@ struct RecordHeader
 template<c_RefData T>
 struct Record
 {
+    using EntityType = T;
+
     /// Entity metadata
     RecordHeader header;
     /// The actual entity data
@@ -202,6 +205,17 @@ public:
 #pragma endregion
 
 #pragma region RefData Helpers
+
+/*
+*********************************************
+*   Helper typedefs for RefData Entities    *
+*********************************************
+*/
+
+using RecordCollection = TupleVector<
+    Record<Currency>,    
+    Record<User>    
+>;
 
 /*
 *********************************************

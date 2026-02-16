@@ -396,26 +396,32 @@ void NatsMessagingService::invokeUserEventCallbacks( const MessagingEvent e, con
 
 NatsSubscription::~NatsSubscription()
 {
-	unsubscribe();
+	if( m_natsSub )
+		unsubscribe();
 }
 
 int64_t NatsSubscription::getID()
 {
+	checkPtr();
 	return natsSubscription_GetID( m_natsSub );
 }
 
 std::string_view NatsSubscription::getTopic()
 {
+	checkPtr();
 	return natsSubscription_GetSubject( m_natsSub );
 }
 
 bool NatsSubscription::isValid()
 {
+	checkPtr();
 	return natsSubscription_IsValid( m_natsSub );
 }
 
 SubStats NatsSubscription::getStats()
 {
+	checkPtr();
+
 	int32_t pendingMsgs, pendingBytes, maxPendingMsgs, maxPendingBytes;
 	int64_t deliveredMsgs, droppedMsgs;
 
@@ -434,20 +440,28 @@ SubStats NatsSubscription::getStats()
 
 void NatsSubscription::unsubscribe()
 {
+	checkPtr();
+
 	if( const natsStatus rc = natsSubscription_Unsubscribe( m_natsSub ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to unsubscribe nats subscription - natsSubscription_Unsubscribe() call failed with error: {}", formatNatsError( rc ) ) );
+
+	m_natsSub = nullptr;
 }
 
-void NatsSubscription::drainAndUnsubscribe()
+void NatsSubscription::drain( const std::chrono::milliseconds timeout )
 {
-	if( const natsStatus rc = natsSubscription_Drain( m_natsSub ); rc != NATS_OK )
-		throw ARQException( std::format( "Failed to drain and unsubscribe nats subscription - natsSubscription_Drain() call failed with error: {}", formatNatsError( rc ) ) );
+	checkPtr();
+
+	if( const natsStatus rc = natsSubscription_DrainTimeout( m_natsSub, timeout.count() ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to drain nats subscription - natsSubscription_DrainTimeout() call failed with error: {}", formatNatsError( rc ) ) );
+
+	m_natsSub = nullptr;
 }
 
-void NatsSubscription::blockOnDrainAndUnsubscribe()
+void NatsSubscription::checkPtr() const
 {
-	if( const natsStatus rc = natsSubscription_WaitForDrainCompletion( m_natsSub, 1000 * 30 /* 30 seconds */); rc != NATS_OK )
-		throw ARQException( std::format( "Failed to unsubscribe nats subscription - natsSubscription_Unsubscribe() call failed with error: {}", formatNatsError( rc ) ) );
+	if( !m_natsSub )
+		throw ARQException( "Nats subscription is nullptr - has this already be unsubscribed/drained?" );
 }
 
 }

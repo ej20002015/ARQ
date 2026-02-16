@@ -2,6 +2,7 @@
 #include <ARQUtils/enum.h>
 #include <ARQUtils/time.h>
 #include <ARQCore/messaging_service.h>
+#include <ARQCore/lib.h>
 
 #include <iostream>
 #include <string>
@@ -56,17 +57,15 @@ public:
 // -----------------------------------------------------------------------------
 int main( int argc, char* argv[] )
 {
-    if( argc < 3 )
-    {
-        std::cerr << "Usage: " << argv[0] << " <DSH> <TOPIC_PATTERN>" << std::endl;
-        std::cerr << "Example: " << argv[0] << " NATS quotes.>" << std::endl;
-        return 1;
-    }
+    Cfg::ConfigWrangler cfg( "Tool for subscribing to NATS using the ARQ Messaging API" );
 
-    // TODO: Init ARQLib
+    std::string dsh = "NATS";
+    std::string topicPattern = "test";
 
-    std::string dsh = argv[1];
-    std::string topicPattern = argv[2];
+    cfg.add( dsh, "--dsh", "dsh for nats" );
+    cfg.add( topicPattern, "--topic,-t", "topic pattern to subscribe to" );
+
+    LibGuard guard( argc, argv, cfg );
 
     std::cout << "Initializing NATS Subscriber..." << std::endl;
     std::cout << "DSH: " << dsh << " | Topic pattern: " << topicPattern << std::endl;

@@ -31,6 +31,29 @@ std::string toUpper( const std::string_view str )
 	return upperStr;
 }
 
+std::vector<std::string_view> split( std::string_view input, char delimiter )
+{
+    std::vector<std::string_view> result;
+
+    std::size_t start = 0;
+
+    while( start <= input.size() )
+    {
+        const auto pos = input.find( delimiter, start );
+
+        if( pos == std::string_view::npos )
+        {
+            result.emplace_back( input.substr( start ) );
+            break;
+        }
+
+        result.emplace_back( input.substr( start, pos - start ) );
+        start = pos + 1;
+    }
+
+    return result;
+}
+
 }
 
 }

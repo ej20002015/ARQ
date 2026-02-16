@@ -1,6 +1,7 @@
 #include "service.h"
 
 #include <ARQUtils/types.h>
+#include <ARQUtils/algos.h>
 #include <ARQCore/refdata_meta.h>
 
 #include <algorithm>
@@ -101,11 +102,12 @@ void RefDataCmdExecutorService::run()
 
 				if( toDLQ )
 				{
+					const std::string key = msg.key.has_value() ? msg.key->data() : "NO_KEY";
 					m_updateProducer->send( StreamProducerMessage{
-						.topic = std::format( "{}.DLQ", msg.topic ),
-						.id = msg.offset,
-						.key = msg.key->data(),
-						.data = msg.data
+						.topic   = std::format( "{}.DLQ", msg.topic ),
+						.id      = msg.offset,
+						.key     = key,
+						.data    = msg.data
 					} );
 				}
 
@@ -148,7 +150,7 @@ void RefDataCmdExecutorService::run()
 
 void RefDataCmdExecutorService::registerConfigOptions( Cfg::ConfigWrangler& cfg )
 {
-	cfg.add( m_config.streamSvcDSH,     "--streamServiceDSH", "The DSH of the kafka streaming service to use" );
+	cfg.add( m_config.streamSvcDSH,     "--streamServiceDSH", "The DSH of the streaming service to use" );
 	cfg.add( m_config.msgSvcDSH,        "--msgSvcDSH",        "The DSH of the messaging service to use" );
 	cfg.add( m_config.entities,         "--entities",         "The set of reference data entities to process commands for. If empty, subscribes to all entities." );
 	cfg.add( m_config.disabledEntities, "--disabledEntities", "The set of reference data entities to NOT process commands for." );
@@ -242,7 +244,7 @@ void RefDataCmdExecutorService::processCmdMessage( const StreamConsumerMessageVi
 	{
 		resp.status = RD::CommandResponse::REJECTED;
 		resp.message = std::format( "Version mismatch for UUID {}: CurrentVersion={}, VersionExpectedByCommand={}",
-									cmd.targetUUID, curVer ? "None" : std::to_string( *curVer ), cmd.expectedVersion );
+									cmd.targetUUID, curVer ? std::to_string( *curVer ) : "None", cmd.expectedVersion );
 
 		Log( Module::EXE ).warn( "Rejecting {} command from message {}: {}", RD::Cmd::Traits<T>::name(), msg.idStr(), *resp.message );
 	}
@@ -399,25 +401,7 @@ const std::set<std::string_view>& RefDataCmdExecutorService::getEntities()
 {
 	static std::set<std::string_view> entities;
 	if( entities.empty() )
-	{
-		std::set<std::string_view> includedEntities;
-		if( m_config.entities.size() )
-		{
-			for( const auto& ent : m_config.entities )
-				includedEntities.insert( ent );
-		}
-		else
-		{
-			for( const auto& meta : RD::Meta::getAll() )
-				includedEntities.insert( meta.name );
-		}
-
-		std::set_difference(
-			includedEntities.begin(), includedEntities.end(),
-			m_config.disabledEntities.begin(), m_config.disabledEntities.end(),
-			std::inserter( entities, entities.begin() )
-		);
-	}
+		entities = Algos::makeEffectiveSet( m_config.entities, RD::Meta::getAllNames(), m_config.disabledEntities );
 
 	return entities;
 }

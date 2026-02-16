@@ -108,10 +108,10 @@ private: // Worker thread function
 	void checkInFlightCommands();
 
 private: // Helpers
-	ID::UUID              sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction, const CommandCallback& callback, const Time::Milliseconds timeout );
-	StreamProducerMessage formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction );
-	std::string           getStreamTopic( const std::string_view cmdEntity ) const;
-	void                  createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout );
+	ARQCore_API ID::UUID              sendCommandImpl( Buffer&& buf, const std::string key, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction, const CommandCallback& callback, const Time::Milliseconds timeout );
+	            StreamProducerMessage formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction );
+	            std::string           getStreamTopic( const std::string_view cmdEntity ) const;
+	            void                  createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout );
 
 private: // On response handler
 	void onCommandResponse( const CommandResponse& resp );

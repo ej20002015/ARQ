@@ -38,6 +38,21 @@ constexpr bool contains( std::string_view str, std::string_view subStr ) noexcep
 ARQUtils_API std::string toUpper( const std::string_view str );
 
 /**
+ * @brief Splits a string into substrings separated by a delimiter.
+ *
+ * Empty fields are preserved. The returned string_views reference the
+ * original input string.
+ *
+ * @param input     The string to split.
+ * @param delimiter The delimiter character.
+ *
+ * @return A vector of std::string_view tokens.
+ *
+ * @note The returned string_views are only valid as long as @p input remains alive.
+ */
+std::vector<std::string_view> split( std::string_view input, char delimiter = ',' );
+
+/**
  * @brief Joins a range of strings into a single string with a specified delimiter.
  * @param range The range of strings to join. Each element must be convertible to std::string_view.
  * @param delimiter The delimiter to use between strings.
