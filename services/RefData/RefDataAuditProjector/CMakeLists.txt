@@ -1,0 +1,2 @@
+ARQ_define_services_exe(RefDataAuditProjector RefData)
+target_link_libraries(RefDataAuditProjector PRIVATE ARQCore)
