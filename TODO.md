@@ -1,8 +1,5 @@
 - Change RefDataGatekeeper service
   - Use snapshotting technique and just keep all version data in-memory
-- Create RefDataViewManager
-  - Listen to refdata update kafka topic
-  - Save down updates to ClickHouse
 - Deploy service to 
 - Update refdata dll interfaces to use new approach used for the serialisation - namely templating
 - Create RefDataViewManager
