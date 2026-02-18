@@ -20,7 +20,7 @@ spec:
         - name: refdata-audit-projector
           image: ej20002011/arq:master
           imagePullPolicy: Always
-          command: ["RefDataCmdExecutor"]
+          command: ["RefDataAuditProjector"]
 
           ports:
             - name: admin-port

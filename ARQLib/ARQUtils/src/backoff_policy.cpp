@@ -3,6 +3,8 @@
 #include <ARQUtils/str.h>
 #include <ARQUtils/error.h>
 
+#include <cmath>
+
 namespace ARQ
 {
 

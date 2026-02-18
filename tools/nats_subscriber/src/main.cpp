@@ -119,9 +119,5 @@ int main( int argc, char* argv[] )
 
     std::cout << "Unsubscribing and shutting down..." << std::endl;
 
-    // Explicitly unsubscribe, though destruction of 'subscription' ptr usually handles this
-    if( subscription )
-        subscription->drainAndUnsubscribe();
-
     return 0;
 }
