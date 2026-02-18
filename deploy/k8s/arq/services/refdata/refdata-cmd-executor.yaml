@@ -18,7 +18,6 @@ spec:
         - name: arq-dockerhub-cred
       containers:
         - name: refdata-cmd-executor
-          # This matches the image your CI pipeline just built
           image: ej20002011/arq:master
           imagePullPolicy: Always
           command: ["RefDataCmdExecutor"]

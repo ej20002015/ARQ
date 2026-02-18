@@ -3,17 +3,17 @@
 [data_sources.ClickHouseDB]
 type = "ClickHouse"
 [data_sources.ClickHouseDB.conn_props.Main]
-hostname = "localhost"
+hostname = "hyperdx-hdx-oss-v2-clickhouse.dev"
 port = 9000
 
 [data_sources.NATS]
 type = "NATS"
 [data_sources.NATS.conn_props.Main]
-hostname = "localhost"
+hostname = "nats.dev"
 port = 4222
 
 [data_sources.Kafka]
 type = "Kafka"
 [data_sources.Kafka.conn_props.Main]
-hostname = "localhost"
+hostname = "kafka-cluster-kafka-brokers.dev"
 port = 9092

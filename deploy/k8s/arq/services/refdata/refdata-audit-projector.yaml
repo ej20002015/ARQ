@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: refdata-audit-projector
+  labels:
+    app: refdata-audit-projector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: refdata-audit-projector
+  template:
+    metadata:
+      labels:
+        app: refdata-audit-projector
+    spec:
+      imagePullSecrets:
+        - name: arq-dockerhub-cred
+      containers:
+        - name: refdata-audit-projector
+          image: ej20002011/arq:master
+          imagePullPolicy: Always
+          command: ["RefDataCmdExecutor"]
+
+          ports:
+            - name: admin-port
+              containerPort: 8080
+
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: admin-port
+            failureThreshold: 10 # 10 * 3 = 30 seconds to startup
+            periodSeconds: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 5
+
+          resources:
+            limits:
+              memory: "512M"
+              cpu: "1"
