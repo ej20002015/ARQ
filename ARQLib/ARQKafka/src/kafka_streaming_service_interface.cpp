@@ -134,7 +134,7 @@ void KafkaStreamProducer::send( const StreamProducerMessage& msg, const StreamPr
 	else if( const BufferView* view = std::get_if<BufferView>( &msg.data ) )
     {
         // Only given a view - No ownership taken.
-        value = kafka::Value(view->data, view->size);
+        value = kafka::Value( view->data, view->size );
     }
 	else
 		ARQ_ASSERT( false );

@@ -21,6 +21,7 @@ public:
 	virtual ~IConfigWrangler() = default;
 	
     ARQUtils_API virtual void add( int32_t& val,                  const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) = 0;
+    ARQUtils_API virtual void add( int64_t& val,                  const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) = 0;
     ARQUtils_API virtual void add( double& val,                   const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) = 0;
     ARQUtils_API virtual void add( bool& val,                     const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) = 0;
     ARQUtils_API virtual void add( std::string& val,              const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) = 0;
@@ -65,6 +66,7 @@ public: // Constructor
 
 public: // IConfigWrangler overrides
     ARQUtils_API void add( int32_t& val,                  const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) override;
+    ARQUtils_API void add( int64_t& val,                  const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) override;
     ARQUtils_API void add( double& val,                   const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) override;
     ARQUtils_API void add( bool& val,                     const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) override;
     ARQUtils_API void add( std::string& val,              const std::string_view flag, const std::string_view desc, const std::string_view env = "", ArgPolicy policy = ArgPolicy::Optional ) override;

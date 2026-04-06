@@ -646,7 +646,7 @@ TEST( DateTimeTest, IndividualTimeComponents )
 TEST( DateTimeTest, StaticMembers )
 {
     EXPECT_TRUE( DateTime::MIN().isSet() );
-    EXPECT_EQ( DateTime::MIN().date(), Date( Year( 1900 ), Month::Jan, Day( 01 ) ) );
+    EXPECT_EQ( DateTime::MIN().date(), Date( Year( 1970 ), Month::Jan, Day( 01 ) ) );
 
     EXPECT_TRUE( DateTime::MAX().isSet() );
     EXPECT_EQ( DateTime::MAX().date(), Date( Year( 2200 ), Month::Dec, Day( 31 ) ) );

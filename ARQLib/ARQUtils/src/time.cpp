@@ -394,7 +394,7 @@ std::string DateTime::fmtISO8601() const
 
 const DateTime& DateTime::MIN()
 {
-	static const DateTime MIN( Date( Year( 1900 ), Month::Jan, Day( 01 ) ) );
+	static const DateTime MIN( Date( Year( 1970 ), Month::Jan, Day( 01 ) ) ); // Unix epoch is min
 	return MIN;
 }
 

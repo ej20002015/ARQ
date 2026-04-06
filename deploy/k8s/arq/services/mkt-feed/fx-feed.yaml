@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fx-feed
+  labels:
+    app: fx-feed
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fx-feed
+  template:
+    metadata:
+      labels:
+        app: fx-feed
+    spec:
+      imagePullSecrets:
+        - name: arq-dockerhub-cred
+      containers:
+        - name: fx-feed
+          image: ej20002011/arq:master
+          imagePullPolicy: Always
+          command: ["FXFeed --publishFrequencyMs 500 --pathGenStepSizeMs 100"]
+
+          ports:
+            - name: admin-port
+              containerPort: 8080
+
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: admin-port
+            failureThreshold: 10 # 10 * 3 = 30 seconds to startup
+            periodSeconds: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 5
+
+          resources:
+            limits:
+              memory: "512M"
+              cpu: "1"

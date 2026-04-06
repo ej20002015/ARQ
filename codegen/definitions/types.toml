@@ -38,7 +38,7 @@ flatbuffer = "int"
 protobuf = "int32"
 
 [types.int64]
-cpp = "std::int64_t"
+cpp = "int64_t"
 clickhouse = "Int64"
 flatbuffer = "long"
 protobuf = "int64"

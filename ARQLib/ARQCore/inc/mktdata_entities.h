@@ -172,7 +172,7 @@ struct EQPrice : public MDEntity
     /// The closing price from the previous trading session.
     double close;
     /// The cumulative volume for the current trading session.
-    std::int64_t volume;
+    int64_t volume;
 };
 
 // Traits specialization for EQPrice
@@ -232,7 +232,7 @@ public:
             /*name            = */ "volume",
             /*comment         = */ "The cumulative volume for the current trading session.",
             /*type            = */ "int64",
-            /*cpp_type        = */ "std::int64_t",
+            /*cpp_type        = */ "int64_t",
             /*clickhouse_type = */ "Int64",
             /*flatbuffer_type = */ "long"
         }    

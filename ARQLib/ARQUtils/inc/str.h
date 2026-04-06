@@ -50,7 +50,7 @@ ARQUtils_API std::string toUpper( const std::string_view str );
  *
  * @note The returned string_views are only valid as long as @p input remains alive.
  */
-std::vector<std::string_view> split( std::string_view input, char delimiter = ',' );
+ARQUtils_API std::vector<std::string_view> split( std::string_view input, char delimiter = ',' );
 
 /**
  * @brief Joins a range of strings into a single string with a specified delimiter.

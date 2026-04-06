@@ -37,21 +37,19 @@ include(FetchContent)
 
 # Handle ARQLib etc files
 
-set(CONFIG_SOURCE_DIR "${CMAKE_SOURCE_DIR}/ARQLib/etc")
-set(CONFIG_BUILD_DEST "${CMAKE_BINARY_DIR}/etc/ARQLib")
+set(ETC_BUILD_DIR_ROOT "${CMAKE_BINARY_DIR}/etc/ARQ")
+set(ARQLIB_ETC_SOURCE_DIR "${CMAKE_SOURCE_DIR}/ARQLib/etc")
+set(ARQLIB_ETC_BUILD_DEST "${ETC_BUILD_DIR_ROOT}/ARQLib")
 
-# Create target to perform copy of config files
-add_custom_target(arq_config_copy
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${CONFIG_BUILD_DEST}"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CONFIG_SOURCE_DIR}" "${CONFIG_BUILD_DEST}"
-    COMMENT "Updating build-tree config files..."
+add_custom_target(arqlib_etc_copy
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${ARQLIB_ETC_BUILD_DEST}"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${ARQLIB_ETC_SOURCE_DIR}" "${ARQLIB_ETC_BUILD_DEST}"
+    COMMENT "Updating build-tree etc files for ARQLib..."
     VERBATIM
 )
-set_target_properties(arq_config_copy PROPERTIES FOLDER "custom_targets")
+set_target_properties(arqlib_etc_copy PROPERTIES FOLDER "custom_targets/etc_files")
 
-install(DIRECTORY "${CONFIG_SOURCE_DIR}/"
-    DESTINATION etc/ARQLib
-)
+install(DIRECTORY "${ARQLIB_ETC_SOURCE_DIR}/" DESTINATION etc/ARQ/ARQLib)
 
 # Download pre-built binaries / packages from ARQ_dependencies repo
 
@@ -380,6 +378,25 @@ function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
     set_target_properties(${EXE_NAME} PROPERTIES FOLDER ${FOLDER_NAME})
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
 
+    # ------------- ETC FILES -------------
+
+    set(SVC_ETC_DIR "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/etc")
+    set(SVC_ETC_BUILD_DEST "${ETC_BUILD_DIR_ROOT}/${FOLDER_NAME}/${EXE_NAME}")
+
+    if(EXISTS "${SVC_ETC_DIR}" AND IS_DIRECTORY "${SVC_ETC_DIR}")
+        add_custom_target(${EXE_NAME}_svc_etc_copy
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${SVC_ETC_BUILD_DEST}"
+            COMMAND ${CMAKE_COMMAND} -E copy_directory "${SVC_ETC_DIR}" "${SVC_ETC_BUILD_DEST}"
+            COMMENT "Updating build-tree etc files for ${FOLDER_NAME}/${EXE_NAME}..."
+            VERBATIM
+        )
+        set_target_properties(${EXE_NAME}_svc_etc_copy PROPERTIES FOLDER "custom_targets/etc_files")
+
+        add_dependencies(${EXE_NAME} ${EXE_NAME}_svc_etc_copy)
+
+        install(DIRECTORY "${SVC_ETC_DIR}/" DESTINATION "etc/ARQ/${FOLDER_NAME}/${EXE_NAME}")
+    endif()
+
     # ------------- INSTALL -------------
 
     install(TARGETS ${EXE_NAME}
@@ -474,10 +491,12 @@ add_subdirectory(ARQLib/ARQGrpc)
 add_subdirectory(ARQLib/ARQProtobuf)
 add_subdirectory(ARQLib/ARQNats)
 add_subdirectory(ARQLib/ARQKafka)
+add_subdirectory(ARQLib/ARQMath)
 
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataCmdExecutor)
 add_subdirectory(services/RefData/RefDataAuditProjector)
+add_subdirectory(services/MktFeed/FXFeed)
 
 # Add tools subdirectories
 add_subdirectory(tools/kafka_example)
