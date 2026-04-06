@@ -6,7 +6,7 @@
 # ===================================
 # - 4 partitions
 # - Compact keys after 24 hours
-# - 3 replicas for durability
+# - 3 replicas and 2 in-sync for strong durability
 # ===================================
 
 apiVersion: kafka.strimzi.io/v1beta2
@@ -18,12 +18,12 @@ metadata:
 spec:
   topicName: ARQ.MktData.Updates.FXR
   partitions: 4
-  replicas: 2
+  replicas: 3
   config:
     min.compaction.lag.ms: 86400000
     segment.ms: 86400000
     cleanup.policy: compact
-    min.insync.replicas: 1
+    min.insync.replicas: 2
 
 ---
 
@@ -36,9 +36,9 @@ metadata:
 spec:
   topicName: ARQ.MktData.Updates.EQP
   partitions: 4
-  replicas: 2
+  replicas: 3
   config:
     min.compaction.lag.ms: 86400000
     segment.ms: 86400000
     cleanup.policy: compact
-    min.insync.replicas: 1
+    min.insync.replicas: 2
