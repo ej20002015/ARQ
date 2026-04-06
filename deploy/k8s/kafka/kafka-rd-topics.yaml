@@ -48,6 +48,7 @@ spec:
 # - Retain for 30 days
 # - 2 replicas for some durability
 # ===================================
+
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
