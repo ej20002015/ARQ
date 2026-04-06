@@ -69,7 +69,7 @@ void RefDataAuditProjectorService::initTopicToEntityMap()
 {
 	for( const std::string_view entityName : m_entities )
 	{
-		const std::string updateTopic = std::format( "ARQ.RefData.Updates.{}", entityName );
+		std::string updateTopic = std::format( "ARQ.RefData.Updates.{}", entityName );
 		m_updateTopicToEntity[std::move( updateTopic )] = entityName;
 	}
 }

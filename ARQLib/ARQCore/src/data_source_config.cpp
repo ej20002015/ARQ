@@ -44,7 +44,7 @@ void DataSourceConfigManager::iLoad( const std::optional<std::string_view> tomlC
 	{
 		// Need to read from file
 
-		const std::filesystem::path configFilepath = Sys::cfgDir() / "datasources" / std::format( "{}.toml", LibContext::Inst().env() );
+		const std::filesystem::path configFilepath = Sys::libCfgDir() / "datasources" / std::format( "{}.toml", LibContext::Inst().env() );
 
 		std::ifstream ifs( configFilepath );
 		if( !ifs.is_open() )

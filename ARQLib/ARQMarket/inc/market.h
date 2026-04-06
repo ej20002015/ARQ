@@ -20,7 +20,7 @@ namespace Mkt
 struct Name
 {
 	std::string tag;
-	Time::Date date;
+	Time::Date  date;
 
 	Name() = default;
 	Name( const std::string_view tag, const Time::Date date = Time::Date() )

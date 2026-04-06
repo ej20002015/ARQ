@@ -9,12 +9,6 @@
 #include <compare>
 #include <format> 
 
-// Date/DateTime::MIN/MAX can collide with c MIN/MAX macros - disable the macros
-#pragma push_macro("MIN")
-#pragma push_macro("MAX")
-#undef MIN
-#undef MAX
-
 namespace ARQ
 {
 
@@ -135,8 +129,8 @@ public:
 	};
 
 public:
-	ARQUtils_API static const Date& MIN();
-	ARQUtils_API static const Date& MAX();
+	ARQUtils_API static const Date& Min();
+	ARQUtils_API static const Date& Max();
 
 private:
 	static constexpr auto NOT_SET_STR = "DATE_NOT_SET";
@@ -262,8 +256,8 @@ public:
 	};
 
 public:
-	ARQUtils_API static const DateTime& MIN();
-	ARQUtils_API static const DateTime& MAX();
+	ARQUtils_API static const DateTime& Min();
+	ARQUtils_API static const DateTime& Max();
 
 private:
 	static constexpr auto NOT_SET_STR = "DATETIME_NOT_SET";
@@ -308,6 +302,3 @@ struct formatter<ARQ::Time::DateTime, CharT> : formatter<std::chrono::system_clo
 };
 
 }
-
-#pragma pop_macro("MIN")
-#pragma pop_macro("MAX")

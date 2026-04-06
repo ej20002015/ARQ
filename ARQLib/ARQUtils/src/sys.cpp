@@ -32,26 +32,38 @@ const fs::path& logDir()
     return dir;
 }
 
-static fs::path iCfgDir()
+static fs::path iRootCfgDir()
 {
     fs::path currentDir = OS::procPath().parent_path();
 
     // Walk up through the directory tree looking for config dir
     while( currentDir != currentDir.parent_path() )
     {
-        const fs::path candidate = currentDir / "etc" / "ARQLib";
+        const fs::path candidate = currentDir / "etc" / "ARQ";
         if( fs::exists( candidate ) )
             return candidate;
         else
             currentDir = currentDir.parent_path();
     }
 
-    throw ARQException( "Could not locate configuration directory 'etc/ARQLib' in any parent directory" );
+    throw ARQException( "Could not locate configuration directory 'etc/ARQ' in any parent directory" );
 }
 
-const fs::path& cfgDir()
+const fs::path& rootCfgDir()
 {
-    static const fs::path dir = iCfgDir();
+    static const fs::path dir = iRootCfgDir();
+    return dir;
+}
+
+const std::filesystem::path& libCfgDir()
+{
+    static const fs::path dir = rootCfgDir() / "ARQLib";
+    return dir;
+}
+
+const std::filesystem::path& svcCfgDir()
+{
+	static const fs::path dir = rootCfgDir() / "services";
     return dir;
 }
 

@@ -1,4 +1,5 @@
 #pragma once
+#include <ARQUtils/dll.h>
 
 #include <cstdint>
 #include <memory>
@@ -121,6 +122,8 @@ struct Buffer
 	{
 		return std::string( getDataPtrAs<const char*>(), size );
 	}
+
+	ARQUtils_API static const Buffer& Null();
 };
 
 struct SharedBuffer

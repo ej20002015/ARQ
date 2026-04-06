@@ -91,7 +91,6 @@ struct Record
 ***********************************
 */
 
-
 // -------------------- Currency RefData entity --------------------
 
 /// Represents an ISO 4217 currency and its conventions.

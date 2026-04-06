@@ -20,6 +20,11 @@ void ConfigWrangler::add( int32_t& val, const std::string_view flag, const std::
     addImpl( val, flag, desc, env, policy );
 }
 
+void ConfigWrangler::add( int64_t& val, const std::string_view flag, const std::string_view desc, const std::string_view env, ArgPolicy policy )
+{
+    addImpl( val, flag, desc, env, policy );
+}
+
 void ConfigWrangler::add( double& val, const std::string_view flag, const std::string_view desc, const std::string_view env, ArgPolicy policy )
 {
     addImpl( val, flag, desc, env, policy );

@@ -1,0 +1,2 @@
+ARQ_define_services_exe(FXFeed MktFeed)
+target_link_libraries(FXFeed PRIVATE ARQCore ARQMarket ARQMath)

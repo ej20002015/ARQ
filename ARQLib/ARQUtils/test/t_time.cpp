@@ -251,19 +251,19 @@ TEST( DateTest, SerialProgression )
 // Static Members Tests
 TEST( DateTest, StaticMembers )
 {
-    EXPECT_TRUE( Date::MIN().isSet() );
-    EXPECT_TRUE( Date::MIN().isValid() );
-    EXPECT_EQ( Date::MIN().year(), 0 );
-    EXPECT_EQ( Date::MIN().month(), Month::Jan );
-    EXPECT_EQ( Date::MIN().day(), 1 );
+    EXPECT_TRUE( Date::Min().isSet() );
+    EXPECT_TRUE( Date::Min().isValid() );
+    EXPECT_EQ( Date::Min().year(), 0 );
+    EXPECT_EQ( Date::Min().month(), Month::Jan );
+    EXPECT_EQ( Date::Min().day(), 1 );
 
-    EXPECT_TRUE( Date::MAX().isSet() );
-    EXPECT_TRUE( Date::MAX().isValid() );
-    EXPECT_EQ( Date::MAX().year(), 9999 );
-    EXPECT_EQ( Date::MAX().month(), Month::Dec );
-    EXPECT_EQ( Date::MAX().day(), 31 );
+    EXPECT_TRUE( Date::Max().isSet() );
+    EXPECT_TRUE( Date::Max().isValid() );
+    EXPECT_EQ( Date::Max().year(), 9999 );
+    EXPECT_EQ( Date::Max().month(), Month::Dec );
+    EXPECT_EQ( Date::Max().day(), 31 );
 
-    EXPECT_LT( Date::MIN(), Date::MAX() );
+    EXPECT_LT( Date::Min(), Date::Max() );
 }
 
 // Output Tests
@@ -645,16 +645,16 @@ TEST( DateTimeTest, IndividualTimeComponents )
 // DateTime Static Members Tests
 TEST( DateTimeTest, StaticMembers )
 {
-    EXPECT_TRUE( DateTime::MIN().isSet() );
-    EXPECT_EQ( DateTime::MIN().date(), Date( Year( 1900 ), Month::Jan, Day( 01 ) ) );
+    EXPECT_TRUE( DateTime::Min().isSet() );
+    EXPECT_EQ( DateTime::Min().date(), Date( Year( 1970 ), Month::Jan, Day( 01 ) ) );
 
-    EXPECT_TRUE( DateTime::MAX().isSet() );
-    EXPECT_EQ( DateTime::MAX().date(), Date( Year( 2200 ), Month::Dec, Day( 31 ) ) );
-    EXPECT_EQ( DateTime::MAX().hour(), Hour( 23 ) );
-    EXPECT_EQ( DateTime::MAX().minute(), Minute( 59 ) );
-    EXPECT_EQ( DateTime::MAX().second(), Second( 59 ) );
+    EXPECT_TRUE( DateTime::Max().isSet() );
+    EXPECT_EQ( DateTime::Max().date(), Date( Year( 2200 ), Month::Dec, Day( 31 ) ) );
+    EXPECT_EQ( DateTime::Max().hour(), Hour( 23 ) );
+    EXPECT_EQ( DateTime::Max().minute(), Minute( 59 ) );
+    EXPECT_EQ( DateTime::Max().second(), Second( 59 ) );
 
-    EXPECT_LT( DateTime::MIN(), DateTime::MAX() );
+    EXPECT_LT( DateTime::Min(), DateTime::Max() );
 }
 
 // DateTime Output Tests
