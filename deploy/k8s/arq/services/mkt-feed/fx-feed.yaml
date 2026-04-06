@@ -20,7 +20,7 @@ spec:
         - name: fx-feed
           image: ej20002011/arq:master
           imagePullPolicy: Always
-          command: ["FXFeed --publishFrequencyMs 500 --pathGenStepSizeMs 100"]
+          command: ["FXFeed", "--publishFrequencyMs", "500", "--pathGenStepSizeMs", "100"]
 
           ports:
             - name: admin-port
