@@ -20,13 +20,13 @@ struct PeriodConfig
 class BrownianBridgePathGenerator
 {
 public:
-	using onPeriodRollover = std::function<PeriodConfig( const int64_t currentPeriodIndex )>;
+	using OnPeriodRollover = std::function<PeriodConfig( const int64_t currentPeriodIndex )>;
 
 	struct Config
 	{
 		int64_t          ticksPerStep;
 		int64_t          ticksPerPeriod;
-		onPeriodRollover onPeriodRollover;
+		OnPeriodRollover onPeriodRollover;
 	};
 
 public:

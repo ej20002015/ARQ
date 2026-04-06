@@ -171,16 +171,16 @@ std::ostream& operator<<( std::ostream& os, const Date& date )
 	return os;
 }
 
-const Date& Date::MIN()
+const Date& Date::Min()
 {
-	static const Date MIN( Year( 0 ), Jan, Day( 1 ) );
-	return MIN;
+	static const Date Min( Year( 0 ), Jan, Day( 1 ) );
+	return Min;
 }
 
-const Date& Date::MAX()
+const Date& Date::Max()
 {
-	static const Date MAX( Year( 9999 ), Dec, Day( 31 ) );
-	return MAX;
+	static const Date Max( Year( 9999 ), Dec, Day( 31 ) );
+	return Max;
 }
 
 /*
@@ -392,15 +392,15 @@ std::string DateTime::fmtISO8601() const
 // NOTE: DateTime range is much smaller than that of Date (std::chrono::year_month_day).
 // This is due to Linux std::chrono::system_clock::time_point having a restricted range.
 
-const DateTime& DateTime::MIN()
+const DateTime& DateTime::Min()
 {
-	static const DateTime MIN( Date( Year( 1970 ), Month::Jan, Day( 01 ) ) ); // Unix epoch is min
-	return MIN;
+	static const DateTime Min( Date( Year( 1970 ), Month::Jan, Day( 01 ) ) ); // Unix epoch is min
+	return Min;
 }
 
-const DateTime& DateTime::MAX()
+const DateTime& DateTime::Max()
 {
-	static const DateTime MAX( Date( Year( 2200 ), Month::Dec, Day( 31 ) ), TimeOfDay{
+	static const DateTime Max( Date( Year( 2200 ), Month::Dec, Day( 31 ) ), TimeOfDay{
 		.hour = Hour( 23 ),
 		.minute = Minute( 59 ),
 		.second = Second( 59 ),
@@ -409,7 +409,7 @@ const DateTime& DateTime::MAX()
 		.microsecondsPast = Microseconds( 999'999 )
 	} );
 
-	return MAX;
+	return Max;
 }
 
 }

@@ -16,7 +16,7 @@ void FXFeedService::onStartup()
 	m_publisher->registerOnErrorCallback( onPublishError );
 
 	const std::filesystem::path eodFileDir = ARQ::Sys::svcCfgDir() / "MktFeed" / "FXFeed";
-	const int64_t currDayIdx = Time::DateTime::nowUTC().date() - Time::DateTime::MIN().date();
+	const int64_t currDayIdx = Time::DateTime::nowUTC().date() - Time::DateTime::Min().date();
     for( const auto& ccy : m_config.publishCcys )
     {
 		const auto eodRatesMap = EODParser::load( eodFileDir / std::format( "EOD_{}.csv", ccy ) );
