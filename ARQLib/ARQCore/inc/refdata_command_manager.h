@@ -50,7 +50,7 @@ public:
 	{
 		std::string messagingServiceDSH           = "NATS";
 		std::string streamingServiceDSH           = "Kafka";
-		std::shared_ptr<Serialiser> serialiser    = SerialiserFactory::create( SerialiserFactory::SerialiserImpl::Protobuf );
+		std::shared_ptr<Serialiser> serialiser    = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
 		std::chrono::milliseconds checkerInterval = 1ms;
 	};
 

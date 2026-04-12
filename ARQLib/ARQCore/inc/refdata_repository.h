@@ -172,7 +172,7 @@ class Repository
 {
 public:
     Repository( const std::string_view dsh )
-	    : m_rdSource( SourceFactory::create( dsh ) )
+	    : m_rdSource( SourceFactory::inst().create( dsh ) )
     {}
 
 	template<c_RefData T>

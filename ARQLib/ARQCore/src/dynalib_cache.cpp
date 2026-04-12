@@ -6,27 +6,7 @@
 namespace ARQ
 {
 
-std::atomic<DynaLibCache*> DynaLibCache::s_globalInst = nullptr;
-
-DynaLibCache* DynaLibCache::globalInst()
-{
-    return s_globalInst.load();
-}
-
-void DynaLibCache::setGlobalInst( DynaLibCache* const inst )
-{
-	s_globalInst.store( inst );
-}
-
 const OS::DynaLib& DynaLibCache::get( const std::string_view libName )
-{
-	if( globalInst() )
-        return globalInst()->iGet(libName);
-    else
-        throw ARQException( std::format( "Cannot get dynalib [{}] as DynaLibCache global instance has not been set", libName ) );
-}
-
-const OS::DynaLib& DynaLibCache::iGet( const std::string_view libName )
 {
     std::lock_guard<std::mutex> lg( m_mut );
 

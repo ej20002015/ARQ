@@ -12,6 +12,8 @@
 namespace ARQ
 {
 
+extern "C" ARQNats_API void arqDynaLibShutdown();
+
 extern "C" ARQNats_API IMessagingService* createMessagingService( const std::string_view dsh );
 
 class NatsMessagingServiceManager
@@ -20,6 +22,8 @@ public:
 	static NatsMessagingServiceManager& inst();
 
 	NatsMessagingService* get( const std::string_view dsh );
+
+	void clearAll();
 
 private:
 	std::unordered_map<std::string_view, std::shared_ptr<NatsMessagingService>> m_messagingServices;

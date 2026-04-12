@@ -2,6 +2,7 @@
 #include <ARQCore/dll.h>
 
 #include <ARQUtils/hashers.h>
+#include <ARQUtils/global_accessor.h>
 #include <ARQCore/mktdata_source_interface.h>
 
 #include <shared_mutex>
@@ -13,17 +14,17 @@ namespace ARQ
 
 using MktDataSourceCreateFunc = std::add_pointer<IMktDataSource*( const std::string_view dsh )>::type;
 
-class MktDataSourceFactory
+class MktDataSourceFactory : public GlobalAccessor<MktDataSourceFactory, "MktDataSourceFactory">
 {
 public:
-	[[nodiscard]] ARQCore_API static std::shared_ptr<IMktDataSource> create( const std::string_view dsh );
+	[[nodiscard]] ARQCore_API std::shared_ptr<IMktDataSource> create( const std::string_view dsh );
 
 	// Not threadsafe but should only really be used on startup / for testing anyway
-	ARQCore_API static void addCustomSource( const std::string_view dsh, const std::shared_ptr<IMktDataSource>& source );
-	ARQCore_API static void delCustomSource( const std::string_view dsh );
+	ARQCore_API void addCustomSource( const std::string_view dsh, const std::shared_ptr<IMktDataSource>& source );
+	ARQCore_API void delCustomSource( const std::string_view dsh );
 
 private:
-	static std::unordered_map<std::string, std::shared_ptr<IMktDataSource>, TransparentStringHash, std::equal_to<>> s_customSources;
+	std::unordered_map<std::string, std::shared_ptr<IMktDataSource>, TransparentStringHash, std::equal_to<>> m_customSources;
 };
 
 class GlobalMktDataSource

@@ -6,14 +6,11 @@
 namespace ARQ
 {
 
-std::unordered_map<SerialiserFactory::SerialiserImpl, std::shared_ptr<Serialiser>> SerialiserFactory::s_serialisers;
-std::mutex SerialiserFactory::s_serialisersMutex;
-
 std::shared_ptr<Serialiser> SerialiserFactory::create( const SerialiserImpl impl )
 {
-    std::lock_guard<std::mutex> lg( s_serialisersMutex );
+    std::lock_guard<std::mutex> lg( m_serialisersMutex );
 
-    if( const auto it = s_serialisers.find( impl ); it != s_serialisers.end() )
+    if( const auto it = m_serialisers.find( impl ); it != m_serialisers.end() )
         return it->second;
 
 	std::string dynaLibName;
@@ -24,13 +21,13 @@ std::shared_ptr<Serialiser> SerialiserFactory::create( const SerialiserImpl impl
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
 	const auto registerTypesFunc = lib.getFunc<RegisterTypeSerialisersFunc>( "registerTypeSerialisers" );
 	auto newSerialiser = std::make_shared<Serialiser>();
 	registerTypesFunc( newSerialiser.get() );
 
-	return s_serialisers.emplace( impl, std::move( newSerialiser ) ).first->second;
+	return m_serialisers.emplace( impl, std::move( newSerialiser ) ).first->second;
 }
 
 }

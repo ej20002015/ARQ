@@ -72,7 +72,7 @@ int main( int argc, char* argv[] )
 
     std::shared_ptr<IMessagingService> msgServ;
     ARQ_DO_IN_TRY( arqExc, errMsg );
-        msgServ = MessagingServiceFactory::create( dsh );
+        msgServ = MessagingServiceFactory::inst().create( dsh );
     ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 
     if( arqExc.what().size() )

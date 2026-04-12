@@ -10,22 +10,22 @@ void RefDataAuditProjectorService::onStartup()
 
 	m_backoffPolicy = BackoffPolicy( m_config.dbBackoffPolicy );
 
-	m_serialiser    = SerialiserFactory::create( SerialiserFactory::SerialiserImpl::Protobuf );
-	m_auditRDSource = RD::SourceFactory::create( m_config.auditDSH );
+	m_serialiser    = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
+	m_auditRDSource = RD::SourceFactory::inst().create( m_config.auditDSH );
 
 	StreamConsumerOptions opts( "RefDataAuditProjector::UpdateConsumer",
 								"ARQ.RefData.AuditProjectors",
 								StreamConsumerOptions::FetchPreset::HighThroughput,
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
 								StreamConsumerOptions::AutoOffsetReset::Earliest );
-	m_updateConsumer = StreamingServiceFactory::createConsumer( m_config.streamSvcDSH, opts );
+	m_updateConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
 
 	const auto updateTopics = m_updateTopicToEntity | std::views::keys | std::ranges::to<std::set>();
 	m_updateConsumer->subscribe( updateTopics );
 
 	StreamProducerOptions prodOpts( "RefDataAuditProjector::DLQProducer",
 									StreamProducerOptions::Preset::HighThroughput );
-	m_dlqProducer = StreamingServiceFactory::createProducer( m_config.streamSvcDSH, prodOpts );
+	m_dlqProducer = StreamingServiceFactory::inst().createProducer( m_config.streamSvcDSH, prodOpts );
 }
 
 void RefDataAuditProjectorService::onShutdown()

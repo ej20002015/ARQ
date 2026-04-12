@@ -3,6 +3,7 @@
 
 #include <ARQUtils/buffer.h>
 #include <ARQUtils/error.h>
+#include <ARQUtils/global_accessor.h>
 #include <ARQCore/type_registry.h>
 
 #include <unordered_map>
@@ -48,7 +49,7 @@ private:
 
 using RegisterTypeSerialisersFunc = std::add_pointer<void( Serialiser* const serialiser )>::type;
 
-class SerialiserFactory
+class SerialiserFactory : public GlobalAccessor<SerialiserFactory, "SerialiserFactory">
 {
 public:
 	enum class SerialiserImpl
@@ -57,11 +58,11 @@ public:
 	};
 
 public:
-	[[nodiscard]] ARQCore_API static std::shared_ptr<Serialiser> create( const SerialiserImpl impl );
+	[[nodiscard]] ARQCore_API std::shared_ptr<Serialiser> create( const SerialiserImpl impl );
 
 private:
-	static std::unordered_map<SerialiserImpl, std::shared_ptr<Serialiser>> s_serialisers;
-	static std::mutex s_serialisersMutex;
+	std::unordered_map<SerialiserImpl, std::shared_ptr<Serialiser>> m_serialisers;
+	std::mutex m_serialisersMutex;
 };
 
 template<typename T>

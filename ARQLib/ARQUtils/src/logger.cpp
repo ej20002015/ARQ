@@ -49,18 +49,6 @@ spdlog::level::level_enum ARQLevelToSpdlog( const LogLevel level )
 	}
 }
 
-std::atomic<Logger*> Logger::s_globalLoggerInstance = nullptr;
-
-Logger* ARQ::Logger::globalInst()
-{
-	return s_globalLoggerInstance.load();
-}
-
-void ARQ::Logger::setGlobalInst( Logger* const logger )
-{
-	s_globalLoggerInstance.store( logger );
-}
-
 Logger::Logger( const LoggerConfig& cfg )
 	: m_cfg( cfg )
 {
@@ -83,7 +71,7 @@ Logger::Logger( const LoggerConfig& cfg )
 		if( spdlog::thread_pool() == nullptr )
 			spdlog::init_thread_pool( 8192, 1 );
 
-		m_spdLogger = std::make_shared<spdlog::async_logger>( LOG_NAME, logSinks.begin(), logSinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block );
+		m_spdLogger = std::make_shared<spdlog::async_logger>( m_cfg.logName, logSinks.begin(), logSinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block );
 		m_spdLogger->flush_on( ARQLevelToSpdlog( LogLevel::ERRO ) );
 		m_spdLogger->set_level( ARQLevelToSpdlog( LogLevel::TRACE ) ); // Set to lowest level, individual sinks will filter
 		spdlog::register_logger( m_spdLogger );
@@ -110,7 +98,7 @@ Logger::Logger( const LoggerConfig& cfg )
 
 Logger::~Logger()
 {
-	spdlog::drop( LOG_NAME );
+	spdlog::drop( m_cfg.logName );
 }
 
 bool Logger::shouldLog( const LogLevel level )
@@ -266,11 +254,7 @@ void Logger::logInternal( const LogLevel level, const std::source_location& loc,
 
 Logger& Log::logger()
 {
-	ARQ_ASSERT( Logger::globalInst() );
-	if( !Logger::globalInst() )
-		throw ARQException( "Global logger not initialised" );
-
-	return *Logger::globalInst();
+	return Logger::getGlobalInst();
 }
 
              JSON Log::Context::s_global = JSON::object();

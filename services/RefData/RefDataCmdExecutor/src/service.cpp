@@ -11,15 +11,15 @@ void RefDataCmdExecutorService::onStartup()
 {
 	buildTopicEntityMaps();
 
-	m_serialiser = SerialiserFactory::create( SerialiserFactory::SerialiserImpl::Protobuf );
-	m_msgSvc     = MessagingServiceFactory::create( m_config.msgSvcDSH );
+	m_serialiser = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
+	m_msgSvc     = MessagingServiceFactory::inst().create( m_config.msgSvcDSH );
 
 	StreamConsumerOptions opts( "RefDataCmdExecutor::CommandConsumer",
 								"ARQ.RefData.CommandExecutors",
 								StreamConsumerOptions::FetchPreset::Standard,
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
 								StreamConsumerOptions::AutoOffsetReset::Earliest );
-	m_commandConsumer = StreamingServiceFactory::createConsumer( m_config.streamSvcDSH, opts );
+	m_commandConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
 
 	const auto commandTopics = getEntities()
 		| std::views::transform( [] ( const std::string_view entity ) { return std::format( "ARQ.RefData.Commands.{}", entity ); } )
@@ -29,7 +29,7 @@ void RefDataCmdExecutorService::onStartup()
 	StreamProducerOptions prodOpts( "RefDataCmdExecutor::UpdateProducer",
 									StreamProducerOptions::Preset::HighThroughput );
 	prodOpts.setOptionOverride( "transactional.id", ID::UUID::create().toString() );
-	m_updateProducer = StreamingServiceFactory::createProducer( m_config.streamSvcDSH, prodOpts );
+	m_updateProducer = StreamingServiceFactory::inst().createProducer( m_config.streamSvcDSH, prodOpts );
 	m_updateProducer->initTransactions();
 }
 
@@ -290,7 +290,7 @@ void RefDataCmdExecutorService::hydrateState( const std::set<StreamTopicPartitio
 								StreamConsumerOptions::FetchPreset::Standard,
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
 								StreamConsumerOptions::AutoOffsetReset::Earliest );
-	std::shared_ptr<IStreamConsumer> updateConsumer = StreamingServiceFactory::createConsumer( "Kafka", opts );
+	std::shared_ptr<IStreamConsumer> updateConsumer = StreamingServiceFactory::inst().createConsumer( "Kafka", opts );
 
 	const std::set<StreamTopicPartition> equivUpdateTPs = mapToUpdatePartitions( cmdTPs );
 	      StreamTopicPartitionOffsets    highWatermarks = getHydrationTargets( *updateConsumer, equivUpdateTPs );

@@ -5,12 +5,12 @@
 #include <ARQUtils/error.h>
 #include <ARQUtils/json.h>
 #include <ARQUtils/sys.h>
+#include <ARQUtils/global_accessor.h>
 
 #include <source_location>
 #include <map>
 #include <shared_mutex>
 #include <optional>
-#include <atomic>
 
 // Fwd declare
 namespace spdlog { class logger; }
@@ -30,7 +30,7 @@ enum class LogLevel
 };
 
 static constexpr LogLevel DEFAULT_LOG_LEVEL = LogLevel::INFO;
-static constexpr auto     LOG_NAME          = "ARQLib";
+static constexpr auto     DEFAULT_LOG_NAME  = "ARQLib";
 
 struct LoggerConfig
 {
@@ -39,15 +39,13 @@ struct LoggerConfig
 	std::string primarySinkDest       = "stdout";
 	std::string secondarySinkDest     = ( Sys::logDir() / "ARQLib.log" ).string();
 
+	std::string logName               = DEFAULT_LOG_NAME;
+
 	std::vector<std::shared_ptr<spdlog::sinks::sink>> customSinks;
 };
 
-class Logger
+class Logger : public GlobalAccessor<Logger, "Logger">
 {
-public:
-	static ARQUtils_API Logger* globalInst();
-	static ARQUtils_API void    setGlobalInst( Logger* const logger );
-
 public:
 	ARQUtils_API Logger( const LoggerConfig& cfg = LoggerConfig() );
 	ARQUtils_API ~Logger();
@@ -89,9 +87,6 @@ private:
 	ARQUtils_API void logInternal( const LogLevel level, const std::source_location& loc, const Module module, const JSON& contextArgs, std::string&& msg, const std::optional<std::reference_wrapper< const ARQException>> exception = std::nullopt );
 
 private:
-	ARQUtils_API static std::atomic<Logger*> s_globalLoggerInstance;
-
-private:
 	LoggerConfig m_cfg;
 
 	std::shared_ptr<spdlog::logger>      m_spdLogger;
@@ -120,75 +115,63 @@ public:
 	template<typename... Args>
 	void critical( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->log( LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().log( LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void error( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->log( LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().log( LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void warn( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->log( LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().log( LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void info( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->log( LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().log( LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void debug( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->log( LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().log( LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void trace( const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->log( LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().log( LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 
 	template<typename... Args>
 	void critical( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->logException( exception, LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().logException( exception, LogLevel::CRITICAL, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void error( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->logException( exception, LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().logException( exception, LogLevel::ERRO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void warn( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->logException( exception, LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().logException( exception, LogLevel::WARN, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void info( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->logException( exception, LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().logException( exception, LogLevel::INFO, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void debug( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->logException( exception, LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().logException( exception, LogLevel::DEBUG, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 	template<typename... Args>
 	void trace( const ARQException& exception, const std::format_string<Args...> fmt, Args&&... args )
 	{
-		if( Logger::globalInst() )
-			Logger::globalInst()->logException( exception, LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
+		Logger::getGlobalInst().logException( exception, LogLevel::TRACE, m_loc, m_module, m_contextArgs, fmt, std::forward<Args>( args )... );
 	}
 
 public:

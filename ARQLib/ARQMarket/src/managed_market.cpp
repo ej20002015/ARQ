@@ -108,7 +108,7 @@ bool ManagedMarket::isSubscriber( const std::weak_ptr<Subscriber> subscriber ) c
 
 void ManagedMarket::load( const ConsolidatingTIDSet& toLoad )
 {
-	const auto mktSrc = MktDataSourceFactory::create( m_dsh );
+	const auto mktSrc = MktDataSourceFactory::inst().create( m_dsh );
 
 	for( const ConsolidatingTIDSet::Item item : toLoad.getAll() )
 	{
