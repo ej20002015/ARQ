@@ -154,6 +154,7 @@ else()
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-linux-x64.tar.gz")
     add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-linux-x64.tar.gz")
     add_prebuilt_dependency(natsc-v3.11.0 "${ARQ_Dependencies_download_path}/nats.c-v3.11.0-linux-x64.tar.gz")
+    add_prebuilt_dependency(redis-plus-plus-1.3.15 "${ARQ_Dependencies_download_path}/redis-plus-plus-1.3.15-linux-x64.tar.gz")
 endif()
 
 # Include cmake standard files that define cmake targets and functions for pre-built binaries
