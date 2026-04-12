@@ -146,6 +146,7 @@ if(WIN32)
     add_prebuilt_dependency(SWIG_4.3.1 "${ARQ_Dependencies_download_path}/SWIG-4.3.1-windows-x64.zip")
     add_prebuilt_dependency(grpc-v1.76.0 "${ARQ_Dependencies_download_path}/grpc-v1.76.0-windows-x64.zip")
     add_prebuilt_dependency(natsc-v3.11.0 "${ARQ_Dependencies_download_path}/nats.c-v3.11.0-windows-x64.zip")
+    add_prebuilt_dependency(redis-plus-plus-1.3.15 "${ARQ_Dependencies_download_path}/redis-plus-plus-1.3.15-windows-x64.zip")
 else()
     add_prebuilt_dependency(openssl-v3.6.0 "${ARQ_Dependencies_download_path}/openssl-3.6.0-linux-x64.tar.gz")
     add_prebuilt_dependency(zlib-v1.3.1 "${ARQ_Dependencies_download_path}/zlib-v1.3.1-linux-x64.tar.gz")
@@ -162,6 +163,7 @@ include("${FETCHCONTENT_EXTRACTED_DIR_librdkafka_v2.12.0}/cmake/librdkafka.cmake
 include("${FETCHCONTENT_EXTRACTED_DIR_SWIG_4.3.1}/cmake/SWIG.cmake")
 include("${FETCHCONTENT_EXTRACTED_DIR_grpc-v1.76.0}/cmake/grpc.cmake")
 include("${FETCHCONTENT_EXTRACTED_DIR_natsc-v3.11.0}/cmake/nats.c.cmake")
+include("${FETCHCONTENT_EXTRACTED_DIR_redis-plus-plus-1.3.15}/cmake/redis-plus-plus.cmake")
 
 # gtest setup
 FetchContent_Declare(
@@ -486,12 +488,13 @@ set(MODERN_CPP_KAFKA_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/modern-cpp-kafka/incl
 add_subdirectory(ARQLib/ARQCore)
 add_subdirectory(ARQLib/ARQUtils)
 add_subdirectory(ARQLib/ARQMarket)
+add_subdirectory(ARQLib/ARQMath)
 add_subdirectory(ARQLib/ARQClickHouse)
 add_subdirectory(ARQLib/ARQGrpc)
 add_subdirectory(ARQLib/ARQProtobuf)
 add_subdirectory(ARQLib/ARQNats)
 add_subdirectory(ARQLib/ARQKafka)
-add_subdirectory(ARQLib/ARQMath)
+add_subdirectory(ARQLib/ARQRedis)
 
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataCmdExecutor)

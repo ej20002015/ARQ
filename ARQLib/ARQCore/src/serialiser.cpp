@@ -24,7 +24,7 @@ std::shared_ptr<Serialiser> SerialiserFactory::create( const SerialiserImpl impl
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
 
 	const auto registerTypesFunc = lib.getFunc<RegisterTypeSerialisersFunc>( "registerTypeSerialisers" );
 	auto newSerialiser = std::make_shared<Serialiser>();

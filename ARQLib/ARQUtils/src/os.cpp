@@ -272,7 +272,7 @@ std::string DynaLib::getLastError() const
 	return errMsg;
 }
 
-void* DynaLib::iGetFunc( const std::string_view funcName ) const
+void* DynaLib::iGetFunc( const std::string_view funcName, const DoThrow doThrow ) const
 {
 	if( !isLoaded() )
 		throw ARQException( std::format( "Could not get {0} function from dynalib as it hasn't been loaded", funcName ) );
@@ -291,7 +291,7 @@ void* DynaLib::iGetFunc( const std::string_view funcName ) const
 
 	#endif
 
-	if( !funcPtr )
+	if( !funcPtr && doThrow == DoThrow::YES )
 		throw ARQException( std::format( "Could not get {0} function from dynalib {1}: {2}", funcName, m_name, getLastError() ) );
 
 	return funcPtr;

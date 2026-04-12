@@ -2,6 +2,7 @@
 #include <ARQUtils/dll.h>
 
 #include <ARQUtils/core.h>
+#include <ARQUtils/types.h>
 #include <ARQUtils/error.h>
 
 #include <string>
@@ -35,7 +36,7 @@ public:
 	[[nodiscard]] ARQUtils_API bool isLoaded() const noexcept { return m_nativeHandle != nullptr; }
 
 	template<c_FuncPtr FuncPtr>
-	[[nodiscard]] FuncPtr getFunc( const std::string_view funcName ) const;
+	[[nodiscard]] FuncPtr getFunc( const std::string_view funcName, const DoThrow doThrow = DoThrow::YES ) const;
 
 private:
 	void setName( const std::string_view name );
@@ -43,7 +44,7 @@ private:
 	void resetError() const;
 	[[nodiscard]] std::string getLastError() const;
 
-	[[nodiscard]] ARQUtils_API void* iGetFunc( const std::string_view funcName ) const;
+	[[nodiscard]] ARQUtils_API void* iGetFunc( const std::string_view funcName, const DoThrow doThrow ) const;
 
 private:
 	void* m_nativeHandle = nullptr;
@@ -51,9 +52,9 @@ private:
 };
 
 template<c_FuncPtr FuncPtr>
-inline FuncPtr DynaLib::getFunc( const std::string_view funcName ) const
+inline FuncPtr DynaLib::getFunc( const std::string_view funcName, const DoThrow doThrow ) const
 {
-	return reinterpret_cast<FuncPtr>( iGetFunc( funcName ) );
+	return reinterpret_cast<FuncPtr>( iGetFunc( funcName, doThrow ) );
 }
 
 }

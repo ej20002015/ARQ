@@ -35,7 +35,7 @@ std::shared_ptr<Source> SourceFactory::create( const std::string_view dsh )
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
 
 	const auto registerSourcesFunc = lib.getFunc<RegisterEntitySourcesFunc>( "registerEntitySources" );
 	auto newSource = std::make_shared<Source>();

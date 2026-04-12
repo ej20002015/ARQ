@@ -4,6 +4,7 @@
 #include <ARQUtils/sys.h>
 #include <ARQUtils/logger.h>
 #include <ARQUtils/cfg_wrangler.h>
+#include <ARQCore/dynalib_cache.h>
 
 #include <vector>
 #include <string>
@@ -71,6 +72,7 @@ private:
 
 private:
 	// Library wide objects go here
+	std::unique_ptr<DynaLibCache> m_dynaLibCache;
 	std::unique_ptr<Logger> m_logger;
 };
 

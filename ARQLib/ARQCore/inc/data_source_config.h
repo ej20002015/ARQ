@@ -20,6 +20,7 @@ enum class DataSourceType
 	gRPC,
 	NATS,
 	Kafka,
+	Redis,
 };
 
 struct DataSourceConfig
