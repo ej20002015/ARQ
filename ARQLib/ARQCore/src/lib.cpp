@@ -1,6 +1,7 @@
 #include <ARQCore/lib.h>
 
 #include <ARQUtils/os.h>
+#include <ARQCore/dynalib_cache.h>
 
 #include <thread>
 
@@ -86,11 +87,17 @@ LibContext::LibContext( const Config& cfg )
 	m_logger = std::make_unique<Logger>( logCfg );
 	Logger::setGlobalInst( m_logger.get() );
 
+	m_dynaLibCache = std::make_unique<DynaLibCache>();
+	DynaLibCache::setGlobalInst( m_dynaLibCache.get() );
+
 	Log( Module::CORE ).info( "ARQLib initialised" );
 }
 
 LibContext::~LibContext()
 {
+	DynaLibCache::setGlobalInst( nullptr );
+	m_dynaLibCache.reset();
+
 	Logger::setGlobalInst( nullptr );
 	m_logger.reset();
 }

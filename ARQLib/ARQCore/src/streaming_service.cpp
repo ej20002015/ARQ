@@ -25,7 +25,7 @@ std::shared_ptr<IStreamProducer> StreamingServiceFactory::createProducer( const 
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<CreateStreamProducerFunc>( "createStreamProducer" );
 	return std::shared_ptr<IStreamProducer>( createFunc( dsc.dsh, options ) );
@@ -46,7 +46,7 @@ std::shared_ptr<IStreamConsumer> StreamingServiceFactory::createConsumer( const 
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<CreateStreamConsumerFunc>( "createStreamConsumer" );
 	return std::shared_ptr<IStreamConsumer>( createFunc( dsc.dsh, options ) );

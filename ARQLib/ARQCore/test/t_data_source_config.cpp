@@ -5,6 +5,14 @@
 
 using namespace ARQ;
 
+#include <ARQCore/stream_offset_source.h>
+
+TEST( TempTests, CheckRedis )
+{
+    auto source = StreamOffsetSourceFactory::create( "Redis" );
+    source->saveOffsets( "test", {} );
+}
+
 TEST( DataSourceConfigManagerTest, LoadFromStringValid )
 {
     const std::string tomlContent = R"(

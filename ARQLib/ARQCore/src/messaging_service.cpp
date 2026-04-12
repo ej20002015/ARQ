@@ -24,7 +24,7 @@ std::shared_ptr<IMessagingService> MessagingServiceFactory::create( const std::s
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<MessagingServiceCreateFunc>( "createMessagingService" );
 	return std::shared_ptr<IMessagingService>( createFunc( dsc.dsh ), [] (IMessagingService* ) { ; } ); // Lifetime handled by dlls so use null deleter

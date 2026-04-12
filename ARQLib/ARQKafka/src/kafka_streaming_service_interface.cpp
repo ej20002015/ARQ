@@ -332,10 +332,12 @@ kafka::Properties KafkaStreamProducer::buildProperties()
 			props.put( "linger.ms", "20" );
 			props.put( "batch.size", "131072" ); // 128KB
 			props.put( "compression.type", "lz4" );
+			break;
 		case StreamProducerOptions::Preset::Standard:
 			props.put( "linger.ms", "5" );
 			props.put( "batch.size", "16384" ); // 16KB
 			props.put( "compression.type", "lz4" );
+			break;
 		default:
 			// use defaults
 			break;

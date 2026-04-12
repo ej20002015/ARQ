@@ -24,7 +24,7 @@ std::shared_ptr<IMktDataSource> MktDataSourceFactory::create( const std::string_
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName ); // TODO: Log when dll is being loaded for the first time?
+	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName ); // TODO: Log when dll is being loaded for the first time?
 
 	const auto createFunc = lib.getFunc<MktDataSourceCreateFunc>( "createMktDataSource" ); // TODO: Need to cache the loaded functions?
 	return std::shared_ptr<IMktDataSource>( createFunc( dsc.dsh ) );
