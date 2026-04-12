@@ -4,6 +4,8 @@
 #include <ARQUtils/str.h>
 #include <ARQUtils/error.h>
 
+#include <atomic>
+
 namespace ARQ
 {
 
