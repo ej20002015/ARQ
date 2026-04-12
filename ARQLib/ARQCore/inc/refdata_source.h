@@ -3,6 +3,7 @@
 
 #include <ARQUtils/hashers.h>
 #include <ARQUtils/error.h>
+#include <ARQUtils/global_accessor.h>
 #include <ARQCore/refdata_entities.h>
 
 #include <string>
@@ -65,17 +66,17 @@ private:
 
 using RegisterEntitySourcesFunc = std::add_pointer<void( Source* const source )>::type;
 
-class SourceFactory
+class SourceFactory : public GlobalAccessor<SourceFactory, "RD::SourceFactory">
 {
 public:
-	[[nodiscard]] ARQCore_API static std::shared_ptr<Source> create( const std::string_view dsh );
+	[[nodiscard]] ARQCore_API std::shared_ptr<Source> create( const std::string_view dsh );
 
-	ARQCore_API static void addCustomSource( const std::string_view dsh, const std::shared_ptr<Source>& source );
-	ARQCore_API static void delCustomSource( const std::string_view dsh );
+	ARQCore_API void addCustomSource( const std::string_view dsh, const std::shared_ptr<Source>& source );
+	ARQCore_API void delCustomSource( const std::string_view dsh );
 
 private:
-	static std::unordered_map<std::string, std::shared_ptr<Source>, TransparentStringHash, std::equal_to<>> s_sources;
-	static std::mutex s_sourcesMutex;
+	std::unordered_map<std::string, std::shared_ptr<Source>, TransparentStringHash, std::equal_to<>> m_sources;
+	std::mutex m_sourcesMutex;
 };
 
 template<typename T>

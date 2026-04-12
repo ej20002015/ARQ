@@ -7,11 +7,9 @@
 namespace ARQ
 {
 
-std::unordered_map<std::string, std::shared_ptr<IMktDataSource>, TransparentStringHash, std::equal_to<>> MktDataSourceFactory::s_customSources;
-
 std::shared_ptr<IMktDataSource> MktDataSourceFactory::create( const std::string_view dsh )
 {
-	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
+	if( const auto it = m_customSources.find( dsh ); it != m_customSources.end() )
 		return it->second;
 
 	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
@@ -24,7 +22,7 @@ std::shared_ptr<IMktDataSource> MktDataSourceFactory::create( const std::string_
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName ); // TODO: Log when dll is being loaded for the first time?
+	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<MktDataSourceCreateFunc>( "createMktDataSource" ); // TODO: Need to cache the loaded functions?
 	return std::shared_ptr<IMktDataSource>( createFunc( dsc.dsh ) );
@@ -32,20 +30,20 @@ std::shared_ptr<IMktDataSource> MktDataSourceFactory::create( const std::string_
 
 void MktDataSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<IMktDataSource>& source )
 {
-	s_customSources.emplace( dsh , source );
+	m_customSources.emplace( dsh , source );
 }
 
 void MktDataSourceFactory::delCustomSource( const std::string_view dsh )
 {
-	if( const auto it = s_customSources.find( dsh ); it != s_customSources.end() )
-		s_customSources.erase( it );
+	if( const auto it = m_customSources.find( dsh ); it != m_customSources.end() )
+		m_customSources.erase( it );
 }
 
 std::shared_ptr<IMktDataSource> GlobalMktDataSource::get()
 {
 	std::shared_lock<std::shared_mutex> sl( s_mut );
 	if( !s_globalSourceCreator )
-		s_globalSourceCreator = [] () { return MktDataSourceFactory::create( "ClickHouseDB" ); };
+		s_globalSourceCreator = [] () { return MktDataSourceFactory::inst().create( "ClickHouseDB" ); };
 	
 	return s_globalSourceCreator();
 }

@@ -32,7 +32,7 @@ public:
 	struct Config
 	{
 		std::string                 streamingServiceDSH = "Kafka";
-		std::shared_ptr<Serialiser> serialiser          = SerialiserFactory::create( SerialiserFactory::SerialiserImpl::Protobuf );
+		std::shared_ptr<Serialiser> serialiser          = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
 		std::string                 updatedByStr        = std::format( "{0}-ARQ::MD::Publisher", OS::procName() );
 	};
 

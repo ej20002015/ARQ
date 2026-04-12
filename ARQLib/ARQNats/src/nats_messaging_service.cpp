@@ -5,6 +5,13 @@
 namespace ARQ
 {
 
+void arqDynaLibShutdown()
+{
+    // Force the singleton to drop all its active NatsMessagingService objects
+    // This safely closes NATS connections before the library is unloaded
+    NatsMessagingServiceManager::inst().clearAll();
+}
+
 IMessagingService* createMessagingService( const std::string_view dsh )
 {
     return NatsMessagingServiceManager::inst().get( dsh );
@@ -43,6 +50,12 @@ NatsMessagingService* NatsMessagingServiceManager::get( const std::string_view d
     }
 
     return svc;
+}
+
+void NatsMessagingServiceManager::clearAll()
+{
+    std::unique_lock<std::shared_mutex> ul( m_messageServicesMutex );
+	m_messagingServices.clear();
 }
 
 }

@@ -45,7 +45,7 @@ protected:
     void SetUp() override
     {
         mockSource = std::make_shared<NiceMock<MockMktDataSource>>();
-        MktDataSourceFactory::addCustomSource( "TestSource", mockSource );
+        MktDataSourceFactory::inst().addCustomSource( "TestSource", mockSource );
 
         managedMarket = std::make_unique<Mkt::ManagedMarket>( "TestSource", Mkt::Name::LIVE );
 
@@ -61,7 +61,7 @@ protected:
         subscriber2.reset();
         managedMarket.reset();
 
-        MktDataSourceFactory::delCustomSource( "TestSource" );
+        MktDataSourceFactory::inst().delCustomSource( "TestSource" );
     }
 
     void setupCallbacks()

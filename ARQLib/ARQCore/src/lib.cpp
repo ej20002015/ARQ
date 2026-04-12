@@ -84,17 +84,51 @@ LibContext::LibContext( const Config& cfg )
 		.secondarySinkDest     = m_config.logDest2
 	};
 
+	// Global objects
+
 	m_logger = std::make_unique<Logger>( logCfg );
 	Logger::setGlobalInst( m_logger.get() );
 
 	m_dynaLibCache = std::make_unique<DynaLibCache>();
 	DynaLibCache::setGlobalInst( m_dynaLibCache.get() );
 
+	// Global factories
+
+	m_rdSourceFactory = std::make_unique<RD::SourceFactory>();
+	RD::SourceFactory::setGlobalInst( m_rdSourceFactory.get() );
+	m_serialiserFactory = std::make_unique<SerialiserFactory>();
+	SerialiserFactory::setGlobalInst( m_serialiserFactory.get() );
+	m_messagingServiceFactory = std::make_unique<MessagingServiceFactory>();
+	MessagingServiceFactory::setGlobalInst( m_messagingServiceFactory.get() );
+	m_streamingServiceFactory = std::make_unique<StreamingServiceFactory>();
+	StreamingServiceFactory::setGlobalInst( m_streamingServiceFactory.get() );
+	m_streamOffsetSourceFactory = std::make_unique<StreamOffsetSourceFactory>();
+	StreamOffsetSourceFactory::setGlobalInst( m_streamOffsetSourceFactory.get() );
+	m_mktDataSourceFactory = std::make_unique<MktDataSourceFactory>();
+	MktDataSourceFactory::setGlobalInst( m_mktDataSourceFactory.get() );
+
 	Log( Module::CORE ).info( "ARQLib initialised" );
 }
 
 LibContext::~LibContext()
 {
+	// Global factories
+
+	MktDataSourceFactory::setGlobalInst( nullptr );
+	m_mktDataSourceFactory.reset();
+	StreamOffsetSourceFactory::setGlobalInst( nullptr );
+	m_streamOffsetSourceFactory.reset();
+	StreamingServiceFactory::setGlobalInst( nullptr );
+	m_streamingServiceFactory.reset();
+	MessagingServiceFactory::setGlobalInst( nullptr );
+	m_messagingServiceFactory.reset();
+	SerialiserFactory::setGlobalInst( nullptr );
+	m_serialiserFactory.reset();
+	RD::SourceFactory::setGlobalInst( nullptr );
+	m_rdSourceFactory.reset();
+
+	// Other global objects
+
 	DynaLibCache::setGlobalInst( nullptr );
 	m_dynaLibCache.reset();
 

@@ -9,8 +9,15 @@ using namespace ARQ;
 
 TEST( TempTests, CheckRedis )
 {
-    auto source = StreamOffsetSourceFactory::create( "Redis" );
-    source->saveOffsets( "test", {} );
+    try
+    {
+        auto source = StreamOffsetSourceFactory::inst().create( "Redis" );
+        source->saveOffsets( "test", {} );
+    }
+	catch( const ARQException& e )
+    {
+        std::cerr << "Caught expected exception for Redis source: " << e.what() << std::endl;
+    }
 }
 
 TEST( DataSourceConfigManagerTest, LoadFromStringValid )

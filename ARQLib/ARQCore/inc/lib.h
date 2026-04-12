@@ -5,6 +5,12 @@
 #include <ARQUtils/logger.h>
 #include <ARQUtils/cfg_wrangler.h>
 #include <ARQCore/dynalib_cache.h>
+#include <ARQCore/stream_offset_source.h>
+#include <ARQCore/messaging_service.h>
+#include <ARQCore/mktdata_source.h>
+#include <ARQCore/refdata_source.h>
+#include <ARQCore/serialiser.h>
+#include <ARQCore/streaming_service.h>
 
 #include <vector>
 #include <string>
@@ -71,7 +77,15 @@ private:
 	ARQCore_API friend void libShutdown();
 
 private:
-	// Library wide objects go here
+	// Global objects that are initialized in LibContext constructor and destroyed in LibContext destructor
+
+	std::unique_ptr<RD::SourceFactory>         m_rdSourceFactory;
+	std::unique_ptr<SerialiserFactory>         m_serialiserFactory;
+	std::unique_ptr<MessagingServiceFactory>   m_messagingServiceFactory;
+	std::unique_ptr<StreamingServiceFactory>   m_streamingServiceFactory;
+	std::unique_ptr<StreamOffsetSourceFactory> m_streamOffsetSourceFactory;
+	std::unique_ptr<MktDataSourceFactory>      m_mktDataSourceFactory;
+
 	std::unique_ptr<DynaLibCache> m_dynaLibCache;
 	std::unique_ptr<Logger> m_logger;
 };

@@ -9,12 +9,32 @@
 #include <concepts>
 #include <format>
 #include <cstdint>
+#include <memory>
 
 namespace ARQ
 {
 
 namespace Str
 {
+
+/**
+* @brief A fixed-size string wrapper that can be used in compile-time contexts.
+ */
+template <size_t N>
+struct FixedString
+{
+    char value[N];
+
+    constexpr FixedString( const char( &str )[N] )
+    {
+        std::copy_n( str, N, value );
+    }
+
+    constexpr std::string_view view() const
+    {
+        return std::string_view( value, N - 1 );
+    }
+};
 
 ARQUtils_API std::string wstr2Str( const std::wstring& wstr );
 ARQUtils_API std::wstring str2Wstr( const std::string& str );

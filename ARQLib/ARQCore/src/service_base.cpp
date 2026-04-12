@@ -25,14 +25,14 @@ int ServiceRunner::tryRunImpl( int argc, char* argv[] )
 	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
 	if( arqExc.what().size() )
 	{
-		if( Logger::globalInst() )
+		if( Logger::isInstSet() )
 			Log( Module::EXE ).critical( arqExc, "Exiting after unhandled exception thrown in service runner" );
 		else
 			std::cerr << "Exiting after unhandled exception thrown in service runner - " << arqExc.what();
 	}
 	else if( errMsg.size() )
 	{
-		if( Logger::globalInst() )
+		if( Logger::isInstSet() )
 			Log( Module::EXE ).critical( "Exiting after unhandled exception thrown in service runner - what: ", errMsg );
 		else
 			std::cerr << "Exiting after unhandled exception thrown in service runner - what: " << errMsg;

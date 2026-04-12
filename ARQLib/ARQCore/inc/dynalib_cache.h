@@ -3,6 +3,7 @@
 
 #include <ARQUtils/hashers.h>
 #include <ARQUtils/os.h>
+#include <ARQUtils/global_accessor.h>
 
 #include <unordered_map>
 #include <mutex>
@@ -12,23 +13,16 @@
 namespace ARQ
 {
 
-class DynaLibCache
+class DynaLibCache : public GlobalAccessor<DynaLibCache, "DynaLibCache">
 {
 public:
-	ARQCore_API static DynaLibCache* globalInst();
-	            static void          setGlobalInst( DynaLibCache* const inst );
-
-	ARQCore_API static const OS::DynaLib& get( const std::string_view libName );
-	ARQCore_API        const OS::DynaLib& iGet( const std::string_view libName );
-	
 	DynaLibCache() = default;
 	~DynaLibCache();
 
+	ARQCore_API const OS::DynaLib& get( const std::string_view libName );
+
 	DynaLibCache( const DynaLibCache& ) = delete;
 	DynaLibCache& operator=( const DynaLibCache& ) = delete;
-
-private:
-	ARQCore_API static std::atomic<DynaLibCache*> s_globalInst;
 
 private:
 	std::unordered_map<std::string, OS::DynaLib, TransparentStringHash, std::equal_to<>> m_loadedLibs;

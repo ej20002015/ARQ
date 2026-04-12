@@ -6,14 +6,11 @@
 namespace ARQ
 {
 
-std::unordered_map<std::string, std::shared_ptr<IStreamOffsetSource>, TransparentStringHash, std::equal_to<>> StreamOffsetSourceFactory::s_sources;
-std::mutex StreamOffsetSourceFactory::s_sourcesMutex;
-
 std::shared_ptr<IStreamOffsetSource> StreamOffsetSourceFactory::create( const std::string_view dsh )
 {
-	std::lock_guard<std::mutex> lg( s_sourcesMutex );
+	std::lock_guard<std::mutex> lg( m_sourcesMutex );
 
-	if( const auto it = s_sources.find( dsh ); it != s_sources.end() )
+	if( const auto it = m_sources.find( dsh ); it != m_sources.end() )
 		return it->second;
 
 	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
@@ -26,26 +23,26 @@ std::shared_ptr<IStreamOffsetSource> StreamOffsetSourceFactory::create( const st
 			ARQ_ASSERT( false );
 	}
 
-	const OS::DynaLib& lib = DynaLibCache::get( dynaLibName );
+	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<StreamOffsetSourceCreateFunc>( "createStreamOffsetSource" );
 	auto newSource = std::shared_ptr<IStreamOffsetSource>( createFunc( dsh ) );
 
-	return s_sources.emplace( dsh, std::move( newSource ) ).first->second;
+	return m_sources.emplace( dsh, std::move( newSource ) ).first->second;
 }
 
 void StreamOffsetSourceFactory::addCustomSource( const std::string_view dsh, const std::shared_ptr<IStreamOffsetSource>& source )
 {
-	std::lock_guard<std::mutex> lg( s_sourcesMutex );
-	s_sources.emplace( dsh, source );
+	std::lock_guard<std::mutex> lg( m_sourcesMutex );
+	m_sources.emplace( dsh, source );
 }
 
 void StreamOffsetSourceFactory::delCustomSource( const std::string_view dsh )
 {
-	std::lock_guard<std::mutex> lg( s_sourcesMutex );
+	std::lock_guard<std::mutex> lg( m_sourcesMutex );
 
-	if( const auto it = s_sources.find( dsh ); it != s_sources.end() )
-		s_sources.erase( it );
+	if( const auto it = m_sources.find( dsh ); it != m_sources.end() )
+		m_sources.erase( it );
 }
 
 }

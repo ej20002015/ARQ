@@ -8,7 +8,7 @@ namespace ARQ::MD
 void Publisher::init( const Config& config )
 {
 	m_config         = config;
-	m_streamProducer = StreamingServiceFactory::createProducer( m_config.streamingServiceDSH, StreamProducerOptions( "MD::Publisher", StreamProducerOptions::Preset::LowLatency ) );
+	m_streamProducer = StreamingServiceFactory::inst().createProducer( m_config.streamingServiceDSH, StreamProducerOptions( "MD::Publisher", StreamProducerOptions::Preset::LowLatency ) );
 }
 
 void Publisher::registerOnErrorCallback( const PublisherErrorCallback& callback )

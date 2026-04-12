@@ -11,8 +11,8 @@ namespace ARQ::RD
 void CommandManager::init( const Config& config )
 {
 	m_config           = config;
-	m_messagingService = MessagingServiceFactory::create( m_config.messagingServiceDSH );
-	m_streamProducer   = StreamingServiceFactory::createProducer( m_config.streamingServiceDSH, StreamProducerOptions( "RD::CommandManager", StreamProducerOptions::Preset::LowLatency ) );
+	m_messagingService = MessagingServiceFactory::inst().create( m_config.messagingServiceDSH );
+	m_streamProducer   = StreamingServiceFactory::inst().createProducer( m_config.streamingServiceDSH, StreamProducerOptions( "RD::CommandManager", StreamProducerOptions::Preset::LowLatency ) );
 	m_subTopicPattern  = SUB_TOPIC_PFX + ID::getSessionID().toString();
 	m_subHandler       = std::make_shared<SubHandler>( *this );
 }

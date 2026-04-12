@@ -1,4 +1,4 @@
 ARQ_define_dynalib(ARQMath)
-append_link_libraries(ARQMath ARQUtils)
+append_link_libraries(ARQMath ARQUtils ARQCore)
 
 ARQ_define_dynalib_tests(ARQMath)

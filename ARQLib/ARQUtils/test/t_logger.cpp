@@ -72,6 +72,7 @@ class LoggerTest : public ::testing::Test
 protected:
     std::shared_ptr<TestSink_mt> m_testSink;
     std::unique_ptr<Logger>      m_loggerInst;
+	Logger*                      m_prevGlobalLogger = nullptr;
 
     void SetUp() override
     {
@@ -83,15 +84,17 @@ protected:
         cfg.primarySinkDest = "none";
         cfg.secondarySinkDest = "none";
         cfg.customSinks = { m_testSink };
+		cfg.logName = "TestLogger";
 
         m_loggerInst = std::make_unique<Logger>( cfg );
 
+		m_prevGlobalLogger = Logger::getGlobalInstPtr();
         Logger::setGlobalInst( m_loggerInst.get() );
     }
 
     void TearDown() override
     {
-        Logger::setGlobalInst( nullptr );
+        Logger::setGlobalInst( m_prevGlobalLogger );
     }
 
     JSON getFirstLogJson( const std::string& context_msg = "" )

@@ -2,6 +2,7 @@
 #include <ARQCore/dll.h>
 
 #include <ARQUtils/hashers.h>
+#include <ARQUtils/global_accessor.h>
 #include <ARQCore/streaming_service_interface.h>
 
 #include <functional>
@@ -115,21 +116,21 @@ private:
 using CreateStreamProducerFunc = std::add_pointer<IStreamProducer* ( const std::string_view dsh, const StreamProducerOptions& options )>::type;
 using CreateStreamConsumerFunc = std::add_pointer<IStreamConsumer* ( const std::string_view dsh, const StreamConsumerOptions& options )>::type;
 
-class StreamingServiceFactory
+class StreamingServiceFactory : public GlobalAccessor<StreamingServiceFactory, "StreamingServiceFactory">
 {
 public:
-	[[nodiscard]] ARQCore_API static std::shared_ptr<IStreamProducer> createProducer( const std::string_view dsh, const StreamProducerOptions& options );
-	[[nodiscard]] ARQCore_API static std::shared_ptr<IStreamConsumer> createConsumer( const std::string_view dsh, const StreamConsumerOptions& options );
+	[[nodiscard]] ARQCore_API std::shared_ptr<IStreamProducer> createProducer( const std::string_view dsh, const StreamProducerOptions& options );
+	[[nodiscard]] ARQCore_API std::shared_ptr<IStreamConsumer> createConsumer( const std::string_view dsh, const StreamConsumerOptions& options );
 
 	// Not threadsafe but should only really be used on startup / for testing anyway
-	ARQCore_API static void addCustomStreamProducer( const std::string_view dsh, const std::shared_ptr<IStreamProducer>& streamProducer );
-	ARQCore_API static void delCustomStreamProducer( const std::string_view dsh );
-	ARQCore_API static void addCustomStreamConsumer( const std::string_view dsh, const std::shared_ptr<IStreamConsumer>& streamConsumer );
-	ARQCore_API static void delCustomStreamConsumer( const std::string_view dsh );
+	ARQCore_API void addCustomStreamProducer( const std::string_view dsh, const std::shared_ptr<IStreamProducer>& streamProducer );
+	ARQCore_API void delCustomStreamProducer( const std::string_view dsh );
+	ARQCore_API void addCustomStreamConsumer( const std::string_view dsh, const std::shared_ptr<IStreamConsumer>& streamConsumer );
+	ARQCore_API void delCustomStreamConsumer( const std::string_view dsh );
 
 private:
-	static std::unordered_map<std::string, std::shared_ptr<IStreamProducer>, TransparentStringHash, std::equal_to<>> s_customStreamProducers;
-	static std::unordered_map<std::string, std::shared_ptr<IStreamConsumer>, TransparentStringHash, std::equal_to<>> s_customStreamConsumers;
+	std::unordered_map<std::string, std::shared_ptr<IStreamProducer>, TransparentStringHash, std::equal_to<>> m_customStreamProducers;
+	std::unordered_map<std::string, std::shared_ptr<IStreamConsumer>, TransparentStringHash, std::equal_to<>> m_customStreamConsumers;
 };
 
 }

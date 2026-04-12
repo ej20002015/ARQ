@@ -2,6 +2,7 @@
 #include <ARQCore/dll.h>
 
 #include <ARQUtils/hashers.h>
+#include <ARQUtils/global_accessor.h>
 #include <ARQCore/streaming_service.h>
 
 #include <string>
@@ -23,17 +24,17 @@ public:
 
 using StreamOffsetSourceCreateFunc = std::add_pointer<IStreamOffsetSource*( const std::string_view dsh )>::type;
 
-class StreamOffsetSourceFactory
+class StreamOffsetSourceFactory : public GlobalAccessor<StreamOffsetSourceFactory, "StreamOffsetSourceFactory">
 {
 public:
-	[[nodiscard]] ARQCore_API static std::shared_ptr<IStreamOffsetSource> create( const std::string_view dsh );
+	[[nodiscard]] ARQCore_API std::shared_ptr<IStreamOffsetSource> create( const std::string_view dsh );
 
-	ARQCore_API static void addCustomSource( const std::string_view dsh, const std::shared_ptr<IStreamOffsetSource>& source );
-	ARQCore_API static void delCustomSource( const std::string_view dsh );
+	ARQCore_API void addCustomSource( const std::string_view dsh, const std::shared_ptr<IStreamOffsetSource>& source );
+	ARQCore_API void delCustomSource( const std::string_view dsh );
 
 private:
-	static std::unordered_map<std::string, std::shared_ptr<IStreamOffsetSource>, TransparentStringHash, std::equal_to<>> s_sources;
-	static std::mutex s_sourcesMutex;
+	std::unordered_map<std::string, std::shared_ptr<IStreamOffsetSource>, TransparentStringHash, std::equal_to<>> m_sources;
+	std::mutex m_sourcesMutex;
 };
 
 }
