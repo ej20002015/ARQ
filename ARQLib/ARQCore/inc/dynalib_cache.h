@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <mutex>
 #include <atomic>
+#include <vector>
 
 namespace ARQ
 {
