@@ -10,8 +10,6 @@
 namespace ARQ
 {
 
-class CHQuery;
-
 class CHConnPool
 {
 public:

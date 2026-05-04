@@ -12,7 +12,8 @@ TEST( TempTests, CheckRedis )
     try
     {
         auto source = StreamOffsetSourceFactory::inst().create( "Redis" );
-        source->saveOffsets( "test", {} );
+        source->saveOffsets( "Test", { { { "EvanTopic", 0 }, 1 }, { { "EvanTopic", 1 }, 99 }, { { "TestTopic", 0 }, 5 } } );
+		auto ret = source->getOffsets( "Test" );
     }
 	catch( const ARQException& e )
     {

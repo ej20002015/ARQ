@@ -13,17 +13,9 @@ std::shared_ptr<IStreamOffsetSource> StreamOffsetSourceFactory::create( const st
 	if( const auto it = m_sources.find( dsh ); it != m_sources.end() )
 		return it->second;
 
-	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
-
-	std::string dynaLibName;
-	switch( dsc.type )
-	{
-		case DataSourceType::Redis: dynaLibName = "ARQRedis"; break;
-		default:
-			ARQ_ASSERT( false );
-	}
-
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const DataSourceConfig& dsc         = DataSourceConfigManager::inst().get( dsh );
+	const std::string_view  dynaLibName = dataSourceTypeToDynaLibName( dsc.type );
+	const OS::DynaLib&      lib         = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<StreamOffsetSourceCreateFunc>( "createStreamOffsetSource" );
 	auto newSource = std::shared_ptr<IStreamOffsetSource>( createFunc( dsh ) );

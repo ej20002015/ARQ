@@ -9,7 +9,7 @@
 namespace ARQ::CH::RD
 {
 
-extern "C" ARQClickHouse_API void registerEntitySources( ARQ::RD::Source& source );
+extern "C" ARQClickHouse_API void registerRDEntitySources( ARQ::RD::Source& source );
 
 // --- EntitySource class for Currency ---
 

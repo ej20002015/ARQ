@@ -25,7 +25,15 @@ public:
     constexpr TupleVector() = default;
 
     /**
-     * @brief Clears all vectors in the batch.
+	 * @brief Gets the number of different types (vectors).
+     */
+    constexpr size_t typeCount() const noexcept
+    {
+        return sizeof...( Types );
+	}
+
+    /**
+     * @brief Clears all vectors.
      */
     constexpr void clear() noexcept
     {
@@ -37,7 +45,7 @@ public:
 
     /**
      * @brief Checks if all vectors are empty.
-     * @return true if ALL vectors in the batch are empty, false otherwise.
+     * @return true if ALL vectors are empty, false otherwise.
      */
     [[nodiscard]] constexpr bool empty() const noexcept
     {

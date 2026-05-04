@@ -32,7 +32,7 @@ public:
 
     static T& getGlobalInst()
     {
-		T* ptr = getGlobalInstPtr();
+        T* ptr = getGlobalInstPtr();
         if( !ptr )
             throw ARQException( std::format( "Attempted to access global component [{}] before initialization or after shutdown", Name.view() ) );
         return *ptr;

@@ -12,17 +12,9 @@ std::shared_ptr<IMessagingService> MessagingServiceFactory::create( const std::s
 	if( const auto it = m_customServices.find( dsh ); it != m_customServices.end() )
 		return it->second;
 
-	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
-
-	std::string dynaLibName;
-	switch( dsc.type )
-	{
-		case DataSourceType::NATS: dynaLibName = "ARQNats"; break;
-		default:
-			ARQ_ASSERT( false );
-	}
-
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const DataSourceConfig& dsc         = DataSourceConfigManager::inst().get( dsh );
+	const std::string_view  dynaLibName = dataSourceTypeToDynaLibName( dsc.type );
+	const OS::DynaLib&      lib         = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<MessagingServiceCreateFunc>( "createMessagingService" );
 	return std::shared_ptr<IMessagingService>( createFunc( dsc.dsh ), [] (IMessagingService* ) { ; } ); // Lifetime handled by dlls so use null deleter

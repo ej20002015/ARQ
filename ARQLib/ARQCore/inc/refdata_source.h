@@ -44,19 +44,18 @@ public:
 class Source
 {
 public:
-	template<typename T>
+	template<c_RefData T>
 	std::vector<Record<T>> fetch() const;
-
-	template<typename T>
+	template<c_RefData T>
 	void insert( const std::vector<Record<T>> data );
 
-	template<typename T>
+	template<c_RefData T>
 	void registerEntitySource( std::unique_ptr<IEntitySource<T>> entitySource );
 
 	void setDSH( const std::string_view dsh );
 
 private:
-	template<typename T>
+	template<c_RefData T>
 	IEntitySource<T>& getEntitySource() const;
 
 private:
@@ -64,7 +63,7 @@ private:
 	std::string m_dsh;
 };
 
-using RegisterEntitySourcesFunc = std::add_pointer<void( Source* const source )>::type;
+using RegisterRDEntitySourcesFunc = std::add_pointer<void( Source* const source )>::type;
 
 class SourceFactory : public GlobalAccessor<SourceFactory, "RD::SourceFactory">
 {
@@ -79,28 +78,28 @@ private:
 	std::mutex m_sourcesMutex;
 };
 
-template<typename T>
+template<c_RefData T>
 std::vector<Record<T>> Source::fetch() const
 {
 	const IEntitySource<T>& entitySource = getEntitySource<T>();
 	return entitySource.fetch();
 }
 
-template<typename T>
+template<c_RefData T>
 void Source::insert( const std::vector<Record<T>> data )
 {
 	IEntitySource<T>& entitySource = getEntitySource<T>();
 	entitySource.insert( data );
 }
 
-template<typename T>
+template<c_RefData T>
 void Source::registerEntitySource( std::unique_ptr<IEntitySource<T>> entitySource )
 {
 	constexpr std::string_view typeName = ARQType<T>::name();
 	m_entitySources[typeName] = std::move( entitySource );
 }
 
-template<typename T>
+template<c_RefData T>
 IEntitySource<T>& Source::getEntitySource() const
 {
 	constexpr std::string_view typeName = ARQType<T>::name();

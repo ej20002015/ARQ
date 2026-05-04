@@ -12,17 +12,9 @@ std::shared_ptr<IMktDataSource> MktDataSourceFactory::create( const std::string_
 	if( const auto it = m_customSources.find( dsh ); it != m_customSources.end() )
 		return it->second;
 
-	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
-
-	std::string dynaLibName;
-	switch( dsc.type )
-	{
-		case DataSourceType::ClickHouse: dynaLibName = "ARQClickHouse"; break;
-		default:
-			ARQ_ASSERT( false );
-	}
-
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const DataSourceConfig& dsc         = DataSourceConfigManager::inst().get( dsh );
+	const std::string_view  dynaLibName = dataSourceTypeToDynaLibName( dsc.type );
+	const OS::DynaLib&      lib         = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<MktDataSourceCreateFunc>( "createMktDataSource" ); // TODO: Need to cache the loaded functions?
 	return std::shared_ptr<IMktDataSource>( createFunc( dsc.dsh ) );
