@@ -104,6 +104,8 @@ LibContext::LibContext( const Config& cfg )
 	StreamingServiceFactory::setGlobalInst( m_streamingServiceFactory.get() );
 	m_streamOffsetSourceFactory = std::make_unique<StreamOffsetSourceFactory>();
 	StreamOffsetSourceFactory::setGlobalInst( m_streamOffsetSourceFactory.get() );
+	m_mdMarketSourceFactory = std::make_unique<MD::MarketSourceFactory>();
+	MD::MarketSourceFactory::setGlobalInst( m_mdMarketSourceFactory.get() );
 	m_mktDataSourceFactory = std::make_unique<MktDataSourceFactory>();
 	MktDataSourceFactory::setGlobalInst( m_mktDataSourceFactory.get() );
 
@@ -116,6 +118,8 @@ LibContext::~LibContext()
 
 	MktDataSourceFactory::setGlobalInst( nullptr );
 	m_mktDataSourceFactory.reset();
+	MD::MarketSourceFactory::setGlobalInst( nullptr );
+	m_mdMarketSourceFactory.reset();
 	StreamOffsetSourceFactory::setGlobalInst( nullptr );
 	m_streamOffsetSourceFactory.reset();
 	StreamingServiceFactory::setGlobalInst( nullptr );

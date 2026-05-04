@@ -12,17 +12,9 @@ std::shared_ptr<IStreamProducer> StreamingServiceFactory::createProducer( const 
 	if( const auto it = m_customStreamProducers.find( dsh ); it != m_customStreamProducers.end() )
 		return it->second;
 
-	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
-
-	std::string dynaLibName;
-	switch( dsc.type )
-	{
-		case DataSourceType::Kafka: dynaLibName = "ARQKafka"; break;
-		default:
-			ARQ_ASSERT( false );
-	}
-
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const DataSourceConfig& dsc         = DataSourceConfigManager::inst().get( dsh );
+	const std::string_view  dynaLibName = dataSourceTypeToDynaLibName( dsc.type );
+	const OS::DynaLib&      lib         = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<CreateStreamProducerFunc>( "createStreamProducer" );
 	return std::shared_ptr<IStreamProducer>( createFunc( dsc.dsh, options ) );
@@ -33,17 +25,9 @@ std::shared_ptr<IStreamConsumer> StreamingServiceFactory::createConsumer( const 
 	if( const auto it = m_customStreamConsumers.find( dsh ); it != m_customStreamConsumers.end() )
 		return it->second;
 
-	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
-
-	std::string dynaLibName;
-	switch( dsc.type )
-	{
-		case DataSourceType::Kafka: dynaLibName = "ARQKafka"; break;
-		default:
-			ARQ_ASSERT( false );
-	}
-
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
+	const DataSourceConfig& dsc         = DataSourceConfigManager::inst().get( dsh );
+	const std::string_view  dynaLibName = dataSourceTypeToDynaLibName( dsc.type );
+	const OS::DynaLib&      lib         = DynaLibCache::inst().get( dynaLibName );
 
 	const auto createFunc = lib.getFunc<CreateStreamConsumerFunc>( "createStreamConsumer" );
 	return std::shared_ptr<IStreamConsumer>( createFunc( dsc.dsh, options ) );

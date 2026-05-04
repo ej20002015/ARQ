@@ -1,13 +1,12 @@
 #include <ARQCore/refdata_source.h>
 
 #include <ARQCore/dynalib_cache.h>
-#include <ARQUtils/logger.h>
 #include <ARQCore/data_source_config.h>
 
 namespace ARQ::RD
 {
 
-void ARQ::RD::Source::setDSH( const std::string_view dsh )
+void Source::setDSH( const std::string_view dsh )
 {
 	m_dsh = dsh;
 	for( auto& [_, entitySource] : m_entitySources )
@@ -21,20 +20,11 @@ std::shared_ptr<Source> SourceFactory::create( const std::string_view dsh )
 	if( const auto it = m_sources.find( dsh ); it != m_sources.end() )
 		return it->second;
 
-	const DataSourceConfig& dsc = DataSourceConfigManager::inst().get( dsh );
+	const DataSourceConfig& dsc         = DataSourceConfigManager::inst().get( dsh );
+	const std::string_view  dynaLibName = dataSourceTypeToDynaLibName( dsc.type );
+	const OS::DynaLib&      lib         = DynaLibCache::inst().get( dynaLibName );
 
-	std::string dynaLibName;
-	switch( dsc.type )
-	{
-		case DataSourceType::ClickHouse: dynaLibName = "ARQClickHouse"; break;
-		case DataSourceType::gRPC:       dynaLibName = "ARQGrpc";       break;
-		default:
-			ARQ_ASSERT( false );
-	}
-
-	const OS::DynaLib& lib = DynaLibCache::inst().get( dynaLibName );
-
-	const auto registerSourcesFunc = lib.getFunc<RegisterEntitySourcesFunc>( "registerEntitySources" );
+	const auto registerSourcesFunc = lib.getFunc<RegisterRDEntitySourcesFunc>( "registerRDEntitySources" );
 	auto newSource = std::make_shared<Source>();
 	registerSourcesFunc( newSource.get() );
 	newSource->setDSH( dsh );

@@ -21,7 +21,24 @@ enum class DataSourceType
 	NATS,
 	Kafka,
 	Redis,
+
+	_SIZE_
 };
+
+static constexpr std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE_ )> DYNA_LIB_NAMES = {
+	"ARQClickHouse",
+	"ARQGrpc",
+	"ARQNATS",
+	"ARQKafka",
+	"ARQRedis",
+};
+
+static_assert(
+	DYNA_LIB_NAMES.size() == static_cast<size_t>( DataSourceType::_SIZE_ ),
+	"Mismatch between DataSourceType and DYNA_LIB_NAMES"
+);
+
+inline std::string_view dataSourceTypeToDynaLibName( const DataSourceType type ) { return DYNA_LIB_NAMES[static_cast<size_t>( type )]; }
 
 struct DataSourceConfig
 {

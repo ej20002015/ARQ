@@ -14,7 +14,7 @@
 namespace ARQ::CH::RD
 {
 
-void registerEntitySources( ARQ::RD::Source& source )
+void registerRDEntitySources( ARQ::RD::Source& source )
 {
 	source.registerEntitySource<ARQ::RD::Currency>( std::make_unique<CHEntitySource_Currency>() );
 	source.registerEntitySource<ARQ::RD::User>( std::make_unique<CHEntitySource_User>() );
@@ -102,7 +102,7 @@ std::vector<ARQ::RD::Record<ARQ::RD::Currency>> CHEntitySource_Currency::fetch()
         throw ARQException( std::format( "Error executing ClickHouse SELECT query: {}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse select query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse SELECT query in {}", tm.duration() );
 
     return results;
 }
@@ -166,7 +166,7 @@ void CHEntitySource_Currency::insert( const std::vector<ARQ::RD::Record<ARQ::RD:
         throw ARQException( std::format( "Error executing ClickHouse INSERT query: {0}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse insert query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse INSERT query in {}", tm.duration() );
 }
 
 // --- Implementation for User ---
@@ -235,7 +235,7 @@ std::vector<ARQ::RD::Record<ARQ::RD::User>> CHEntitySource_User::fetch() const
         throw ARQException( std::format( "Error executing ClickHouse SELECT query: {}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse select query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse SELECT query in {}", tm.duration() );
 
     return results;
 }
@@ -299,7 +299,7 @@ void CHEntitySource_User::insert( const std::vector<ARQ::RD::Record<ARQ::RD::Use
         throw ARQException( std::format( "Error executing ClickHouse INSERT query: {0}", e.what() ) );
     }
 
-    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse insert query in {}", tm.duration() );
+    Log( Module::CLICKHOUSE ).debug( "Ran ClickHouse INSERT query in {}", tm.duration() );
 }
 
 }

@@ -21,5 +21,6 @@ port = 9092
 [data_sources.Redis]
 type = "Redis"
 [data_sources.Redis.conn_props.Main]
+#hostname = "redis-standalone"
 hostname = "localhost"
 port = 6379

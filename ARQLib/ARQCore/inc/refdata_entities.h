@@ -61,7 +61,7 @@ struct RecordHeader
     ID::UUID       uuid;
     /// Indicates if the record is still active - false means it's been 'tombstoned'
     bool           isActive;
-    /// The timestamp of the last successful commit
+    /// The timestamp of the last update to this record
     Time::DateTime lastUpdatedTs;
     /// The user who last updated the record
     std::string    lastUpdatedBy;

@@ -98,6 +98,36 @@ std::string join( R&& range, std::string_view delimiter = "," )
 }
 
 /**
+ * @brief Joins a range of elements, applying a specific format string to each element.
+ * @param range The range of elements to join.
+ * @param elementFmt The format string to apply to each element (e.g., "'{}'").
+ * @param delimiter The delimiter to use between formatted elements.
+ * @return A single string containing all formatted and joined elements.
+ */
+template<std::ranges::input_range R>
+    requires std::formattable<std::ranges::range_reference_t<R>, char>
+std::string joinFmt( R&& range, std::string_view elementFmt, std::string_view delimiter = "," )
+{
+    std::string result;
+
+	if constexpr( std::ranges::sized_range<R> ) // If range has accessible size, reserve capacity to avoid multiple reallocations
+        result.reserve( std::ranges::size( range ) * ( 16 + elementFmt.size() + delimiter.size() ) );
+
+    bool first = true;
+
+    for( auto&& v : range )
+    {
+        if( !first )
+            result.append( delimiter );
+        first = false;
+
+        std::vformat_to( std::back_inserter( result ), elementFmt, std::make_format_args( v ) );
+    }
+
+    return result;
+}
+
+/**
  * @brief Joins a range of formattable elements into a single string with a specified delimiter.
  * @param range The range of elements to join. Each element must be formattable with std::format.
  * @param delimiter The delimiter to use between elements.

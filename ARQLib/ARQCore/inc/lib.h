@@ -11,6 +11,7 @@
 #include <ARQCore/refdata_source.h>
 #include <ARQCore/serialiser.h>
 #include <ARQCore/streaming_service.h>
+#include <ARQMarket/mktdata_source.h>
 
 #include <vector>
 #include <string>
@@ -79,15 +80,16 @@ private:
 private:
 	// Global objects that are initialized in LibContext constructor and destroyed in LibContext destructor
 
+	std::unique_ptr<DynaLibCache> m_dynaLibCache;
+	std::unique_ptr<Logger>       m_logger;
+
 	std::unique_ptr<RD::SourceFactory>         m_rdSourceFactory;
 	std::unique_ptr<SerialiserFactory>         m_serialiserFactory;
 	std::unique_ptr<MessagingServiceFactory>   m_messagingServiceFactory;
 	std::unique_ptr<StreamingServiceFactory>   m_streamingServiceFactory;
 	std::unique_ptr<StreamOffsetSourceFactory> m_streamOffsetSourceFactory;
+	std::unique_ptr<MD::MarketSourceFactory>   m_mdMarketSourceFactory; // TODO: If factories are going to be outside ARQCore, we need a mechanism to inject the factories instances into LibContext
 	std::unique_ptr<MktDataSourceFactory>      m_mktDataSourceFactory;
-
-	std::unique_ptr<DynaLibCache> m_dynaLibCache;
-	std::unique_ptr<Logger> m_logger;
 };
 
 }

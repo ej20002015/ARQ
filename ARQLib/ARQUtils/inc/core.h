@@ -25,6 +25,7 @@ enum class Module
 	NATS,
 	KAFKA,
 	HTTP,
+	REDIS,
 
 	_SIZE
 };
