@@ -19,8 +19,8 @@ public:
 		m_serialiser = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
 	}
 
-	ARQ::MD::RecordCollection load( const std::string_view marketName, const ARQ::MD::TIDSet& filter )            override;
-	void                      save( const std::string_view marketName, const ARQ::MD::RecordCollection& records ) override;
+	ARQ::MD::RecordCollection load( const std::string_view marketName, const ARQ::MD::TIDSet& filter = ARQ::MD::TIDSet{} ) override;
+	void                      save( const std::string_view marketName, const ARQ::MD::RecordCollection& records )          override;
 
 private:
 	std::string                  m_dsh;

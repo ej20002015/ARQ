@@ -18,8 +18,8 @@ namespace ARQ::MD
 class IMarketSource
 {
 public:
-	virtual RecordCollection load( const std::string_view marketName, const TIDSet& filter )            = 0;
-	virtual void             save( const std::string_view marketName, const RecordCollection& records ) = 0;
+	virtual RecordCollection load( const std::string_view marketName, const TIDSet& filter = ARQ::MD::TIDSet{} ) = 0;
+	virtual void             save( const std::string_view marketName, const RecordCollection& records )          = 0;
 };
 
 using MarketSourceCreateFunc = std::add_pointer<IMarketSource* ( const std::string_view dsh )>::type;

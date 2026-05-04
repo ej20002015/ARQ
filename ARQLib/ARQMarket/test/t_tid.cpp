@@ -47,7 +47,7 @@ TEST( TempTests, SaveMarket )
 TEST( TempTests, LoadMarket )
 {
     std::shared_ptr<IMarketSource> mktSrc = MarketSourceFactory::inst().create( "Redis" );
-	RecordCollection coll = mktSrc->load( "TEST_MARKET", TIDSet{} );
+	RecordCollection coll = mktSrc->load( "TEST_MARKET" );
 
     RecordCollection collOnlyFXR = mktSrc->load( "TEST_MARKET", TIDSet{ TID{ Type::FXR } } );
 
