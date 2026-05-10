@@ -13,6 +13,7 @@
 #include <ARQUtils/id.h>
 #include <ARQUtils/str.h>
 #include <ARQUtils/tuple_vector.h>
+#include <ARQUtils/enum.h>
 #include <ARQCore/type_registry.h>
 
 #include <string>
@@ -173,25 +174,44 @@ using RecordCollection = TupleVector<
  * @brief Dispatches to the concrete type T based on entity name.
  * @param entityName The name of the MktData entity.
  * @param visitor A callable object with a templated operator()<T>() method.
- * @param doThrow Whether to throw an exception on unknown entity name.
  * @returns whatever the visitor returns.
  * @throws ARQException if entityName is unknown.
  */
 template<typename F>
-decltype(auto) dispatch( const std::string_view entityName, F&& visitor, const DoThrow doThrow = DoThrow::YES )
+decltype(auto) dispatch( const std::string_view entityName, F&& visitor )
 {
     switch( Str::constexprHash( entityName ) )
     {
         {% for entity in entities %}
         case Str::constexprHash( "{{ entity.name }}" ):
-            if (entityName == "{{ entity.name }}") 
+            if( entityName == "{{ entity.name }}" ) 
                 return visitor.template operator()<{{ entity.name }}>();
             break;
         {% endfor %}
     }
 
-    if( doThrow == DoThrow::YES )
-        throw ARQException( std::format( "Unknown MktData entity name [{}] - cannot dispatch to function", entityName ) );
+    throw ARQException( std::format( "Unknown MktData entity name [{}] - cannot dispatch to function", entityName ) );
+}
+
+/**
+ * @brief Dispatches to the concrete type T based on entity type enum.
+ * @param entityType The type enum of the MktData entity.
+ * @param visitor A callable object with a templated operator()<T>() method.
+ * @returns whatever the visitor returns.
+ * @throws ARQException if entityType is unknown.
+ */
+template<typename F>
+decltype(auto) dispatch( const Type entityType, F&& visitor )
+{
+    switch( entityType )
+    {
+        {% for entity in entities %}
+        case Type::{{ entity.type_string }}:
+            return visitor.template operator()<{{ entity.name }}>();
+        {% endfor %}
+    }
+
+    throw ARQException( std::format( "Unknown MktData entity type [{}] - cannot dispatch to function", Enum::enum_name( entityType ) ) );
 }
 
 #pragma endregion

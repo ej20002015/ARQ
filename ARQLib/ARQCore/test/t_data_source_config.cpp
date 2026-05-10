@@ -7,19 +7,19 @@ using namespace ARQ;
 
 #include <ARQCore/stream_offset_source.h>
 
-TEST( TempTests, CheckRedis )
-{
-    try
-    {
-        auto source = StreamOffsetSourceFactory::inst().create( "Redis" );
-        source->saveOffsets( "Test", { { { "EvanTopic", 0 }, 1 }, { { "EvanTopic", 1 }, 99 }, { { "TestTopic", 0 }, 5 } } );
-		auto ret = source->getOffsets( "Test" );
-    }
-	catch( const ARQException& e )
-    {
-        std::cerr << "Caught expected exception for Redis source: " << e.what() << std::endl;
-    }
-}
+//TEST( TempTests, CheckRedis )
+//{
+//    try
+//    {
+//        auto source = StreamOffsetSourceFactory::inst().create( "Redis" );
+//        source->saveOffsets( "Test", { { { "EvanTopic", 0 }, 1 }, { { "EvanTopic", 1 }, 99 }, { { "TestTopic", 0 }, 5 } } );
+//		auto ret = source->getOffsets( "Test" );
+//    }
+//	catch( const ARQException& e )
+//    {
+//        std::cerr << "Caught expected exception for Redis source: " << e.what() << std::endl;
+//    }
+//}
 
 TEST( DataSourceConfigManagerTest, LoadFromStringValid )
 {

@@ -301,11 +301,14 @@ void NatsMessagingService::connect( const std::string_view dsh )
 	if( natsStatus rc = natsConnection_Connect( &m_natsConn, natsOptions ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to create NatsMessagingService - natsConnection_Connect() call failed with error: {}", formatNatsError( rc ) ) );
 
+	m_disconnected = false;
+
 	Log( Module::NATS ).info( "Finished connecting to Nats for dsh [{}]", dsh );
 }
 
 void NatsMessagingService::disconnect()
 {
+	m_disconnected = true;
 	natsConnection_Destroy( m_natsConn );
 }
 
@@ -329,21 +332,24 @@ void NatsMessagingService::onNatsError( natsSubscription* subscription, natsStat
 
 void NatsMessagingService::onNatsClosed()
 {
-	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
-	Log( Module::NATS ).error( "NatsMessagingService: Nats connection has been closed" );
-	invokeUserEventCallbacks( MessagingEvent::CONN_CLOSED );
+	if( !m_disconnected )
+	{
+		Log( Module::NATS ).error( "NatsMessagingService: Nats connection has been closed" );
+		invokeUserEventCallbacks( MessagingEvent::CONN_CLOSED );
+	}
 }
 
 void NatsMessagingService::onNatsDisconnected()
 {
-	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
-	Log( Module::NATS ).error( "NatsMessagingService: Nats connection has been disconnected - will attempt to reconnect" );
-	invokeUserEventCallbacks( MessagingEvent::CONN_DISCONNECTED );
+	if( !m_disconnected )
+	{
+		Log( Module::NATS ).error( "NatsMessagingService: Nats connection has been disconnected - will attempt to reconnect" );
+		invokeUserEventCallbacks( MessagingEvent::CONN_DISCONNECTED );
+	}
 }
 
 void NatsMessagingService::onNatsReconnected()
 {
-	// TODO: Work out if we need to send this to all the subscribers as well or other callback will deal with that
 	Log( Module::NATS ).info( "NatsMessagingService: Nats connection has been reconnected" );
 	invokeUserEventCallbacks( MessagingEvent::CONN_RECONNECTED );
 }

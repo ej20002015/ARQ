@@ -37,18 +37,25 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 	// 1. Queue commands
 	// -----------------
 
-	collection.visitVectors( [&] <c_MktData T> ( std::vector<Record<T>>& vector )
+	try
 	{
-		const std::string hashKey = std::format( "{}:{}", marketKeyRoot, Traits<T>::type() );
+		collection.visitVectors( [&] <c_MktData T> ( std::vector<Record<T>>&vector )
+		{
+			const std::string hashKey = std::format( "{}:{}", marketKeyRoot, Traits<T>::type() );
 
-		TIDSet::IDs idSpec = filter.empty() ? TIDSet::All{} : filter.getIDsForType( Traits<T>::typeEnum() );
-		if( std::holds_alternative<TIDSet::None>( idSpec ) )
-			return;                                          // filter explicitly specifies 'None' for this type, so skip entirely
-		else if( std::holds_alternative<TIDSet::All>( idSpec ) )
-			pl.hgetall( hashKey );                           // filter specifies 'all' for this type, so use hgetall
-		else if( TIDSet::IDList* list = std::get_if<TIDSet::IDList>( &idSpec ) )
-			pl.hmget( hashKey, list->begin(), list->end() ); // filter specifies specific IDs, so only get those fields using hmget
-	} );
+			TIDSet::IDs idSpec = filter.empty() ? TIDSet::All{} : filter.getIDsForType( Traits<T>::typeEnum() );
+			if( std::holds_alternative<TIDSet::None>( idSpec ) )
+				return;                                          // filter explicitly specifies 'None' for this type, so skip entirely
+			else if( std::holds_alternative<TIDSet::All>( idSpec ) )
+				pl.hgetall( hashKey );                           // filter specifies 'all' for this type, so use hgetall
+			else if( TIDSet::IDList* list = std::get_if<TIDSet::IDList>( &idSpec ) )
+				pl.hmget( hashKey, list->begin(), list->end() ); // filter specifies specific IDs, so only get those fields using hmget
+		} );
+	}
+	catch( const std::exception& e )
+	{
+		throw ARQException( std::format( "RedisMarketSource: Error queuing redis pipeline to load market [{}]: {}", marketName, e.what() ) );
+	}
 
 	// -------------------
 	// 2. Execute pipeline
@@ -123,7 +130,7 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 		}
 	} );
 
-	Log( Module::REDIS ).warn( "Loaded market [{}] from Redis with {} objects in {}", marketName, collection.size(), tm.duration() );
+	Log( Module::REDIS ).debug( "Loaded market [{}] from Redis with {} objects in {}", marketName, collection.size(), tm.duration() );
 
 	return collection;
 }
@@ -181,7 +188,7 @@ void RedisMarketSource::save( const std::string_view marketName, const RecordCol
 		throw ARQException( std::format( "RedisMarketSource: Error executing redis pipeline to save market [{}]: {}", marketName, e.what() ) );
 	}
 
-	Log( Module::REDIS ).warn( "Saved market [{}] to Redis with {} objects in {}", marketName, records.size(), tm.duration() );
+	Log( Module::REDIS ).debug( "Saved market [{}] to Redis with {} objects in {}", marketName, records.size(), tm.duration() );
 }
 
 }

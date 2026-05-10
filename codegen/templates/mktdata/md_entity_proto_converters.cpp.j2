@@ -10,6 +10,12 @@
 namespace ARQ::Proto::MD
 {
 
+/*
+******************************************************
+* Protobuf conversion functions for MktData entities *
+******************************************************
+*/
+
 {% for entity in entities %}
 // --- Converters for {{ entity.name }} ---
 
@@ -66,4 +72,129 @@ ARQ::MD::{{ entity.name }} fromProto( {{ entity.name }}&& protoEntity )
 }
 
 {% endfor %}
+
+/*
+****************************************************
+* Protobuf conversion functions for Misc MD types  *
+****************************************************
+*/
+
+// --- Converters for RecordHeader ---
+
+void toProto( const ARQ::MD::RecordHeader& arqRecordHeader, RecordHeader* const protoRecordHeader )
+{
+	protoRecordHeader->set_id( arqRecordHeader.id );
+	protoRecordHeader->set_asof_ts( arqRecordHeader.asofTs.microsecondsSinceEpoch() );
+	protoRecordHeader->set_is_active( arqRecordHeader.isActive );
+	protoRecordHeader->set_last_updated_ts( arqRecordHeader.lastUpdatedTs.microsecondsSinceEpoch() );
+	protoRecordHeader->set_last_updated_by( arqRecordHeader.lastUpdatedBy );
+}
+
+void toProto( ARQ::MD::RecordHeader&& arqRecordHeader, RecordHeader* const protoRecordHeader )
+{
+    protoRecordHeader->set_id( std::move( arqRecordHeader.id ) );
+	protoRecordHeader->set_asof_ts( arqRecordHeader.asofTs.microsecondsSinceEpoch() );
+	protoRecordHeader->set_is_active( arqRecordHeader.isActive );
+	protoRecordHeader->set_last_updated_ts( arqRecordHeader.lastUpdatedTs.microsecondsSinceEpoch() );
+	protoRecordHeader->set_last_updated_by( std::move( arqRecordHeader.lastUpdatedBy ) );
+}
+
+ARQ::MD::RecordHeader fromProto( const RecordHeader& protoRecordHeader )
+{
+    return {
+		.id            = protoRecordHeader.id(),
+		.asofTs        = Time::DateTime( Time::Microseconds( protoRecordHeader.asof_ts() ) ),
+		.isActive      = protoRecordHeader.is_active(),
+		.lastUpdatedTs = Time::DateTime( Time::Microseconds( protoRecordHeader.last_updated_ts() ) ),
+		.lastUpdatedBy = protoRecordHeader.last_updated_by()
+	};
+}
+
+ARQ::MD::RecordHeader fromProto( RecordHeader&& protoRecordHeader )
+{
+    return {
+		.id            = std::move( *protoRecordHeader.mutable_id() ),
+		.asofTs        = Time::DateTime( Time::Microseconds( protoRecordHeader.asof_ts() ) ),
+		.isActive      = protoRecordHeader.is_active(),
+		.lastUpdatedTs = Time::DateTime( Time::Microseconds( protoRecordHeader.last_updated_ts() ) ),
+		.lastUpdatedBy = std::move( *protoRecordHeader.mutable_last_updated_by() )
+	};
+}
+
+// --- Converters for RecordCollection ---
+
+ARQProtobuf_API void toProto( const ARQ::MD::RecordCollection& arqObj, RecordCollection* const protoObj )
+{
+    arqObj.visitVectors( [&] <ARQ::MD::c_MktData T> ( const std::vector<ARQ::MD::Record<T>>& cppVector )
+    {
+        if( cppVector.empty() )
+            return;
+
+        auto* protoList = ProtoTraits<T>::mutableList( protoObj );
+        protoList->Reserve( cppVector.size() );
+
+        for( const auto& cppRecord : cppVector )
+        {
+            auto* protoRecord = protoList->Add();
+            toProto( cppRecord, protoRecord );
+        }
+    } );
+}
+
+ARQProtobuf_API void toProto( ARQ::MD::RecordCollection&& arqObj, RecordCollection* const protoObj )
+{
+    arqObj.visitVectors( [&] <ARQ::MD::c_MktData T> ( std::vector<ARQ::MD::Record<T>>& cppVector )
+    {
+        if( cppVector.empty() )
+            return;
+
+        auto* protoList = ProtoTraits<T>::mutableList( protoObj );
+        protoList->Reserve( cppVector.size() );
+
+        for( auto& cppRecord : cppVector )
+        {
+            auto* protoRecord = protoList->Add();
+            toProto( std::move( cppRecord ), protoRecord ); 
+        }
+    } );
+}
+
+[[nodiscard]] ARQProtobuf_API ARQ::MD::RecordCollection fromProto( const RecordCollection& protoObj )
+{
+    ARQ::MD::RecordCollection cppObj;
+
+    cppObj.visitVectors( [&] <ARQ::MD::c_MktData T> ( std::vector<ARQ::MD::Record<T>>& cppVector )
+    {
+        const auto& protoList = ProtoTraits<T>::getList( protoObj );
+        if( protoList.empty() )
+            return;
+
+        cppVector.reserve( protoList.size() );
+
+        for( const auto& protoRecord : protoList )
+            cppVector.push_back( fromProto<T>( protoRecord ) );
+    } );
+
+    return cppObj;
+}
+
+[[nodiscard]] ARQProtobuf_API ARQ::MD::RecordCollection fromProto( RecordCollection&& protoObj )
+{
+    ARQ::MD::RecordCollection cppObj;
+
+    cppObj.visitVectors( [&] <ARQ::MD::c_MktData T> ( std::vector<ARQ::MD::Record<T>>& cppVector )
+    {
+        auto* protoList = ProtoTraits<T>::mutableList( &protoObj );
+        if( protoList->empty() )
+            return;
+
+        cppVector.reserve( protoList->size() );
+
+        for( auto& protoRecord : *protoList )
+            cppVector.push_back( fromProto<T>( std::move( protoRecord ) ) );
+    } );
+
+    return cppObj;
+}
+
 }

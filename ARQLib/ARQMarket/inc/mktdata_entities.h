@@ -9,6 +9,7 @@
 #include <ARQUtils/id.h>
 #include <ARQUtils/str.h>
 #include <ARQUtils/tuple_vector.h>
+#include <ARQUtils/enum.h>
 #include <ARQCore/type_registry.h>
 
 #include <string>
@@ -236,27 +237,46 @@ using RecordCollection = TupleVector<
  * @brief Dispatches to the concrete type T based on entity name.
  * @param entityName The name of the MktData entity.
  * @param visitor A callable object with a templated operator()<T>() method.
- * @param doThrow Whether to throw an exception on unknown entity name.
  * @returns whatever the visitor returns.
  * @throws ARQException if entityName is unknown.
  */
 template<typename F>
-decltype(auto) dispatch( const std::string_view entityName, F&& visitor, const DoThrow doThrow = DoThrow::YES )
+decltype(auto) dispatch( const std::string_view entityName, F&& visitor )
 {
     switch( Str::constexprHash( entityName ) )
     {
         case Str::constexprHash( "FXRate" ):
-            if (entityName == "FXRate") 
+            if( entityName == "FXRate" ) 
                 return visitor.template operator()<FXRate>();
             break;
         case Str::constexprHash( "EQPrice" ):
-            if (entityName == "EQPrice") 
+            if( entityName == "EQPrice" ) 
                 return visitor.template operator()<EQPrice>();
             break;
     }
 
-    if( doThrow == DoThrow::YES )
-        throw ARQException( std::format( "Unknown MktData entity name [{}] - cannot dispatch to function", entityName ) );
+    throw ARQException( std::format( "Unknown MktData entity name [{}] - cannot dispatch to function", entityName ) );
+}
+
+/**
+ * @brief Dispatches to the concrete type T based on entity type enum.
+ * @param entityType The type enum of the MktData entity.
+ * @param visitor A callable object with a templated operator()<T>() method.
+ * @returns whatever the visitor returns.
+ * @throws ARQException if entityType is unknown.
+ */
+template<typename F>
+decltype(auto) dispatch( const Type entityType, F&& visitor )
+{
+    switch( entityType )
+    {
+        case Type::FXR:
+            return visitor.template operator()<FXRate>();
+        case Type::EQP:
+            return visitor.template operator()<EQPrice>();
+    }
+
+    throw ARQException( std::format( "Unknown MktData entity type [{}] - cannot dispatch to function", Enum::enum_name( entityType ) ) );
 }
 
 #pragma endregion

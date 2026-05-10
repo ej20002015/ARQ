@@ -500,6 +500,7 @@ add_subdirectory(ARQLib/ARQRedis)
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataCmdExecutor)
 add_subdirectory(services/RefData/RefDataAuditProjector)
+add_subdirectory(services/MktData/MktDataLiveProjector)
 add_subdirectory(services/MktFeed/FXFeed)
 
 # Add tools subdirectories

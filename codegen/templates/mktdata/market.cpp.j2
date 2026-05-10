@@ -18,6 +18,18 @@ namespace Mkt
 
 const Name Name::LIVE = { "LIVE", Time::Date() };
 
+Name Name::fromStr( const std::string_view nameStr )
+{
+    size_t delimPos = nameStr.find( '|' );
+    if( delimPos == std::string_view::npos )
+        return Name( std::string( nameStr ) );
+
+    std::string tag( nameStr.substr( 0, delimPos ) );
+    std::string dateStr( nameStr.substr( delimPos + 1 ) );
+    Time::Date date = Time::Date( dateStr, "%Y%m%d" );
+    return Name( tag, date );
+}
+
 std::string Name::str() const
 {
     return tag + ( date.isSet() ? std::format( "|{:%Y%m%d}", date ) : "" );

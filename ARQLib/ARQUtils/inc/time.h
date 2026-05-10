@@ -76,6 +76,7 @@ public:
 	ARQUtils_API explicit Date( const TimeZone tz );
 	ARQUtils_API explicit Date( const Year y, const Month m, const Day d );
 	ARQUtils_API explicit Date( const Days serial );
+	ARQUtils_API explicit Date( std::string_view dateStr, std::string_view format );
 	ARQUtils_API explicit Date( const std::chrono::year_month_day ymd );
 	Date() = default;
 

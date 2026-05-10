@@ -42,18 +42,33 @@ Date::Date( const TimeZone tz )
 	}
 }
 
-Time::Date::Date( const Year y, const Month m, const Day d )
+Date::Date( const Year y, const Month m, const Day d )
 	: m_ymd( std::chrono::year_month_day( std::chrono::year( y ), std::chrono::month( m ), std::chrono::day( d ) ) )
 {
 	if( !m_ymd->ok() )
 		throw ARQException( std::format( "Invalid date args given: year={}, month={}, day={}", static_cast<int32_t>( y ), static_cast<int32_t>( m ), static_cast<int32_t>( d ) ) );
 }
 
-Time::Date::Date( const Days serial )
+Date::Date( const Days serial )
 	: m_ymd( std::chrono::sys_days( std::chrono::days( serial ) ) )
 {
 	if( !m_ymd->ok() )
 		throw ARQException( std::format( "Invalid date serial arg given: serial={} (equivalent to {:%Y%m%d})", serial.val(), m_ymd.value() ) );
+}
+
+Date::Date( std::string_view dateStr, std::string_view format )
+{
+	using namespace std::chrono;
+
+	std::istringstream stream{ std::string( dateStr ) };
+	std::chrono::year_month_day parsedYmd;
+	if( stream >> std::chrono::parse( std::string( format ), parsedYmd ) )
+		m_ymd = parsedYmd;
+	else
+		throw ARQException( std::format( "Failed to parse date string [{}] with format [{}]", dateStr, format ) );
+
+	if( !m_ymd->ok() )
+		throw ARQException( std::format( "Parsed date is invalid: year={}, month={}, day={}", static_cast<int32_t>( m_ymd->year() ), static_cast<uint32_t>( m_ymd->month() ), static_cast<uint32_t>( m_ymd->day() ) ) );	
 }
 
 Date::Date( const std::chrono::year_month_day ymd )

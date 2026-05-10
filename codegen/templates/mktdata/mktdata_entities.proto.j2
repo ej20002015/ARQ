@@ -34,15 +34,26 @@ message {{ entity.name }}
 // A Record<{{ entity.name }}> object
 message {{ entity.name }}Record 
 {
-  RecordHeader header = 1;
-  {{ entity.name }} data = 2;
+    RecordHeader header = 1;
+    {{ entity.name }} data = 2;
 }
 
 // A {{ entity.name }} RecordMessage object
 message {{ entity.name }}RecordMessage 
 {
-  {{ entity.name }}Record record = 1;
-  string mkt_name = 2;
+    {{ entity.name }}Record record = 1;
+    string mkt_name = 2;
 }
 
 {% endfor %}
+
+/*
+================== RecordCollection ==================
+*/
+
+message RecordCollection 
+{
+    {% for entity in entities %}
+    repeated {{ entity.name }}Record {{ entity.name_plural | snake_case }} = {{ loop.index }};
+    {% endfor %}
+}
