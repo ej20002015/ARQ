@@ -1,0 +1,12 @@
+syntax = "proto3";
+package ARQ.Proto.MD;
+
+import "mktdata_entities.proto";
+import "streaming_service.proto";
+
+message MarketUpdateBatch
+{
+    string                                mkt_name = 1;
+    ARQ.Proto.MD.RecordCollection         records  = 2;
+    ARQ.Proto.StreamTopicPartitionOffsets offsets  = 3;
+}

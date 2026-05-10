@@ -2,6 +2,7 @@
 // Contains C++ definitions for Market Data topics.
 
 #pragma once
+#include <ARQMarket/dll.h>
 
 #include <ARQMarket/mktdata_entities.h>
 
@@ -22,5 +23,17 @@ struct Topics<EQPrice>
 {
     static constexpr std::string_view updateTopic() { return "ARQ.MktData.Updates.EQP"; }
 };
+
+inline std::string_view getUpdateTopic( const std::string_view entityName )
+{
+    return dispatch( entityName, []<typename T>() { return Topics<T>::updateTopic(); } );
+}
+
+inline std::string_view getUpdateTopic( const Type type )
+{
+    return dispatch( type, []<typename T>() { return Topics<T>::updateTopic(); } );
+}
+
+ARQMarket_API Type getTypeFromUpdateTopic( const std::string_view topic );
 
 }

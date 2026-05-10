@@ -11,6 +11,41 @@
 namespace ARQ::Proto::MD
 {
 
+/*
+******************************************************
+*           MktData entity protobuf traits           *
+******************************************************
+*/
+
+template<ARQ::MD::c_MktData T>
+struct ProtoTraits;
+
+template<>
+struct ProtoTraits<ARQ::MD::FXRate>
+{
+    using RecordProto        = ARQ::Proto::MD::FXRateRecord;
+    using RecordMessageProto = ARQ::Proto::MD::FXRateRecordMessage;
+
+    static auto*       mutableList( RecordCollection* proto )   { return proto->mutable_fx_rates(); }
+    static const auto& getList( const RecordCollection& proto ) { return proto.fx_rates(); }
+};
+
+template<>
+struct ProtoTraits<ARQ::MD::EQPrice>
+{
+    using RecordProto        = ARQ::Proto::MD::EQPriceRecord;
+    using RecordMessageProto = ARQ::Proto::MD::EQPriceRecordMessage;
+
+    static auto*       mutableList( RecordCollection* proto )   { return proto->mutable_eq_prices(); }
+    static const auto& getList( const RecordCollection& proto ) { return proto.eq_prices(); }
+};
+
+/*
+******************************************************
+* Protobuf conversion functions for MktData entities *
+******************************************************
+*/
+
 // --- Converters for FXRate (FXR) ---
 
 ARQProtobuf_API void toProto( const ARQ::MD::FXRate& arqEntity, FXRate* const protoEntity );
@@ -26,5 +61,112 @@ ARQProtobuf_API void toProto(ARQ::MD::EQPrice&& arqEntity, EQPrice* const protoE
 
 [[nodiscard]] ARQProtobuf_API ARQ::MD::EQPrice fromProto( const EQPrice& protoEntity );
 [[nodiscard]] ARQProtobuf_API ARQ::MD::EQPrice fromProto( EQPrice&& protoEntity );
+
+
+/*
+****************************************************
+* Protobuf conversion functions for Misc MD types  *
+****************************************************
+*/
+
+// --- Converters for RecordHeader ---
+
+ARQProtobuf_API void toProto( const ARQ::MD::RecordHeader& arqRecordHeader, RecordHeader* const protoRecordHeader );
+ARQProtobuf_API void toProto( ARQ::MD::RecordHeader&& arqRecordHeader, RecordHeader* const protoRecordHeader );
+
+[[nodiscard]] ARQProtobuf_API ARQ::MD::RecordHeader fromProto( const RecordHeader& protoRecordHeader );
+[[nodiscard]] ARQProtobuf_API ARQ::MD::RecordHeader fromProto( RecordHeader&& protoRecordHeader );
+
+// --- Converters for Record<T> ---
+
+template<ARQ::MD::c_MktData T>
+void toProto( const ARQ::MD::Record<T>& arqRecord, typename ProtoTraits<T>::RecordProto* const protoRecord )
+{
+	ARQ::Proto::MD::RecordHeader* const protoRecordHeader = protoRecord->mutable_header();
+	toProto( arqRecord.header, protoRecordHeader );
+
+    auto* const dataPtr = protoRecord->mutable_data();
+    toProto( arqRecord.data, dataPtr );
+}
+
+template<ARQ::MD::c_MktData T>
+void toProto( ARQ::MD::Record<T>&& arqRecord, typename ProtoTraits<T>::RecordProto* const protoRecord )
+{
+    ARQ::Proto::MD::RecordHeader* const protoRecordHeader = protoRecord->mutable_header();
+	toProto( std::move( arqRecord.header ), protoRecordHeader );
+
+    auto* const dataPtr = protoRecord->mutable_data();
+    toProto( std::move( arqRecord.data ), dataPtr );
+}
+
+template<ARQ::MD::c_MktData T>
+[[nodiscard]] ARQ::MD::Record<T> fromProto( const typename ProtoTraits<T>::RecordProto& protoRecord )
+{
+    ARQ::MD::Record<T> objOut;
+
+    objOut.header = fromProto( protoRecord.header() );
+    objOut.data   = fromProto( protoRecord.data() );
+
+    return objOut;
+}
+
+template<ARQ::MD::c_MktData T>
+[[nodiscard]] ARQ::MD::Record<T> fromProto( typename ProtoTraits<T>::RecordProto&& protoRecord )
+{
+    ARQ::MD::Record<T> objOut;
+
+    objOut.header = fromProto( std::move( *protoRecord.mutable_header() ) );
+    objOut.data   = fromProto( std::move( *protoRecord.mutable_data() ) );
+
+    return objOut;
+}
+
+// --- Converters for RecordMessage<T> ---
+
+template<ARQ::MD::c_MktData T> void toProto( const ARQ::MD::RecordMessage<T>& arqRecordMsg, typename ProtoTraits<T>::RecordMessageProto* const protoRecordMsg )
+{
+    auto* const protoRecord = protoRecordMsg->mutable_record();
+    toProto( arqRecordMsg.record, protoRecord );
+
+    protoRecordMsg->set_mkt_name( arqRecordMsg.mktName );
+}
+
+template<ARQ::MD::c_MktData T> void toProto( ARQ::MD::RecordMessage<T>&& arqRecordMsg, typename ProtoTraits<T>::RecordMessageProto* const protoRecordMsg )
+{
+    auto* const protoRecord = protoRecordMsg->mutable_record();
+    toProto( std::move( arqRecordMsg.record ), protoRecord );
+
+    protoRecordMsg->set_mkt_name( std::move( arqRecordMsg.mktName ) );
+}
+
+template<ARQ::MD::c_MktData T>
+[[nodiscard]] ARQ::MD::RecordMessage<T> fromProto( const typename ProtoTraits<T>::RecordMessageProto& protoRecordMsg )
+{
+    ARQ::MD::RecordMessage<T> objOut;
+
+	objOut.record  = fromProto<T>( protoRecordMsg.record() );
+	objOut.mktName = protoRecordMsg.mkt_name();
+
+    return objOut;
+}
+
+template<ARQ::MD::c_MktData T>
+[[nodiscard]] ARQ::MD::RecordMessage<T> fromProto( typename ProtoTraits<T>::RecordMessageProto&& protoRecordMsg )
+{
+    ARQ::MD::RecordMessage<T> objOut;
+
+    objOut.record  = fromProto<T>( std::move( *protoRecordMsg.mutable_record() ) );
+    objOut.mktName = std::move( *protoRecordMsg.mutable_mkt_name() );
+
+    return objOut;
+}
+
+// --- Converters for RecordCollection ---
+
+ARQProtobuf_API void toProto( const ARQ::MD::RecordCollection& arqObj, RecordCollection* const protoObj );
+ARQProtobuf_API void toProto( ARQ::MD::RecordCollection&& arqObj, RecordCollection* const protoObj );
+
+[[nodiscard]] ARQProtobuf_API ARQ::MD::RecordCollection fromProto( const RecordCollection& protoObj );
+[[nodiscard]] ARQProtobuf_API ARQ::MD::RecordCollection fromProto( RecordCollection&& protoObj );
 
 }

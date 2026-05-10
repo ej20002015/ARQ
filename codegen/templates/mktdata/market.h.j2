@@ -24,13 +24,15 @@ namespace Mkt
 struct Name
 {
 	std::string tag;
-	Time::Date date;
+	Time::Date  date;
 
 	Name() = default;
 	Name( const std::string_view tag, const Time::Date date = Time::Date() )
 		: tag( tag )
 		, date( date )
 	{}
+
+    ARQMarket_API static Name fromStr( const std::string_view nameStr );
 
 	ARQMarket_API std::string str() const;
 

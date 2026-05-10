@@ -80,6 +80,7 @@ public: // Optional overrides
 	 * * Override this to register custom command line arguments, environment variables,
 	 * or config file options specific to this service.
 	 * @param cfg The configuration wrangler instance to register options against.
+	 * @warning This is called before library init, so do not access LibraryContext components here (e.g. logger).
 	 */
 	ARQCore_API virtual void registerConfigOptions( Cfg::ConfigWrangler& cfg ) {}
 

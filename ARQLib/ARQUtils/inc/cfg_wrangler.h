@@ -15,6 +15,8 @@ enum class ArgPolicy
     Required
 };
 
+// TODO: Support option groups
+
 class IConfigWrangler
 {
 public:

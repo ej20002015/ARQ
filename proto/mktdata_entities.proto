@@ -29,15 +29,15 @@ message FXRate
 // A Record<FXRate> object
 message FXRateRecord 
 {
-  RecordHeader header = 1;
-  FXRate data = 2;
+    RecordHeader header = 1;
+    FXRate data = 2;
 }
 
 // A FXRate RecordMessage object
 message FXRateRecordMessage 
 {
-  FXRateRecord record = 1;
-  string mkt_name = 2;
+    FXRateRecord record = 1;
+    string mkt_name = 2;
 }
 
 // A EQPrice object
@@ -54,14 +54,24 @@ message EQPrice
 // A Record<EQPrice> object
 message EQPriceRecord 
 {
-  RecordHeader header = 1;
-  EQPrice data = 2;
+    RecordHeader header = 1;
+    EQPrice data = 2;
 }
 
 // A EQPrice RecordMessage object
 message EQPriceRecordMessage 
 {
-  EQPriceRecord record = 1;
-  string mkt_name = 2;
+    EQPriceRecord record = 1;
+    string mkt_name = 2;
 }
 
+
+/*
+================== RecordCollection ==================
+*/
+
+message RecordCollection 
+{
+    repeated FXRateRecord fx_rates = 1;
+    repeated EQPriceRecord eq_prices = 2;
+}

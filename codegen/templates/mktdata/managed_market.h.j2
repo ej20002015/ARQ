@@ -8,11 +8,27 @@
 #pragma once
 #include <ARQMarket/dll.h>
 
+#include <ARQCore/streaming_service_interface.h>
 #include <ARQMarket/market.h>
+#include <ARQMarket/mktdata_entities.h>
 
 #include <map>
 #include <functional>
 #include <shared_mutex>
+
+namespace ARQ::MD
+{
+
+struct MarketUpdateBatch
+{
+    Mkt::Name                   marketName;
+    MD::RecordCollection        records;
+    StreamTopicPartitionOffsets offsets;
+};
+
+}
+
+ARQ_REG_TYPE( ARQ::MD::MarketUpdateBatch )
 
 namespace ARQ
 {

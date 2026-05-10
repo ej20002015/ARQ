@@ -1,0 +1,19 @@
+syntax = "proto3";
+package ARQ.Proto;
+
+message StreamTopicPartition
+{
+    string topic = 1;
+    int32 partition = 2;
+}
+
+message StreamTopicPartitionOffset
+{
+    StreamTopicPartition topic_partition = 1;
+    int64 offset = 2;
+}
+
+message StreamTopicPartitionOffsets
+{
+    repeated StreamTopicPartitionOffset offsets = 1;
+}

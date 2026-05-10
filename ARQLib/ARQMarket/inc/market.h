@@ -28,6 +28,8 @@ struct Name
 		, date( date )
 	{}
 
+    ARQMarket_API static Name fromStr( const std::string_view nameStr );
+
 	ARQMarket_API std::string str() const;
 
 	ARQMarket_API static const Name LIVE;

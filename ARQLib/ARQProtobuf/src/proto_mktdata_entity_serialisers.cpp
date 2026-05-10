@@ -4,9 +4,8 @@
 #include "proto_mktdata_entity_serialisers.h"
 
 #include <ARQProtobuf/md_entity_proto_converters.h>
-#include "helpers.h"
 
-#include <proto_gen/mktdata_entities.pb.h>
+#include "helpers.h"
 
 namespace ARQ::Proto::MD
 {
@@ -20,143 +19,45 @@ void registerMktDataEntitySerialisers( Serialiser& serialiser )
 }
 
 /*
-**************************************************
-* Helpers for MktData entity proto serialisation *
-**************************************************
-*/
-
-template<typename ProtoType>
-void setRecordHeaderFields( ProtoType& protoObj, const ARQ::MD::RecordHeader& arqRecordHeader )
-{
-	ARQ::Proto::MD::RecordHeader* const recordHeaderPtr = protoObj.mutable_header();
-
-    recordHeaderPtr->set_id( arqRecordHeader.id );
-    recordHeaderPtr->set_asof_ts( arqRecordHeader.asofTs.microsecondsSinceEpoch() );
-	recordHeaderPtr->set_is_active( arqRecordHeader.isActive );
-	recordHeaderPtr->set_last_updated_ts( arqRecordHeader.lastUpdatedTs.microsecondsSinceEpoch() );
-	recordHeaderPtr->set_last_updated_by( arqRecordHeader.lastUpdatedBy );
-}
-
-template<typename ProtoType>
-ARQ::MD::RecordHeader getRecordHeaderFromProto( ProtoType& protoObj )
-{
-	ARQ::Proto::MD::RecordHeader* const protoHeaderPtr = protoObj.mutable_header();
-
-	return {
-        .id            = std::move( *protoHeaderPtr->mutable_id() ),
-		.asofTs        = Time::DateTime( Time::Microseconds( protoHeaderPtr->asof_ts() ) ),
-		.isActive      = protoHeaderPtr->is_active(),
-		.lastUpdatedTs = Time::DateTime( Time::Microseconds( protoHeaderPtr->last_updated_ts() ) ),
-		.lastUpdatedBy = std::move( *protoHeaderPtr->mutable_last_updated_by() )
-	};
-}
-
-/*
 ************************************************************
 * Protobuf TypeSerialiser definitions for mktdata entities *
 ************************************************************
 */
 
-// -------------------- FXRate MktData Entity --------------------
-
-template<>
-Buffer ProtobufTypeSerialiser_MDRecord<ARQ::MD::FXRate>::serialise( const ARQ::MD::Record<ARQ::MD::FXRate>& obj ) const
+template<ARQ::MD::c_MktData T>
+Buffer ProtobufTypeSerialiser_MDRecord<T>::serialise( const ARQ::MD::Record<T>& obj ) const
 {
-	FXRateRecord protoObj;
-	setRecordHeaderFields( protoObj, obj.header );
-
-	FXRate* dataPtr = protoObj.mutable_data();
-	toProto( obj.data, dataPtr );
-
+	typename ProtoTraits<T>::RecordProto protoObj;
+	toProto<T>( obj, &protoObj );
 	return serialiseToBuffer( protoObj );
 }
 
-template<>
-void ProtobufTypeSerialiser_MDRecord<ARQ::MD::FXRate>::deserialise( const BufferView buf, ARQ::MD::Record<ARQ::MD::FXRate>& objOut ) const
+template<ARQ::MD::c_MktData T>
+void ProtobufTypeSerialiser_MDRecord<T>::deserialise( const BufferView buf, ARQ::MD::Record<T>& objOut ) const
 {
-	FXRateRecord protoObj;
+	typename ProtoTraits<T>::RecordProto protoObj;
 	if( !protoObj.ParseFromArray( buf.data, buf.size ) )
-		throw ARQException( "Cannot deserialise buffer into MktData FXRate Record" );
+		throw ARQException( std::format( "Cannot deserialise buffer into MktData {} Record", ARQ::MD::Traits<T>::name() ) );
 
-	objOut.header = getRecordHeaderFromProto( protoObj );
-	objOut.data   = fromProto( std::move( *protoObj.mutable_data() ) );
+	objOut = fromProto<T>( protoObj );
 }
 
-template<>
-Buffer ProtobufTypeSerialiser_MDRecordMessage<ARQ::MD::FXRate>::serialise( const ARQ::MD::RecordMessage<ARQ::MD::FXRate>& obj ) const
+template<ARQ::MD::c_MktData T>
+Buffer ProtobufTypeSerialiser_MDRecordMessage<T>::serialise( const ARQ::MD::RecordMessage<T>& obj ) const
 {
-	FXRateRecordMessage protoObj;
-	setRecordHeaderFields( *protoObj.mutable_record(), obj.record.header );
-
-	FXRate* dataPtr = protoObj.mutable_record()->mutable_data();
-	toProto( obj.record.data, dataPtr );
-
-    protoObj.set_mkt_name( obj.mktName );
-
+	typename ProtoTraits<T>::RecordMessageProto protoObj;
+	toProto<T>( obj, &protoObj );
 	return serialiseToBuffer( protoObj );
 }
 
-template<>
-void ProtobufTypeSerialiser_MDRecordMessage<ARQ::MD::FXRate>::deserialise( const BufferView buf, ARQ::MD::RecordMessage<ARQ::MD::FXRate>& objOut ) const
+template<ARQ::MD::c_MktData T>
+void ProtobufTypeSerialiser_MDRecordMessage<T>::deserialise( const BufferView buf, ARQ::MD::RecordMessage<T>& objOut ) const
 {
-	FXRateRecordMessage protoObj;
+	typename ProtoTraits<T>::RecordMessageProto protoObj;
 	if( !protoObj.ParseFromArray( buf.data, buf.size ) )
-		throw ARQException( "Cannot deserialise buffer into MktData FXRate RecordMessage" );
+		throw ARQException( std::format( "Cannot deserialise buffer into MktData {} RecordMessage", ARQ::MD::Traits<T>::name() ) );
 
-	objOut.record.header = getRecordHeaderFromProto( *protoObj.mutable_record() );
-	objOut.record.data   = fromProto( std::move( *protoObj.mutable_record()->mutable_data() ) );
-    objOut.mktName       = std::move( *protoObj.mutable_mkt_name() );
-}
-
-// -------------------- EQPrice MktData Entity --------------------
-
-template<>
-Buffer ProtobufTypeSerialiser_MDRecord<ARQ::MD::EQPrice>::serialise( const ARQ::MD::Record<ARQ::MD::EQPrice>& obj ) const
-{
-	EQPriceRecord protoObj;
-	setRecordHeaderFields( protoObj, obj.header );
-
-	EQPrice* dataPtr = protoObj.mutable_data();
-	toProto( obj.data, dataPtr );
-
-	return serialiseToBuffer( protoObj );
-}
-
-template<>
-void ProtobufTypeSerialiser_MDRecord<ARQ::MD::EQPrice>::deserialise( const BufferView buf, ARQ::MD::Record<ARQ::MD::EQPrice>& objOut ) const
-{
-	EQPriceRecord protoObj;
-	if( !protoObj.ParseFromArray( buf.data, buf.size ) )
-		throw ARQException( "Cannot deserialise buffer into MktData EQPrice Record" );
-
-	objOut.header = getRecordHeaderFromProto( protoObj );
-	objOut.data   = fromProto( std::move( *protoObj.mutable_data() ) );
-}
-
-template<>
-Buffer ProtobufTypeSerialiser_MDRecordMessage<ARQ::MD::EQPrice>::serialise( const ARQ::MD::RecordMessage<ARQ::MD::EQPrice>& obj ) const
-{
-	EQPriceRecordMessage protoObj;
-	setRecordHeaderFields( *protoObj.mutable_record(), obj.record.header );
-
-	EQPrice* dataPtr = protoObj.mutable_record()->mutable_data();
-	toProto( obj.record.data, dataPtr );
-
-    protoObj.set_mkt_name( obj.mktName );
-
-	return serialiseToBuffer( protoObj );
-}
-
-template<>
-void ProtobufTypeSerialiser_MDRecordMessage<ARQ::MD::EQPrice>::deserialise( const BufferView buf, ARQ::MD::RecordMessage<ARQ::MD::EQPrice>& objOut ) const
-{
-	EQPriceRecordMessage protoObj;
-	if( !protoObj.ParseFromArray( buf.data, buf.size ) )
-		throw ARQException( "Cannot deserialise buffer into MktData EQPrice RecordMessage" );
-
-	objOut.record.header = getRecordHeaderFromProto( *protoObj.mutable_record() );
-	objOut.record.data   = fromProto( std::move( *protoObj.mutable_record()->mutable_data() ) );
-    objOut.mktName       = std::move( *protoObj.mutable_mkt_name() );
+	objOut = fromProto<T>( protoObj );
 }
 
 }

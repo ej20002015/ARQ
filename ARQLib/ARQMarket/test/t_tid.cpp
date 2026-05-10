@@ -7,52 +7,102 @@ using namespace ARQ::MD;
 
 // TEMP
 #include <ARQMarket/mktdata_source.h>
+#include <ARQCore/messaging_service.h>
+#include <ARQCore/serialiser.h>
+#include <ARQMarket/managed_market.h>
 
-TEST( TempTests, SaveMarket )
-{
-	std::shared_ptr<IMarketSource> mktSrc = MarketSourceFactory::inst().create( "Redis" );
-	RecordCollection coll;
+//TEST( TempTests, SaveMarket )
+//{
+//	std::shared_ptr<IMarketSource> mktSrc = MarketSourceFactory::inst().create( "Redis" );
+//	RecordCollection coll;
+//
+//    Record<FXRate> fxr;
+//	fxr.header.id = "EUR";
+//	fxr.header.asofTs = Time::DateTime::nowUTC();
+//	fxr.header.isActive = true;
+//	fxr.header.lastUpdatedBy = "Evan";
+//	fxr.header.lastUpdatedTs = Time::DateTime::nowUTC();
+//	fxr.data.ask = 1.2345;
+//	fxr.data.bid = 1.2335;
+//	fxr.data.mid = 1.2340;
+//    coll.get<Record<FXRate>>().push_back( std::move( fxr ) );
+//
+//	Record<EQPrice> eqp;
+//	eqp.header.id = "AAPL";
+//	eqp.header.asofTs = Time::DateTime::nowUTC();
+//	eqp.header.isActive = true;
+//    eqp.header.lastUpdatedBy = "Evan";
+//    eqp.header.lastUpdatedTs = Time::DateTime::nowUTC();
+//	eqp.data.ask = 150.25;
+//	eqp.data.bid = 149.75;
+//	eqp.data.last = 150.00;
+//	eqp.data.open = 148.00;
+//	eqp.data.close = 148.50;
+//    eqp.data.volume = 1000000;
+//	coll.get<Record<EQPrice>>().push_back( std::move( eqp ) );
+//
+//	mktSrc->save( "TEST_MARKET", coll );
+//
+//    mktSrc->save( "TEST_MARKET", coll );
+//	int y = 0;
+//}
 
-    Record<FXRate> fxr;
-	fxr.header.id = "EUR";
-	fxr.header.asofTs = Time::DateTime::nowUTC();
-	fxr.header.isActive = true;
-	fxr.header.lastUpdatedBy = "Evan";
-	fxr.header.lastUpdatedTs = Time::DateTime::nowUTC();
-	fxr.data.ask = 1.2345;
-	fxr.data.bid = 1.2335;
-	fxr.data.mid = 1.2340;
-    coll.get<Record<FXRate>>().push_back( std::move( fxr ) );
-
-	Record<EQPrice> eqp;
-	eqp.header.id = "AAPL";
-	eqp.header.asofTs = Time::DateTime::nowUTC();
-	eqp.header.isActive = true;
-    eqp.header.lastUpdatedBy = "Evan";
-    eqp.header.lastUpdatedTs = Time::DateTime::nowUTC();
-	eqp.data.ask = 150.25;
-	eqp.data.bid = 149.75;
-	eqp.data.last = 150.00;
-	eqp.data.open = 148.00;
-	eqp.data.close = 148.50;
-    eqp.data.volume = 1000000;
-	coll.get<Record<EQPrice>>().push_back( std::move( eqp ) );
-
-	mktSrc->save( "TEST_MARKET", coll );
-
-    mktSrc->save( "TEST_MARKET", coll );
-	int y = 0;
-}
-
-TEST( TempTests, LoadMarket )
-{
-    std::shared_ptr<IMarketSource> mktSrc = MarketSourceFactory::inst().create( "Redis" );
-	RecordCollection coll = mktSrc->load( "TEST_MARKET" );
-
-    RecordCollection collOnlyFXR = mktSrc->load( "TEST_MARKET", TIDSet{ TID{ Type::FXR } } );
-
-    int y = 0;
-}
+//class TestSubHandler : public ISubscriptionHandler
+//{
+//public:
+//    TestSubHandler()
+//    {
+//        m_serialiser = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
+//    }
+//
+//    void                onMsg( Message&& msg ) override
+//    {
+//		const auto& batch = m_serialiser->deserialise<MD::MarketUpdateBatch>( msg.data );
+//		auto fxRates = batch.records.get<Record<FXRate>>();
+//        
+//		for( const auto& fxr : fxRates )
+//        {
+//            std::cout << "Received FXRate update for " << fxr.header.id << ": mid=" << fxr.data.mid
+//                      << ", bid=" << fxr.data.bid << ", ask=" << fxr.data.ask << ", asof=" << fxr.header.asofTs << std::endl;
+//        }
+//    }
+//
+//    std::string_view    getDesc() const override
+//    {
+//		return "TestSubHandler";
+//    }
+//
+//private:
+//    std::shared_ptr<Serialiser> m_serialiser;
+//};
+//
+//TEST( TempTests, LoadMarket )
+//{
+//    try
+//    {
+//        std::shared_ptr<IMarketSource> mktSrc = MarketSourceFactory::inst().create( "Redis" );
+//        RecordCollection coll = mktSrc->load( "LIVE" );
+//
+//        RecordCollection collOnlyFXR = mktSrc->load( "LIVE", TIDSet{ TID{ Type::FXR } } );
+//
+//        std::shared_ptr<IMessagingService> msgSvc = MessagingServiceFactory::inst().create( "NATS" );
+//        std::shared_ptr<ISubscriptionHandler> handler = std::make_shared<TestSubHandler>();
+//        auto sub = msgSvc->subscribe( "ARQ.MktData.Updates.*", handler );
+//
+//        while( true )
+//        {
+//            std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+//            int y = 0;
+//        }
+//
+//        sub->unsubscribe();
+//    }
+//	catch( const ARQException& ex )
+//    {
+//        std::cerr << "ARQException: " << ex.what() << std::endl;
+//        FAIL() << "ARQException thrown during LoadMarket test";
+//    }
+//}
 
 TEST( TIDTest, DefaultConstructor )
 {

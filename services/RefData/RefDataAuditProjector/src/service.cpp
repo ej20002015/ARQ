@@ -31,6 +31,7 @@ void RefDataAuditProjectorService::onStartup()
 void RefDataAuditProjectorService::onShutdown()
 {
 	m_updateConsumer.reset();
+	m_dlqProducer.reset();
 	m_auditRDSource.reset();
 	m_serialiser.reset();
 }
@@ -53,12 +54,14 @@ void RefDataAuditProjectorService::run()
 
 		if( allInserted )
 			m_updateConsumer->commitOffsets();
+		else
+			throw ARQException( "Failed to insert all records into audit DB - exiting" );
 	}
 }
 
 void RefDataAuditProjectorService::registerConfigOptions( Cfg::ConfigWrangler& cfg )
 {
-	cfg.add( m_config.streamSvcDSH,     "--streamServiceDSH", "The DSH of the streaming service to use" );
+	cfg.add( m_config.streamSvcDSH,     "--streamServiceDSH", "The DSH of the streaming service to read updates from" );
 	cfg.add( m_config.auditDSH,         "--auditDSH",         "The DSH of the audit DB to write updates to" );
 	cfg.add( m_config.entities,         "--entities",         "The set of reference data entities to process updates for. If empty, subscribes to all entities." );
 	cfg.add( m_config.disabledEntities, "--disabledEntities", "The set of reference data entities to NOT process updates for." );
@@ -109,7 +112,7 @@ void RefDataAuditProjectorService::processMsgBatch( std::unique_ptr<IStreamConsu
 		}
 		else if( errMsg.size() )
 		{
-			Log( Module::EXE ).error( "Exception thrown when processing message so sending to DLQ [{}] - what: ", msg.idStr() );
+			Log( Module::EXE ).error( "Exception thrown when processing message so sending to DLQ [{}] - what: {}", msg.idStr(), errMsg );
 			toDLQ = true;
 		}
 
@@ -164,7 +167,7 @@ bool RefDataAuditProjectorService::insertIntoAuditDB( const RD::RecordCollection
 				{
 					auto errMsg = std::format( "Exception thrown when inserting {} refdata entities into the audit DB - max save attempts exceeded - STOPPING SERVICE!",
 											   RD::Traits<EntityType>::name() );
-					Log( Module::EXE ).critical( "", errMsg );
+					Log( Module::EXE ).critical( "{}", errMsg );
 					e.str() += " - " + errMsg;
 					throw;
 				}

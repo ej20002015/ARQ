@@ -493,12 +493,16 @@ void KafkaStreamConsumer::commitOffsetsAsync( const StreamConsumerOffsetCommitCa
 {
 	try
 	{
-		return m_kafkaConsumer->commitAsync( [callback] ( const kafka::TopicPartitionOffsets& topicPartitionOffsets, const kafka::Error& err ) {
+		return m_kafkaConsumer->commitAsync( [callback, this] ( const kafka::TopicPartitionOffsets& topicPartitionOffsets, const kafka::Error& err ) {
 			std::optional<StreamError> streamingError;
 			if( err )
+			{
 				streamingError = kafkaErrorToStreamError( err );
+				Log( Module::KAFKA ).error( "KafkaStreamConsumer[{}]: Failed to commit offsets asynchronously: {}", this ? m_options.name() : "UNKNOWN", streamingError->message );
+			}
 
-			callback( topicPartitionOffsets, streamingError );
+			if( callback )
+				callback( topicPartitionOffsets, streamingError );
 		} );
 	}
 	catch( const kafka::KafkaException& e )
@@ -535,13 +539,17 @@ void KafkaStreamConsumer::commitOffsetAsync( const StreamConsumerMessageView& ms
 			{   StreamTopicPartition( msg.topic, msg.partition ), msg.offset + 1  } // committed offset should be "current-received-offset + 1"
 		};
 
-		return m_kafkaConsumer->commitAsync( tpos, [callback] ( const kafka::TopicPartitionOffsets& topicPartitionOffsets, const kafka::Error& err )
+		return m_kafkaConsumer->commitAsync( tpos, [callback, this] ( const kafka::TopicPartitionOffsets& topicPartitionOffsets, const kafka::Error& err )
 		{
 			std::optional<StreamError> streamingError;
 			if( err )
+			{
 				streamingError = kafkaErrorToStreamError( err );
+				Log( Module::KAFKA ).error( "KafkaStreamConsumer[{}]: Failed to commit offsets asynchronously for specific message: {}", this ? m_options.name() : "UNKNOWN", streamingError->message );
+			}
 
-			callback( topicPartitionOffsets, streamingError );
+			if( callback )
+				callback( topicPartitionOffsets, streamingError );
 		} );
 	}
 	catch( const kafka::KafkaException& e )
@@ -570,13 +578,17 @@ void KafkaStreamConsumer::commitOffsetsAsync( const StreamTopicPartitionOffsets&
 {
 	try
 	{
-		return m_kafkaConsumer->commitAsync( topicPartitionOffsets, [callback] ( const kafka::TopicPartitionOffsets& topicPartitionOffsets, const kafka::Error& err )
+		return m_kafkaConsumer->commitAsync( topicPartitionOffsets, [callback, this] ( const kafka::TopicPartitionOffsets& topicPartitionOffsets, const kafka::Error& err )
 		{
 			std::optional<StreamError> streamingError;
 			if( err )
+			{
 				streamingError = kafkaErrorToStreamError( err );
+				Log( Module::KAFKA ).error( "KafkaStreamConsumer[{}]: Failed to commit offsets asynchronously on specific topic partitions: {}", this ? m_options.name() : "UNKNOWN", streamingError->message );
+			}
 
-			callback( topicPartitionOffsets, streamingError );
+			if( callback )
+				callback( topicPartitionOffsets, streamingError );
 		} );
 	}
 	catch( const kafka::KafkaException& e )

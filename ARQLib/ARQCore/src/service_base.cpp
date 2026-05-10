@@ -104,17 +104,11 @@ void ServiceRunner::registerSignalHandlers()
 
 void ServiceRunner::addConfigOptions()
 {
-	Log( Module::EXE ).debug( "Adding service configuration options..." );
-
 	// Add common config options
-
 	m_cfgWrangler.add( m_service.m_baseConfig.adminPort, "--svc.adminServer.port", "Set the port used by the http admin server", "ARQ_svc_adminServer_port" );
 
 	// Add service-specific config options
-
 	m_service.registerConfigOptions( m_cfgWrangler );
-
-	Log( Module::EXE ).debug( "Finished adding service configuration options" );
 }
 
 void ARQ::ServiceRunner::logConfig()

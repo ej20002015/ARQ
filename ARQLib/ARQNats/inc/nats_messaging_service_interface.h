@@ -7,6 +7,7 @@
 
 #include <mutex>
 #include <shared_mutex>
+#include <atomic>
 
 namespace ARQ
 {
@@ -72,7 +73,8 @@ private: // Callbacks
 private:
 	std::string m_dsh;
 
-	natsConnection* m_natsConn;
+	natsConnection*   m_natsConn     = nullptr;
+	std::atomic<bool> m_disconnected = false;
 
 	std::vector<MessagingEventCallbackFunc> m_eventCallbacks;
 	std::shared_mutex                       m_eventCallbacksMutex;
