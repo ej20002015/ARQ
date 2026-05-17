@@ -1,15 +1,19 @@
 name: CMake Build & Docker Publish
 
 on:
+  workflow_dispatch:
+
   push:
     branches: [ "master" ]
     tags: [ 'v*' ]
     paths-ignore:
       - deploy/k8s/**
+
   pull_request:
     branches: [ "master" ]
     paths-ignore:
       - deploy/k8s/**
+
 
 jobs:
   # =========================================================
