@@ -1,4 +1,6 @@
 #include <ARQMarket/market.h>
+#include <ARQMarket/market_new.h> // Temp
+#include <ARQMarket/market_builders.h> // Temp
 #include <gtest/gtest.h>
 #include "gmock/gmock.h"
 
@@ -16,6 +18,73 @@ class MarketTests : public ::testing::Test
 protected:
     Mkt::Market m_market;
 };
+
+//TEST( Temp_NewMktTests, testMisc )
+//{
+//    MD::Record<MD::FXRate> fx1;
+//    fx1.data.mid = 1.1;
+//    fx1.data.bid = 1.099;
+//    fx1.data.ask = 1.101;
+//
+//    fx1.header.id = "EURUSD";
+//    fx1.header.asofTs = DateTime( Date( Year( 2025 ), Month::May, Day( 6 ) ), Hour( 10 ), Minute( 0 ), Second( 0 ) );
+//    fx1.header.isActive = true;
+//    fx1.header.lastUpdatedTs = DateTime::nowUTC();
+//    fx1.header.lastUpdatedBy = "Tester";
+//
+//	MD::RecordCollection records;
+//	records.get<MD::Record<MD::FXRate>>().push_back( fx1 );
+//
+//    MD::Market mkt;
+//
+//    std::shared_ptr<const MD::MarketSnapshot> snap1 = mkt.snapshot();
+//    
+//    mkt.update( std::move( records ) );
+//
+//    auto snap2 = mkt.snapshot();
+//
+//    const auto fxRate1 = snap1->get<MD::FXRate>( "EURUSD" );
+//    if( fxRate1 )
+//        double d = fxRate1->data.ask;
+//
+//	const auto fxRate2 = snap2->get<MD::FXRate>( "EURUSD" );
+//    if( fxRate2 )
+//		double d = fxRate2->data.ask;
+//
+//    int y = 0;
+//}
+
+//TEST( Temp_LiveMktTests, test )
+//{
+//    const auto [mkt, updater] = MD::LiveMarketBuilder()
+//        .fromSource( "Redis", Mkt::Name::LIVE )
+//        .withMessagingFeed( "NATS", MD::TIDSet( { MD::TID{ MD::Type::FXR, "GBP" } } ) )
+//        .build();
+//
+//    updater->start();
+//
+//    for( size_t i = 0; i < 10; i++ )
+//    {
+//        auto snap = mkt->snapshot();
+//        auto eurOpt = snap->get<MD::FXRate>( "EUR" );
+//        auto gbpOpt = snap->get<MD::FXRate>( "GBP" );
+//
+//        auto print = [] ( const MD::Record<MD::FXRate>& fxr )
+//        {
+//            std::cout << "Received FXRate update for " << fxr.header.id << ": mid=" << fxr.data.mid
+//                << ", bid=" << fxr.data.bid << ", ask=" << fxr.data.ask << ", asof=" << fxr.header.asofTs << std::endl;
+//        };
+//
+//        if( eurOpt )
+//            print( *eurOpt );
+//        if( gbpOpt )
+//            print( *gbpOpt );
+//        
+//        std::this_thread::sleep_for( 1s );
+//    }
+//
+//    updater->stop();
+//}
 
 TEST( MarketNameTests, LiveMkt )
 {

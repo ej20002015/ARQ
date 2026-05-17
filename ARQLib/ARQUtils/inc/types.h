@@ -1,6 +1,7 @@
 #pragma once
 
 #include <ARQUtils/core.h>
+#include <ARQUtils/error.h>
 
 #include <concepts>
 
@@ -23,6 +24,35 @@ public:
 
 private:
 	T m_val;
+};
+
+/*
+ * @brief A simple optional const reference wrapper. It can either contain a reference to an object of type T, or be empty (nullopt).
+*/
+template<typename T>
+class OptRef
+{
+public:
+	OptRef( const T* ptr = nullptr )
+		: m_ptr( ptr )
+	{}
+
+	operator      bool()           const noexcept { return m_ptr != nullptr; }
+	[[nodiscard]] bool has_value() const noexcept { return m_ptr != nullptr; }
+
+	[[nodiscard]] const T& value() const noexcept
+	{
+		if( m_ptr )
+			return *m_ptr;
+		else
+			throw ARQException( "Attempted to access value of an OptRef that does not contain a value." );
+	}
+
+	const T& operator*() const noexcept  { return *m_ptr; }
+	const T* operator->() const noexcept { return m_ptr;  }
+	
+private:
+	const T* m_ptr;
 };
 
 enum class DoThrow

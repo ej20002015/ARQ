@@ -55,7 +55,7 @@ using namespace ARQ::MD;
 //        m_serialiser = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
 //    }
 //
-//    void                onMsg( Message&& msg ) override
+//    void onMsg( Message&& msg ) override
 //    {
 //		const auto& batch = m_serialiser->deserialise<MD::MarketUpdateBatch>( msg.data );
 //		auto fxRates = batch.records.get<Record<FXRate>>();
@@ -67,7 +67,7 @@ using namespace ARQ::MD;
 //        }
 //    }
 //
-//    std::string_view    getDesc() const override
+//    std::string_view getDesc() const override
 //    {
 //		return "TestSubHandler";
 //    }
@@ -83,7 +83,7 @@ using namespace ARQ::MD;
 //        std::shared_ptr<IMarketSource> mktSrc = MarketSourceFactory::inst().create( "Redis" );
 //        RecordCollection coll = mktSrc->load( "LIVE" );
 //
-//        RecordCollection collOnlyFXR = mktSrc->load( "LIVE", TIDSet{ TID{ Type::FXR } } );
+//        RecordCollection collOnlyFXR = mktSrc->load( "LIVE", TIDSet{ TID{ Type::FXR, "GBPUSD" }, TID{ Type::EQP, "AAPL" } });
 //
 //        std::shared_ptr<IMessagingService> msgSvc = MessagingServiceFactory::inst().create( "NATS" );
 //        std::shared_ptr<ISubscriptionHandler> handler = std::make_shared<TestSubHandler>();

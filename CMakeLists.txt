@@ -485,6 +485,9 @@ set(TOMLPP_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/tomlplusplus/include")
 # modern-cpp-kafka set up
 set(MODERN_CPP_KAFKA_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/modern-cpp-kafka/include")
 
+# unordered_dense setup
+set(UNORDERED_DENSE_INC_PATHS "${CMAKE_SOURCE_DIR}/vendor/unordered_dense/include")
+
 # Add ARQLib subdirectories
 add_subdirectory(ARQLib/ARQCore)
 add_subdirectory(ARQLib/ARQUtils)

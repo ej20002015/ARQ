@@ -157,10 +157,28 @@ public:
 *********************************************
 */
 
+template<c_MktData... T>
+struct EntityList {};
+
+using AllEntities = EntityList<
+{% for entity in entities %}
+    {{ entity.name }}{% if not loop.last %},{% endif %}
+
+{% endfor %}>;
+
+template<typename... T>
+struct EntityRecordList {};
+
+using AllEntityRecords = EntityRecordList<
+{% for entity in entities %}
+    Record<{{ entity.name }}>{% if not loop.last %},{% endif %}
+
+{% endfor %}>;
+
 using RecordCollection = TupleVector<
 {% for entity in entities %}
     Record<{{ entity.name }}>{% if not loop.last %},{% endif %}
-    
+
 {% endfor %}
 >;
 

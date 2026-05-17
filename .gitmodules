@@ -13,3 +13,6 @@
 [submodule "vendor/modern-cpp-kafka"]
 	path = vendor/modern-cpp-kafka
 	url = git@github.com:morganstanley/modern-cpp-kafka.git
+[submodule "vendor/unordered_dense"]
+	path = vendor/unordered_dense
+	url = git@github.com:martinus/unordered_dense.git
