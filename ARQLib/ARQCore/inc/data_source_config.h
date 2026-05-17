@@ -28,7 +28,7 @@ enum class DataSourceType
 static constexpr std::array<std::string_view, static_cast<size_t>( DataSourceType::_SIZE_ )> DYNA_LIB_NAMES = {
 	"ARQClickHouse",
 	"ARQGrpc",
-	"ARQNATS",
+	"ARQNats",
 	"ARQKafka",
 	"ARQRedis",
 };
