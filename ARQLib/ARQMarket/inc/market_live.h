@@ -5,12 +5,17 @@
 #include <ARQCore/stream_offset_source.h>
 #include <ARQCore/serialiser.h>
 #include <ARQMarket/mktdata_source.h>
-// TODO: Remove when possible
-#include <ARQMarket/managed_market.h>
-#include <ARQMarket/market_new.h>
+#include <ARQMarket/market.h>
 
 namespace ARQ::MD
 {
+
+struct MarketUpdateBatch
+{
+	MarketName                  marketName;
+	RecordCollection            records;
+	StreamTopicPartitionOffsets offsets;
+};
 
 class LiveMarketUpdater : public ISubscriptionHandler,
 	                      public std::enable_shared_from_this<LiveMarketUpdater>
@@ -21,7 +26,7 @@ public:
 		const std::shared_ptr<Market>& mkt;
 		const std::string_view         mktSrcDSH;
 		const std::string_view         msgSvcDSH;
-		const Mkt::Name&               mktName;
+		const MarketName&              mktName;
 		const TIDSet&                  mktSrcTIDSet;
 		const TIDSet&                  msgTIDSet;
 	};
@@ -63,8 +68,8 @@ public:
 	static constexpr std::string_view SUB_TOPIC_PFX = "ARQ.MktData.Updates.";
 
 private: // ISubscriptionHandler implementation
-	void             onMsg( Message&& msg )       override;
-	std::string_view getDesc()              const override { return m_desc; };
+	ARQMarket_API void             onMsg( Message&& msg )       override;
+	              std::string_view getDesc()              const override { return m_desc; };
 
 private:
 	void applyUpdate( MarketUpdateBatch&& updateBatch );
@@ -78,7 +83,7 @@ private:
 	std::shared_ptr<Market>            m_mkt;
 	std::string                        m_mktSrcDSH;
 	std::shared_ptr<IMessagingService> m_msgSvc;
-	Mkt::Name                          m_mktName;
+	MarketName                         m_mktName;
 	TIDSet                             m_mktSrcTIDSet;
 	TIDSet                             m_msgTIDSet;
 	std::string                        m_desc;
@@ -93,3 +98,5 @@ private:
 };
 
 }
+
+ARQ_REG_TYPE( ARQ::MD::MarketUpdateBatch )

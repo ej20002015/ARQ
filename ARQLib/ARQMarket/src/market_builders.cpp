@@ -3,7 +3,7 @@
 namespace ARQ::MD
 {
 
-LiveMarketBuilder& LiveMarketBuilder::withMessagingFeed( const std::string_view msgSvcDSH, const TIDSet& tidSet, const Mkt::Name& mktName )
+LiveMarketBuilder& LiveMarketBuilder::withMessagingFeed( const std::string_view msgSvcDSH, const TIDSet& tidSet, const MarketName& mktName )
 {
     m_msgSvcDSH  = msgSvcDSH;
     m_msgTIDSet  = tidSet;

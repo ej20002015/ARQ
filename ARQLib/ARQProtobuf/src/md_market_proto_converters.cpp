@@ -36,7 +36,7 @@ ARQ::MD::MarketUpdateBatch fromProto( const MarketUpdateBatch& protoObj )
 
 	objOut.records    = fromProto( protoObj.records() );
 	objOut.offsets    = ARQ::Proto::fromProto( protoObj.offsets() );
-	objOut.marketName = Mkt::Name::fromStr( protoObj.mkt_name() );
+	objOut.marketName = ARQ::MD::MarketName::fromStr( protoObj.mkt_name() );
 
 	return objOut;
 }
@@ -47,7 +47,7 @@ ARQ::MD::MarketUpdateBatch fromProto( MarketUpdateBatch&& protoObj )
 
 	objOut.records    = fromProto( std::move( *protoObj.mutable_records() ) );
 	objOut.offsets    = ARQ::Proto::fromProto( std::move( *protoObj.mutable_offsets() ) );
-	objOut.marketName = Mkt::Name::fromStr( std::move( *protoObj.mutable_mkt_name() ) );
+	objOut.marketName = ARQ::MD::MarketName::fromStr( std::move( *protoObj.mutable_mkt_name() ) );
 
 	return objOut;
 }

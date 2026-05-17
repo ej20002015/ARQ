@@ -2,7 +2,7 @@
 #include <ARQProtobuf/dll.h>
 
 #include <ARQCore/serialiser.h>
-#include <ARQMarket/managed_market.h>
+#include <ARQMarket/market_live.h>
 
 namespace ARQ::Proto::MD
 {

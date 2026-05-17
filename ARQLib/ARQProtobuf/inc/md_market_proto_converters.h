@@ -1,7 +1,7 @@
 #pragma once
 #include <ARQProtobuf/dll.h>
 
-#include <ARQMarket/managed_market.h>
+#include <ARQMarket/market_live.h>
 
 #include <proto_gen/mktdata_markets.pb.h>
 

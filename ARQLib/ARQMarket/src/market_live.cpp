@@ -1,4 +1,4 @@
-#include <ARQMarket/live_market_updater.h>
+#include <ARQMarket/market_live.h>
 
 #include <ARQUtils/logger.h>
 #include <ARQMarket/mktdata_topics.h>

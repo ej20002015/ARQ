@@ -10,7 +10,7 @@ protected:
     ARQ::MD::MarketUpdateBatch createPopulatedBatch()
     {
         ARQ::MD::MarketUpdateBatch cppBatch;
-        cppBatch.marketName = ARQ::Mkt::Name( "NYSE" );
+        cppBatch.marketName = ARQ::MD::MarketName( "NYSE" );
 
         // 1. Add an FXRate Record
         ARQ::MD::Record<ARQ::MD::FXRate> fxRecord;
