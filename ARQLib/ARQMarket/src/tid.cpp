@@ -115,8 +115,12 @@ void TIDSet::consolidate() const
 			continue;                             // Skip this item as it's covered by the type-level item at resultTail
         else if( *resultTail == *it )
 			continue;                             // Skip this item as it's a duplicate of the item at resultTail
-        else
-		    *( ++resultTail ) = std::move( *it ); // This item is not covered by a previous type-level item and is not a duplicate, so we keep it
+	    else
+    	{
+            resultTail++;
+            if( resultTail != it )
+                *resultTail = std::move( *it ); // This item is not covered by a previous type-level item and is not a duplicate, so we keep it
+	    }
     }
 
     // Erase whatever is left at the end of the vector

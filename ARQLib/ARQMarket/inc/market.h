@@ -120,16 +120,16 @@ public:
 		{
 			for( const auto& rec : recs )
 			{
-				if( const auto current = newSnapshot->get<T>( rec.header.id ) )
+				if( const auto current = newSnapshot->template get<T>( rec.header.id ) )
 				{
 					if( rec.header.asofTs < current->header.asofTs )
 						continue;
 				}
 
 				if( rec.header.isActive )
-					newSnapshot->set<T>( rec );
+					newSnapshot->template set<T>( rec );
 				else
-					newSnapshot->erase<T>( rec.header.id );
+					newSnapshot->template erase<T>( rec.header.id );
 
 				if( rec.header.asofTs > latestTs )
 					latestTs = rec.header.asofTs;
