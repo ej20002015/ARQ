@@ -178,7 +178,7 @@ void MktDataLiveProjectorService::insertOffsets( const std::string_view marketNa
 		try
 		{
 			Log( Module::EXE ).debug( "Saving topic partition offsets for market [{}] into the live market source", marketName );
-			m_offsetSource->saveOffsets( std::format( "Markets:{}", marketName ), offsets );
+			m_offsetSource->saveOffsets( std::format( "{}:{}", MARKETS_KEY_NAMESPACE, marketName ), offsets );
 			break;
 		}
 		catch( ARQException& e )

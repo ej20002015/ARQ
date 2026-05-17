@@ -28,6 +28,8 @@ struct Name
 		, date( date )
 	{}
 
+    bool isSet() const { return !tag.empty(); }
+
     ARQMarket_API static Name fromStr( const std::string_view nameStr );
 
 	ARQMarket_API std::string str() const;

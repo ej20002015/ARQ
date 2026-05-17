@@ -1,6 +1,6 @@
 ARQ_define_dynalib(ARQUtils)
 append_link_libraries(ARQUtils PUBLIC ${JSON_LINK_LIB})
-target_include_directories(ARQUtils PUBLIC ${TOMLPP_INC_PATHS} ${SPDLOG_INC_PATHS})
+target_include_directories(ARQUtils PUBLIC ${TOMLPP_INC_PATHS} ${SPDLOG_INC_PATHS} ${UNORDERED_DENSE_INC_PATHS})
 
 ARQ_define_dynalib_tests(ARQUtils)
 

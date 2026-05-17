@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mktdata-live-projector
+  labels:
+    app: mktdata-live-projector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mktdata-live-projector
+  template:
+    metadata:
+      labels:
+        app: mktdata-live-projector
+    spec:
+      imagePullSecrets:
+        - name: arq-dockerhub-cred
+      containers:
+        - name: mktdata-live-projector
+          image: ej20002011/arq:master
+          imagePullPolicy: Always
+          command: ["MktDataLiveProjector"]
+
+          ports:
+            - name: admin-port
+              containerPort: 8080
+
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: admin-port
+            failureThreshold: 10 # 10 * 3 = 30 seconds to startup
+            periodSeconds: 3
+
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: admin-port
+            failureThreshold: 3
+            periodSeconds: 5
+
+          resources:
+            limits:
+              memory: "512M"
+              cpu: "1"

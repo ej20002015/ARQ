@@ -222,9 +222,25 @@ public:
 *********************************************
 */
 
+template<c_MktData... T>
+struct EntityList {};
+
+using AllEntities = EntityList<
+    FXRate,
+    EQPrice
+>;
+
+template<typename... T>
+struct EntityRecordList {};
+
+using AllEntityRecords = EntityRecordList<
+    Record<FXRate>,
+    Record<EQPrice>
+>;
+
 using RecordCollection = TupleVector<
-    Record<FXRate>,    
-    Record<EQPrice>    
+    Record<FXRate>,
+    Record<EQPrice>
 >;
 
 /*

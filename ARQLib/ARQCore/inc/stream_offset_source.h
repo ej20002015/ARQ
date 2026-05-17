@@ -13,6 +13,8 @@
 namespace ARQ
 {
 
+static constexpr std::string_view MARKETS_KEY_NAMESPACE = "Markets";
+
 class IStreamOffsetSource
 {
 public:
