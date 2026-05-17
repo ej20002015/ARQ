@@ -6,7 +6,7 @@
 #include <ARQMarket/market.h>
 #include <ARQMarket/mktdata_source.h>
 #include <ARQMarket/mktdata_entities.h>
-#include <ARQMarket/managed_market.h>
+#include <ARQMarket/market_live.h>
 
 #include <set>
 #include <unordered_map>

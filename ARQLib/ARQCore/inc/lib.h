@@ -7,7 +7,6 @@
 #include <ARQCore/dynalib_cache.h>
 #include <ARQCore/stream_offset_source.h>
 #include <ARQCore/messaging_service.h>
-#include <ARQCore/mktdata_source.h>
 #include <ARQCore/refdata_source.h>
 #include <ARQCore/serialiser.h>
 #include <ARQCore/streaming_service.h>
@@ -89,7 +88,6 @@ private:
 	std::unique_ptr<StreamingServiceFactory>   m_streamingServiceFactory;
 	std::unique_ptr<StreamOffsetSourceFactory> m_streamOffsetSourceFactory;
 	std::unique_ptr<MD::MarketSourceFactory>   m_mdMarketSourceFactory; // TODO: If factories are going to be outside ARQCore, we need a mechanism to inject the factories instances into LibContext
-	std::unique_ptr<MktDataSourceFactory>      m_mktDataSourceFactory;
 };
 
 }

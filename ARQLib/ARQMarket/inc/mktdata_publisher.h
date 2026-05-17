@@ -10,6 +10,7 @@
 #include <ARQMarket/market.h>
 
 #include <string>
+#include <shared_mutex>
 
 namespace ARQ::MD
 {
@@ -44,7 +45,7 @@ public:
 	ARQMarket_API void registerOnErrorCallback( const PublisherErrorCallback& callback );
 
 	template<c_MktData T>
-	void publish( const ARQ::Mkt::Name& mktName, Record<T> record, const std::optional<PublisherErrorCallback>& errorCallback = std::nullopt )
+	void publish( const MarketName& mktName, Record<T> record, const std::optional<PublisherErrorCallback>& errorCallback = std::nullopt )
 	{
 		// Inject infrastructure metadata into the record header
 		record.header.isActive      = true;
@@ -64,7 +65,7 @@ public:
 	}
 
 	template<c_MktData T>
-	void tombstone( const ARQ::Mkt::Name& mktName, const std::string_view entityType, const std::string_view recordID, const std::optional<PublisherErrorCallback>& errorCallback = std::nullopt )
+	void tombstone( const MarketName& mktName, const std::string_view entityType, const std::string_view recordID, const std::optional<PublisherErrorCallback>& errorCallback = std::nullopt )
 	{
 		Buffer      buf = Buffer::Null(); // Tombstone messages have null payload
 		std::string key = std::format( "{0}|{1}#{2}", mktName.str(), entityType, recordID );

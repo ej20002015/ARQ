@@ -125,7 +125,7 @@ void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsum
 		m_dlqProducer->flush();
 
 	for( auto& [mktName, updateBatch] : updateBatches )
-		updateBatch.marketName = Mkt::Name::fromStr( mktName );
+		updateBatch.marketName = MD::MarketName::fromStr( mktName );
 }
 
 void MktDataLiveProjectorService::insertIntoLiveMarketSource( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches )

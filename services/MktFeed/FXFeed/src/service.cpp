@@ -106,7 +106,7 @@ void FXFeedService::run()
             record.header.id = ccy;
 			record.header.asofTs = Time::DateTime::nowUTC();
 
-            m_publisher->publish( Mkt::Name::LIVE, std::move( record ) );
+            m_publisher->publish( MD::MarketName::LIVE, std::move( record ) );
         }
 
         next_wake_time += publish_interval;

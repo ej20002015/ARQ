@@ -60,6 +60,9 @@ public:
 public:
 	[[nodiscard]] ARQCore_API std::shared_ptr<Serialiser> create( const SerialiserImpl impl );
 
+	ARQCore_API void addCustomSerialiser( const SerialiserImpl impl, std::shared_ptr<Serialiser> customSerialiser );
+	ARQCore_API void delCustomSerialiser( const SerialiserImpl impl );
+
 private:
 	std::unordered_map<SerialiserImpl, std::shared_ptr<Serialiser>> m_serialisers;
 	std::mutex m_serialisersMutex;
