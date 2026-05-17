@@ -153,6 +153,8 @@ jobs:
         cmake -S ${{ github.workspace }}
         -B ${{ steps.strings.outputs.build-output-dir }}
         -G "Ninja Multi-Config"
+        -DCMAKE_POLICY_DEFAULT_CMP0141=NEW 
+        -DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
