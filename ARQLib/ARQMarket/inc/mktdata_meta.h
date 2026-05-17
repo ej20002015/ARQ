@@ -54,4 +54,5 @@ private:
 }
 
 #define ARQ_REG_MD_ENTITY_META( TYPE ) \
-	static ARQ::MD::Meta::EntityMetadataRegistry::Reg<TYPE> mdEntityMeta_##TYPE;
+	static ARQ::MD::Meta::EntityMetadataRegistry::Reg<TYPE> mdEntityMeta_##TYPE; \
+
