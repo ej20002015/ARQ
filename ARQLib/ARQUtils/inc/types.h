@@ -30,10 +30,10 @@ private:
  * @brief A simple optional const reference wrapper. It can either contain a reference to an object of type T, or be empty (nullopt).
 */
 template<typename T>
-class OptRef
+class OptConstRef
 {
 public:
-	OptRef( const T* ptr = nullptr )
+	OptConstRef( const T* ptr = nullptr )
 		: m_ptr( ptr )
 	{}
 
@@ -45,7 +45,7 @@ public:
 		if( m_ptr )
 			return *m_ptr;
 		else
-			throw ARQException( "Attempted to access value of an OptRef that does not contain a value." );
+			throw ARQException( "Attempted to access value of an OptConstRef that does not contain a value." );
 	}
 
 	const T& operator*() const noexcept  { return *m_ptr; }

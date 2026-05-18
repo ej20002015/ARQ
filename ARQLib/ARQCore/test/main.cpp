@@ -5,7 +5,7 @@
 
 int main( int argc, char** argv )
 {
-	ARQ::LibGuard guard( { argv[0], "--log.dest2", ARQ::getLogFilepathForTests( "t_ARQCore" ).string() } );
+	ARQ::LibGuard guard( ARQ::getLibArgs( argc, argv, "t_ARQCore" ) );
 	testing::InitGoogleTest( &argc, argv );
 	return RUN_ALL_TESTS();
 }
