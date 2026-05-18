@@ -211,6 +211,22 @@ public:
 *********************************************
 */
 
+template<c_RefData... T>
+struct EntityList {};
+
+using AllEntities = EntityList<
+    Currency,
+    User
+>;
+
+template<typename... T>
+struct EntityRecordList {};
+
+using AllEntityRecords = EntityRecordList<
+    Record<Currency>,
+    Record<User>
+>;
+
 using RecordCollection = TupleVector<
     Record<Currency>,    
     Record<User>    

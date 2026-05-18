@@ -51,7 +51,7 @@ public:
 	{}
 
 	template<c_MktData Entity>
-	OptRef<Record<Entity>> const get( const std::string_view id ) const
+	OptConstRef<Record<Entity>> const get( const std::string_view id ) const
 	{
 		const auto& map = std::get<RecordMap<Entity>>( m_data );
 		if( auto it = map.find( id ); it != map.end() )
