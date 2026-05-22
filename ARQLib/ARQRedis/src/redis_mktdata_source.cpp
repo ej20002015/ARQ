@@ -23,7 +23,8 @@ IMarketSource* createMarketSource( const std::string_view dsh )
 
 RecordCollection RedisMarketSource::load( const std::string_view marketName, const TIDSet& filter )
 {
-	Instr::Timer tm;
+	Instr::Timer tmTotal;
+	Instr::Timer tmConn;
 
 	RecordCollection collection;
 
@@ -31,11 +32,14 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 	sw::redis::Redis&   redis = conn.client();
 	sw::redis::Pipeline pl    = redis.pipeline( false ); // Don't create a new connection for the pipeline - take from conn pool
 
-	const std::string marketKeyRoot = std::format( "{}:{}", KEY_ROOT, marketName );
+	const auto connTime = tmConn.duration();
 
 	// -----------------
 	// 1. Queue commands
 	// -----------------
+
+	Instr::Timer tmPrep;
+	const std::string marketKeyRoot = std::format( "{}:{}", KEY_ROOT, marketName );
 
 	try
 	{
@@ -57,10 +61,14 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 		throw ARQException( std::format( "RedisMarketSource: Error queuing redis pipeline to load market [{}]: {}", marketName, e.what() ) );
 	}
 
+	const auto prepTime = tmPrep.duration();
+
 	// -------------------
 	// 2. Execute pipeline
 	// -------------------
 	sw::redis::QueuedReplies replies;
+
+	Instr::Timer tmNet;
 
 	try
 	{
@@ -71,9 +79,13 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 		throw ARQException( std::format( "RedisMarketSource: Error executing redis pipeline to load market [{}]: {}", marketName, e.what() ) );
 	}
 
+	const auto netTime = tmNet.duration();
+
 	// -------------------
 	// 2. Parse results
 	// -------------------
+
+	Instr::Timer tmParse;
 
 	size_t replyIndex = 0;
 	collection.visitVectors( [&] <c_MktData T> ( std::vector<Record<T>>& vector )
@@ -130,24 +142,28 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 		}
 	} );
 
-	Log( Module::REDIS ).debug( "Loaded market [{}] from Redis with {} objects in {}", marketName, collection.size(), tm.duration() );
+	Log( Module::REDIS ).debug( "Loaded market [{}] from Redis with {} objects in total: {} (conn: {}, prep: {}, net: {}, parse: {})", marketName, collection.size(), tmTotal.duration(), connTime, prepTime, netTime, tmParse.duration() );
 
 	return collection;
 }
 
 void RedisMarketSource::save( const std::string_view marketName, const RecordCollection& records )
 {
-	Instr::Timer tm;
+	Instr::Timer tmTotal;
+	Instr::Timer tmConn;
 
 	RedisConn conn( m_dsh );
 	sw::redis::Redis&   redis = conn.client();
 	sw::redis::Pipeline pl    = redis.pipeline( false ); // Don't create a new connection for the pipeline - take from conn pool
 
-	const std::string marketKeyRoot = std::format( "{}:{}", KEY_ROOT, marketName );
+	const auto connTime = tmConn.duration();
 
 	// -----------------
 	// 1. Queue commands
 	// -----------------
+
+	Instr::Timer tmPrep;
+	const std::string marketKeyRoot = std::format( "{}:{}", KEY_ROOT, marketName );
 
 	records.visitVectors( [&] <c_MktData T> ( const std::vector<Record<T>>& vector )
 	{
@@ -175,9 +191,13 @@ void RedisMarketSource::save( const std::string_view marketName, const RecordCol
 			pl.hset( hashKey, redisFields.begin(), redisFields.end() );
 	} );
 
+	const auto prepTime = tmPrep.duration();
+
 	// -------------------
 	// 2. Execute pipeline
 	// -------------------
+
+	Instr::Timer tmNet;
 
 	try
 	{
@@ -188,7 +208,7 @@ void RedisMarketSource::save( const std::string_view marketName, const RecordCol
 		throw ARQException( std::format( "RedisMarketSource: Error executing redis pipeline to save market [{}]: {}", marketName, e.what() ) );
 	}
 
-	Log( Module::REDIS ).debug( "Saved market [{}] to Redis with {} objects in {}", marketName, records.size(), tm.duration() );
+	Log( Module::REDIS ).debug( "Saved market [{}] to Redis with {} objects in total: {} (conn: {}, prep: {}, net: {})", marketName, records.size(), tmTotal.duration(), connTime, prepTime, tmNet.duration() );
 }
 
 }

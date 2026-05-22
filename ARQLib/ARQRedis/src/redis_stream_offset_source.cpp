@@ -3,6 +3,7 @@
 #include <redis_connection.h>
 
 #include <ARQUtils/logger.h>
+#include <ARQUtils/instr.h>
 
 namespace ARQ
 {
@@ -16,8 +17,15 @@ IStreamOffsetSource* createStreamOffsetSource( const std::string_view dsh )
 
 void RedisStreamOffsetSource::saveOffsets( const std::string_view key, const StreamTopicPartitionOffsets& offsets )
 {
+	Instr::Timer tmTotal;
+	Instr::Timer tmConn;
+
     RedisConn redConn( m_dsh );
 	sw::redis::Redis& redis = redConn.client();
+
+	const auto connTime = tmConn.duration();
+
+	Instr::Timer tmPrep;
 
 	const std::string redisKey = std::format( "{}:{}", KEY_ROOT, key );
 	std::map<std::string, std::string> redisFields;
@@ -27,6 +35,10 @@ void RedisStreamOffsetSource::saveOffsets( const std::string_view key, const Str
 		redisFields[field] = std::to_string( offset );
 	}
 
+	const auto prepTime = tmPrep.duration();
+
+	Instr::Timer tmNet;
+
 	try
 	{
 		redis.hset( redisKey, redisFields.begin(), redisFields.end() );
@@ -35,15 +47,28 @@ void RedisStreamOffsetSource::saveOffsets( const std::string_view key, const Str
 	{
 		throw ARQException( std::format( "Error saving stream offsets to Redis for key [{}]: {}", key, e.what() ) );
 	}
+
+	Log( Module::REDIS ).debug( "Saved stream offsets for key [{}] to Redis in total: {} (conn: {}, prep: {}, net: {})", key, tmTotal.duration(), connTime, prepTime, tmNet.duration() );
 }
 
 std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( const std::string_view key )
 {
+	Instr::Timer tmTotal;
+	Instr::Timer tmConn;
+
 	RedisConn redConn( m_dsh );
 	sw::redis::Redis& redis = redConn.client();
 
+	const auto connTime = tmConn.duration();
+
+	Instr::Timer tmPrep;
+
 	const std::string redisKey = std::format( "{}:{}", KEY_ROOT, key );
 	std::map<std::string, std::string> redisFields;
+
+	const auto prepTime = tmPrep.duration();
+
+	Instr::Timer tmNet;
 
 	try
 	{
@@ -53,6 +78,10 @@ std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( 
 	{
 		throw ARQException( std::format( "Error getting stream offsets from Redis for key [{}]: {}", key, e.what() ) );
 	}
+
+	const auto netTime = tmNet.duration();
+
+	Instr::Timer tmParse;
 
 	if( redisFields.empty() )
 		return std::nullopt;
@@ -82,6 +111,8 @@ std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( 
 	{
 		throw ARQException( std::format( "Error parsing stream offsets from Redis for key [{}]: {}", key, e.what() ) );
 	}
+
+	Log( Module::REDIS ).debug( "Got stream offsets for key [{}] from Redis in total: {} (conn: {}, prep: {}, net: {}, parse: {})", key, tmTotal.duration(), connTime, prepTime, netTime, tmParse.duration() );
 }
 
 }
