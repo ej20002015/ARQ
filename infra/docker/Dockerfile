@@ -68,5 +68,6 @@ WORKDIR /app/ARQ
 # Copy artifacts from the builder stage
 COPY --from=builder /app/ARQ .
 
+ENV ARQ_home="/app/ARQ"
 ENV LD_LIBRARY_PATH="/app/ARQ/lib"
 ENV PATH="/app/ARQ/bin:$PATH"

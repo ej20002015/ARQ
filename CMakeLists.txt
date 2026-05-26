@@ -270,9 +270,9 @@ endfunction()
 create_master_inc_dir()
 
 function(ARQ_define_dynalib TARGET)
-    file(GLOB SOURCES  "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src/*.cpp")
-    file(GLOB HEADERS  "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src/*.h")
-    file(GLOB INCLUDES "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/inc/*.h")
+    file(GLOB_RECURSE SOURCES  "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src/*.cpp")
+    file(GLOB_RECURSE HEADERS  "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src/*.h")
+    file(GLOB_RECURSE INCLUDES "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/inc/*.h")
 
     add_library(${TARGET}
                 SHARED
@@ -290,8 +290,14 @@ function(ARQ_define_dynalib TARGET)
     endif()
 
     set_target_properties(${TARGET} PROPERTIES FOLDER "shared_libs")
-    source_group("src" FILES ${SOURCES} FILES ${HEADERS})
-    source_group("inc" FILES ${INCLUDES})
+
+    if(SOURCES OR HEADERS)
+        source_group(TREE "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/src" PREFIX "src" FILES ${SOURCES} ${HEADERS})
+    endif()
+    
+    if(INCLUDES)
+        source_group(TREE "${CMAKE_SOURCE_DIR}/ARQLib/${TARGET}/inc" PREFIX "inc" FILES ${INCLUDES})
+    endif()
 
     # ------------- INSTALL -------------
 
@@ -499,6 +505,7 @@ add_subdirectory(ARQLib/ARQProtobuf)
 add_subdirectory(ARQLib/ARQNats)
 add_subdirectory(ARQLib/ARQKafka)
 add_subdirectory(ARQLib/ARQRedis)
+add_subdirectory(ARQLib/ARQAdapt)
 
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataCmdExecutor)
@@ -513,4 +520,4 @@ add_subdirectory(tools/nats_subscriber)
 add_subdirectory(tools/rd_cmd_publisher)
 
 # Add SWIG wrappers
-add_subdirectory(ARQLib/SWIG)
+#add_subdirectory(ARQLib/SWIG)

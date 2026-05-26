@@ -9,6 +9,8 @@ namespace ARQ
 namespace Sys
 {
 
+ARQUtils_API void setARQHome( const std::filesystem::path& path );
+
 ARQUtils_API const std::filesystem::path& tempDir();
 ARQUtils_API const std::filesystem::path& logDir();
 ARQUtils_API const std::filesystem::path& rootCfgDir();

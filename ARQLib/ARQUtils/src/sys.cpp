@@ -2,6 +2,8 @@
 
 #include <ARQUtils/os.h>
 
+#include <mutex>
+
 namespace ARQ
 {
 
@@ -9,6 +11,15 @@ namespace fs = std::filesystem;
 
 namespace Sys
 {
+
+static std::filesystem::path s_ARQHome;
+static std::mutex s_ARQHomeMutex;
+
+ARQUtils_API void setARQHome( const std::filesystem::path& path )
+{
+    std::lock_guard<std::mutex> lock( s_ARQHomeMutex );
+    s_ARQHome = path;
+}
 
 static fs::path iTempDir()
 {
@@ -34,9 +45,27 @@ const fs::path& logDir()
 
 static fs::path iRootCfgDir()
 {
+    // First check if ARQHome config variable is set and points to a valid config directory
+
+    std::filesystem::path arqHome;
+    {
+		std::lock_guard<std::mutex> lock( s_ARQHomeMutex );
+		arqHome = s_ARQHome;
+    }
+    
+    if( !arqHome.empty() )
+    {
+        const fs::path candidate = arqHome / "etc" / "ARQ";
+        if( fs::exists( candidate ) )
+			return candidate;
+		else
+			throw ARQException( std::format( "Environment variable ARQ_HOME is set to [{}] but configuration directory 'etc/ARQ' does not exist at that location", arqHome.string() ) );
+    }
+
+    // If not, start from the executable's directory and walk up through parent directories looking for 'etc/ARQ'
+
     fs::path currentDir = OS::procPath().parent_path();
 
-    // Walk up through the directory tree looking for config dir
     while( currentDir != currentDir.parent_path() )
     {
         const fs::path candidate = currentDir / "etc" / "ARQ";

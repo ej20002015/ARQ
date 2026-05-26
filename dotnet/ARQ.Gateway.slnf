@@ -1,0 +1,9 @@
+{
+  "solution": {
+    "path": "ARQ.slnx",
+    "projects": [
+      "ARQ.Gateway\\ARQ.Gateway.csproj",
+      "ARQ.NET\\ARQ.NET.csproj",
+    ]
+  }
+}

@@ -48,6 +48,7 @@ public:
 		LogLevel    logLevel2 = DEFAULT_LOG_LEVEL;
 		std::string logDest   = "stdout";
 		std::string logDest2  = ( Sys::logDir() / "ARQLib.log" ).string();
+		std::string arqHome;
 	};
 
 public:

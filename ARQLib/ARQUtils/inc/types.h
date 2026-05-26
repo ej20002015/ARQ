@@ -40,7 +40,7 @@ public:
 	operator      bool()           const noexcept { return m_ptr != nullptr; }
 	[[nodiscard]] bool has_value() const noexcept { return m_ptr != nullptr; }
 
-	[[nodiscard]] const T& value() const noexcept
+	[[nodiscard]] const T& value() const
 	{
 		if( m_ptr )
 			return *m_ptr;

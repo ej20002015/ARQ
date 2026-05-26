@@ -81,6 +81,20 @@ TEST( DateTest, SerialConstruction )
     EXPECT_EQ( date.day(), fromSerial.day() );
 }
 
+TEST( DateTest, YMDIntConstruction )
+{
+	// Test construction from YYYYMMDDInt
+	Date date( YYYYMMDDInt( 20240526 ) );
+	EXPECT_TRUE( date.isSet() );
+	EXPECT_TRUE( date.isValid() );
+	EXPECT_EQ( date.year(), 2024 );
+	EXPECT_EQ( date.month(), Month::May );
+	EXPECT_EQ( date.day(), 26 );
+	// Test invalid YYYYMMDDInt
+	EXPECT_THROW( Date( YYYYMMDDInt( 20240230 ) ), ARQException ); // Invalid day
+	EXPECT_THROW( Date( YYYYMMDDInt( 20241301 ) ), ARQException ); // Invalid month
+}
+
 // Strong Type Tests
 TEST( DateTest, StrongTypes )
 {
@@ -221,6 +235,12 @@ TEST( DateTest, WeekdayCalculation )
     EXPECT_EQ( monday.weekday(), Weekday::Mon );
     EXPECT_EQ( tuesday.weekday(), Weekday::Tue );
     EXPECT_EQ( sunday.weekday(), Weekday::Sun );
+}
+
+TEST( DateTest, YMDIntGetter )
+{
+    Date date( Year( 2024 ), Month::May, Day( 26 ) );
+    EXPECT_EQ( date.ymdInt().val(), 20240526 );
 }
 
 // Serial Tests
