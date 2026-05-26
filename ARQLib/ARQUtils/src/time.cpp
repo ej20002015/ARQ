@@ -7,6 +7,7 @@
 #include <limits>
 #include <format>
 #include "time.h"
+#include "time.h"
 
 namespace ARQ
 {
@@ -54,6 +55,13 @@ Date::Date( const Days serial )
 {
 	if( !m_ymd->ok() )
 		throw ARQException( std::format( "Invalid date serial arg given: serial={} (equivalent to {:%Y%m%d})", serial.val(), m_ymd.value() ) );
+}
+
+Date::Date( const YYYYMMDDInt ymd )
+	: m_ymd( std::chrono::year_month_day( std::chrono::year( ymd / 10'000 ), std::chrono::month( ( ymd / 100 ) % 100 ), std::chrono::day( ymd % 100 ) ) )
+{
+	if( !m_ymd->ok() )
+		throw ARQException( std::format( "Invalid YYYYMMDDInt arg given: {}", ymd.val() ) );
 }
 
 Date::Date( std::string_view dateStr, std::string_view format )
@@ -111,6 +119,11 @@ Weekday Date::weekday() const noexcept
 Days Date::serial() const noexcept
 {
 	return isSet() ? Days( std::chrono::sys_days( *m_ymd ).time_since_epoch().count() ) : Days( std::numeric_limits<int32_t>::min() );
+}
+
+YYYYMMDDInt Date::ymdInt() const noexcept
+{
+	return isSet() ? YYYYMMDDInt( static_cast<int32_t>( m_ymd->year() ) * 10'000 + static_cast<uint32_t>( m_ymd->month() ) * 100 + static_cast<uint32_t>( m_ymd->day() ) ) : YYYYMMDDInt( std::numeric_limits<int32_t>::min() );
 }
 
 std::chrono::year_month_day Date::ymd() const noexcept

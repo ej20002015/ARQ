@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    
+    <Title>ARQ Dotnet SDK</Title>
+    <Authors>ARQ</Authors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="src\Generated\" />
+
+    <Compile Update="src\Generated\**\*.cs">
+      <Pack>false</Pack>
+      <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
+      <NoWarn>CS0114;CS0108;CS1591;CS8600;CS8601;CS8625</NoWarn>
+    </Compile>
+  </ItemGroup>
+
+</Project>

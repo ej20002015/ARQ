@@ -18,6 +18,7 @@ static void addLibOptions( Cfg::IConfigWrangler& cfgWrangler, LibContext::Config
 	cfgWrangler.addEnum( cfg.logLevel2, "--log.level2",   "Set the log level of the secondary sink",                                                   "ARQ_log_level2" );
 	cfgWrangler.add(     cfg.logDest,   "--log.dest,-D",  "Set the log destination of the primary sink ('stdout', 'stderr', <filepath>, or 'none')",   "ARQ_log_dest"   );
 	cfgWrangler.add(     cfg.logDest2,  "--log.dest2",    "Set the log destination of the secondary sink ('stdout', 'stderr', <filepath>, or 'none')", "ARQ_log_dest2"  );
+	cfgWrangler.add(     cfg.arqHome,   "--home",         "Override the default ARQ library location with the specified path",                         "ARQ_home"       );
 }
 
 void libInit( int argc, char* argv[], Cfg::IConfigWrangler& cfgWrangler )
@@ -83,6 +84,9 @@ LibContext::LibContext( const Config& cfg )
 		.primarySinkDest       = m_config.logDest,
 		.secondarySinkDest     = m_config.logDest2
 	};
+
+	if( !m_config.arqHome.empty() )
+		Sys::setARQHome( m_config.arqHome );
 
 	// Global objects
 

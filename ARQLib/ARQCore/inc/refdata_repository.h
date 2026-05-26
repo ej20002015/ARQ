@@ -35,9 +35,14 @@ public:
 		buildCacheIndexes<T>( *this );
     }
 
-    [[nodiscard]] const RecordMap& getAllRecords() const
+	[[nodiscard]] const RecordMap& getMap() const
+	{
+		return m_map;
+	}
+
+    [[nodiscard]] const std::vector<std::pair<ID::UUID, Record<T>>>& getList() const
     {
-        return m_map;
+        return m_map.values();
     }
 
     [[nodiscard]] bool empty() const
@@ -149,7 +154,7 @@ private:
     };
 
 public:
-    RepositoryImpl( const std::string_view dsh )
+    explicit RepositoryImpl( const std::string_view dsh )
         : m_rdSource( SourceFactory::inst().create( dsh ) )
     {
     }
@@ -174,7 +179,7 @@ private:
     template<c_RefData T>
     std::shared_ptr<Cache<T>> load( CacheSlot<T>& cacheSlot ) const
     {
-        Log( Module::REFDATA ).info( "RD::Repository: Loading Reference Data for entity [{}]...", Traits<T>::name() );
+        Log( Module::REFDATA ).info( "RD::Repository: Loading Reference Data for entity [{}]", Traits<T>::name() );
 
         std::vector<Record<T>>    records = m_rdSource->fetch<T>();
         std::shared_ptr<Cache<T>> newCache = std::make_shared<Cache<T>>( std::move( records ) );

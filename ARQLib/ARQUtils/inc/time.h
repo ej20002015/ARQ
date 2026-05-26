@@ -70,12 +70,16 @@ using Months = StrongType<MonthsTag, int32_t>;
 struct DaysTag {};
 using Days = StrongType<DaysTag, int32_t>;
 
+struct YYYYMMDDIntTag {};
+using YYYYMMDDInt = StrongType<YYYYMMDDIntTag, int32_t>;
+
 class Date
 {
 public:
 	ARQUtils_API explicit Date( const TimeZone tz );
 	ARQUtils_API explicit Date( const Year y, const Month m, const Day d );
 	ARQUtils_API explicit Date( const Days serial );
+	ARQUtils_API explicit Date( const YYYYMMDDInt ymd );
 	ARQUtils_API explicit Date( std::string_view dateStr, std::string_view format );
 	ARQUtils_API explicit Date( const std::chrono::year_month_day ymd );
 	Date() = default;
@@ -92,7 +96,8 @@ public:
 	[[nodiscard]] ARQUtils_API Day     day()     const noexcept;
 	[[nodiscard]] ARQUtils_API Weekday weekday() const noexcept;
 
-	[[nodiscard]] ARQUtils_API Days serial() const noexcept;
+	[[nodiscard]] ARQUtils_API Days        serial() const noexcept;
+	[[nodiscard]] ARQUtils_API YYYYMMDDInt ymdInt() const noexcept;
 
 	[[nodiscard]] ARQUtils_API std::chrono::year_month_day ymd() const noexcept;
 

@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/ARQ.NET/">
+    <Project Path="ARQ.NET\ARQ.NET.csproj" />
+    <Project Path="ARQ.NET.Tests\ARQ.NET.Tests.csproj" />
+    <Project Path="ARQ.TestExe\ARQ.TestExe.csproj" />
+  </Folder>
+  <Folder Name="/ARQ.Gateway/">
+    <Project Path="ARQ.Gateway\ARQ.Gateway.csproj" />
+  </Folder>
+</Solution>
