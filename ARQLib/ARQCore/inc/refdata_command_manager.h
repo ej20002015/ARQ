@@ -112,6 +112,7 @@ private: // Helpers
 	            StreamProducerMessage formStreamMsg( Buffer&& buf, const std::string_view key, const ID::UUID& corrID, const std::string_view cmdName, const std::string_view cmdEntity, const std::string_view cmdAction );
 	            std::string           getStreamTopic( const std::string_view cmdEntity ) const;
 	            void                  createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout );
+				void                  waitForInFlightCommandsToComplete();
 
 private: // On response handler
 	void onCommandResponse( const CommandResponse& resp );

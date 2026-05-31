@@ -13,6 +13,16 @@ using var arq = ARQ.ARQLib.Init(arqCfg);
 
 builder.Services.AddSingleton(provider => new ARQ.RD.Repository("ClickHouseDB"));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowARQWebLocal", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.MapGet("/api/refdata/{entityType}", (string entityType, ARQ.RD.Repository repo) =>
@@ -39,4 +49,5 @@ app.MapGet("/api/refdata/{entityType}/{id}", (string entityType, string id, Repo
     return Results.Ok(record);
 });
 
+app.UseCors("AllowARQWebLocal");
 app.Run();

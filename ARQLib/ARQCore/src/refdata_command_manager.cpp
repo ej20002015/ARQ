@@ -26,6 +26,7 @@ void CommandManager::start()
 
 void CommandManager::stop()
 {
+	waitForInFlightCommandsToComplete();
 	m_subscription->drain();
 	m_running.store( false );
 	if( m_commandCheckerThread.joinable() )
@@ -225,6 +226,43 @@ void CommandManager::SubHandler::onMsg( Message&& msg )
 		Log( Module::NATS ).error( "RD::CommandManager: Exception thrown when deserialising message on topic [{}] to a CommandResponse object - what: ", msg.topic, errMsg );
 
 	m_owner.onCommandResponse( resp );
+}
+
+void CommandManager::waitForInFlightCommandsToComplete()
+{
+	bool empty = false;
+	{
+		std::shared_lock<std::shared_mutex> sl( m_inFlightCommandsMut );
+		empty = m_inFlightCommands.empty();
+	}
+
+	if( empty )
+		return;
+
+	size_t numCommands;
+	Time::DateTime maxWaitTime = Time::DateTime::Min();
+	{
+		std::shared_lock<std::shared_mutex> sl( m_inFlightCommandsMut );
+		numCommands = m_inFlightCommands.size();
+		for( const auto& [_, cmd] : m_inFlightCommands )
+		{
+			if( cmd.timeoutTime > maxWaitTime )
+				maxWaitTime = cmd.timeoutTime;
+		}
+
+		maxWaitTime = maxWaitTime + Time::Seconds( 1 ); // Add a buffer to ensure we wait slightly longer than the longest timeout to allow all commands to be processed
+	}
+
+	auto timeToWaitMicroSeconds = maxWaitTime - Time::DateTime::nowUTC();
+	Log( Module::REFDATA ).warn( "RD::CommandManager: Waiting a maximum of {} seconds for {} in-flight commands to complete before shutdown...", timeToWaitMicroSeconds.val() / 1000000.0, numCommands );
+	while( !empty && Time::DateTime::nowUTC() < maxWaitTime )
+	{
+		{
+			std::shared_lock<std::shared_mutex> sl( m_inFlightCommandsMut );
+			empty = m_inFlightCommands.empty();
+		}
+		std::this_thread::sleep_for( 100ms );
+	}
 }
 
 }
