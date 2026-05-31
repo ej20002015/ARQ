@@ -17,7 +17,7 @@ inline std::vector<std::string> getLibArgs( int argc, char** argv, const std::st
 {
     std::vector<std::string> args;
 
-	for( int i = 1; i < argc; ++i )
+	for( int i = 0; i < argc; ++i )
         args.emplace_back( argv[i] );
 
     args.emplace_back( "--log.dest2" );
