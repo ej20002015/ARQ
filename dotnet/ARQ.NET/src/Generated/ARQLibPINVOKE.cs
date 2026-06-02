@@ -305,6 +305,75 @@ class ARQLibPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_Collections_StringVector")]
   public static extern void delete_ARQ_Collections_StringVector(global::System.Runtime.InteropServices.HandleRef jarg1);
 
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_Collections_StringViewVector__SWIG_0")]
+  public static extern global::System.IntPtr new_ARQ_Collections_StringViewVector__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_Collections_StringViewVector__SWIG_1")]
+  public static extern global::System.IntPtr new_ARQ_Collections_StringViewVector__SWIG_1(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_Clear")]
+  public static extern void ARQ_Collections_StringViewVector_Clear(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_Add")]
+  public static extern void ARQ_Collections_StringViewVector_Add(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_size")]
+  public static extern uint ARQ_Collections_StringViewVector_size(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_empty")]
+  public static extern bool ARQ_Collections_StringViewVector_empty(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_capacity")]
+  public static extern uint ARQ_Collections_StringViewVector_capacity(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_reserve")]
+  public static extern void ARQ_Collections_StringViewVector_reserve(global::System.Runtime.InteropServices.HandleRef jarg1, uint jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_Collections_StringViewVector__SWIG_2")]
+  public static extern global::System.IntPtr new_ARQ_Collections_StringViewVector__SWIG_2(int jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_getitemcopy")]
+  public static extern string ARQ_Collections_StringViewVector_getitemcopy(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_getitem")]
+  public static extern string ARQ_Collections_StringViewVector_getitem(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_setitem")]
+  public static extern void ARQ_Collections_StringViewVector_setitem(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, string jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_AddRange")]
+  public static extern void ARQ_Collections_StringViewVector_AddRange(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_GetRange")]
+  public static extern global::System.IntPtr ARQ_Collections_StringViewVector_GetRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_Insert")]
+  public static extern void ARQ_Collections_StringViewVector_Insert(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, string jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_InsertRange")]
+  public static extern void ARQ_Collections_StringViewVector_InsertRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_RemoveAt")]
+  public static extern void ARQ_Collections_StringViewVector_RemoveAt(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_RemoveRange")]
+  public static extern void ARQ_Collections_StringViewVector_RemoveRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_Repeat")]
+  public static extern global::System.IntPtr ARQ_Collections_StringViewVector_Repeat(string jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_Reverse__SWIG_0")]
+  public static extern void ARQ_Collections_StringViewVector_Reverse__SWIG_0(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_Reverse__SWIG_1")]
+  public static extern void ARQ_Collections_StringViewVector_Reverse__SWIG_1(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_Collections_StringViewVector_SetRange")]
+  public static extern void ARQ_Collections_StringViewVector_SetRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_Collections_StringViewVector")]
+  public static extern void delete_ARQ_Collections_StringViewVector(global::System.Runtime.InteropServices.HandleRef jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_Collections_Int32Vector__SWIG_0")]
   public static extern global::System.IntPtr new_ARQ_Collections_Int32Vector__SWIG_0();
 
@@ -614,6 +683,54 @@ class ARQLibPINVOKE {
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_LibGuard")]
   public static extern void delete_ARQ_LibGuard(global::System.Runtime.InteropServices.HandleRef jarg1);
 
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_name_set")]
+  public static extern void ARQ_RD_MemberInfo_name_set(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_name_get")]
+  public static extern string ARQ_RD_MemberInfo_name_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_comment_set")]
+  public static extern void ARQ_RD_MemberInfo_comment_set(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_comment_get")]
+  public static extern string ARQ_RD_MemberInfo_comment_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_type_set")]
+  public static extern void ARQ_RD_MemberInfo_type_set(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_type_get")]
+  public static extern string ARQ_RD_MemberInfo_type_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_indexType_set")]
+  public static extern void ARQ_RD_MemberInfo_indexType_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_indexType_get")]
+  public static extern int ARQ_RD_MemberInfo_indexType_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_format_set")]
+  public static extern void ARQ_RD_MemberInfo_format_set(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_format_get")]
+  public static extern int ARQ_RD_MemberInfo_format_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_uiReadOnly_set")]
+  public static extern void ARQ_RD_MemberInfo_uiReadOnly_set(global::System.Runtime.InteropServices.HandleRef jarg1, bool jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_uiReadOnly_get")]
+  public static extern bool ARQ_RD_MemberInfo_uiReadOnly_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_isPrimaryKey_set")]
+  public static extern void ARQ_RD_MemberInfo_isPrimaryKey_set(global::System.Runtime.InteropServices.HandleRef jarg1, bool jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_isPrimaryKey_get")]
+  public static extern bool ARQ_RD_MemberInfo_isPrimaryKey_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_MemberInfo")]
+  public static extern global::System.IntPtr new_ARQ_RD_MemberInfo();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_RD_MemberInfo")]
+  public static extern void delete_ARQ_RD_MemberInfo(global::System.Runtime.InteropServices.HandleRef jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_RecordHeader_uuid_set")]
   public static extern void ARQ_RD_RecordHeader_uuid_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
 
@@ -757,6 +874,177 @@ class ARQLibPINVOKE {
 
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_RD_UserRecord")]
   public static extern void delete_ARQ_RD_UserRecord(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_EntityMetadataVector__SWIG_0")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_EntityMetadataVector__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_EntityMetadataVector__SWIG_1")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_EntityMetadataVector__SWIG_1(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_Clear")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_Clear(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_Add")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_Add(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_size")]
+  public static extern uint ARQ_RD_Meta_EntityMetadataVector_size(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_empty")]
+  public static extern bool ARQ_RD_Meta_EntityMetadataVector_empty(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_capacity")]
+  public static extern uint ARQ_RD_Meta_EntityMetadataVector_capacity(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_reserve")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_reserve(global::System.Runtime.InteropServices.HandleRef jarg1, uint jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_EntityMetadataVector__SWIG_2")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_EntityMetadataVector__SWIG_2(int jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_getitemcopy")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_EntityMetadataVector_getitemcopy(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_getitem")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_EntityMetadataVector_getitem(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_setitem")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_setitem(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_AddRange")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_AddRange(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_GetRange")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_EntityMetadataVector_GetRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_Insert")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_Insert(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_InsertRange")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_InsertRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_RemoveAt")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_RemoveAt(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_RemoveRange")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_RemoveRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_Repeat")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_EntityMetadataVector_Repeat(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_Reverse__SWIG_0")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_Reverse__SWIG_0(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_Reverse__SWIG_1")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_Reverse__SWIG_1(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadataVector_SetRange")]
+  public static extern void ARQ_RD_Meta_EntityMetadataVector_SetRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_RD_Meta_EntityMetadataVector")]
+  public static extern void delete_ARQ_RD_Meta_EntityMetadataVector(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_MemberInfoVector__SWIG_0")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_MemberInfoVector__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_MemberInfoVector__SWIG_1")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_MemberInfoVector__SWIG_1(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_Clear")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_Clear(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_Add")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_Add(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_size")]
+  public static extern uint ARQ_RD_Meta_MemberInfoVector_size(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_empty")]
+  public static extern bool ARQ_RD_Meta_MemberInfoVector_empty(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_capacity")]
+  public static extern uint ARQ_RD_Meta_MemberInfoVector_capacity(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_reserve")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_reserve(global::System.Runtime.InteropServices.HandleRef jarg1, uint jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_MemberInfoVector__SWIG_2")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_MemberInfoVector__SWIG_2(int jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_getitemcopy")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_MemberInfoVector_getitemcopy(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_getitem")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_MemberInfoVector_getitem(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_setitem")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_setitem(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_AddRange")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_AddRange(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_GetRange")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_MemberInfoVector_GetRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_Insert")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_Insert(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_InsertRange")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_InsertRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_RemoveAt")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_RemoveAt(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_RemoveRange")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_RemoveRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_Repeat")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_MemberInfoVector_Repeat(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_Reverse__SWIG_0")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_Reverse__SWIG_0(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_Reverse__SWIG_1")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_Reverse__SWIG_1(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, int jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_MemberInfoVector_SetRange")]
+  public static extern void ARQ_RD_Meta_MemberInfoVector_SetRange(global::System.Runtime.InteropServices.HandleRef jarg1, int jarg2, global::System.Runtime.InteropServices.HandleRef jarg3);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_RD_Meta_MemberInfoVector")]
+  public static extern void delete_ARQ_RD_Meta_MemberInfoVector(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadata_name_set")]
+  public static extern void ARQ_RD_Meta_EntityMetadata_name_set(global::System.Runtime.InteropServices.HandleRef jarg1, string jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadata_name_get")]
+  public static extern string ARQ_RD_Meta_EntityMetadata_name_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadata_membersInfo_set")]
+  public static extern void ARQ_RD_Meta_EntityMetadata_membersInfo_set(global::System.Runtime.InteropServices.HandleRef jarg1, global::System.Runtime.InteropServices.HandleRef jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_EntityMetadata_membersInfo_get")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_EntityMetadata_membersInfo_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Meta_EntityMetadata")]
+  public static extern global::System.IntPtr new_ARQ_RD_Meta_EntityMetadata();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_RD_Meta_EntityMetadata")]
+  public static extern void delete_ARQ_RD_Meta_EntityMetadata(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_Funcs_get")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_Funcs_get(string jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_Funcs_getAll")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_Funcs_getAll();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_Funcs_getAllNames")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_Funcs_getAllNames();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_Meta_Funcs_getHeaderMemberInfos")]
+  public static extern global::System.IntPtr ARQ_RD_Meta_Funcs_getHeaderMemberInfos();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_ARQ_RD_Meta_Funcs")]
+  public static extern void delete_ARQ_RD_Meta_Funcs(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_Repository")]
   public static extern global::System.IntPtr new_ARQ_RD_Repository(string jarg1);

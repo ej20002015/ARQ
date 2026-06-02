@@ -10,13 +10,16 @@ namespace ARQ::RD::Meta
 
 struct EntityMetadata
 {
-	std::string_view name;
+	std::string_view        name;
+	std::vector<MemberInfo> membersInfo;
 };
 
 // Shorthand functions
 ARQCore_API const EntityMetadata& get( const std::string_view entityName );
 ARQCore_API const std::vector<EntityMetadata>&   getAll();
 ARQCore_API const std::vector<std::string_view>& getAllNames();
+
+ARQCore_API const std::vector<MemberInfo>& getHeaderMemberInfos();
 
 class EntityMetadataRegistry
 {
@@ -34,8 +37,11 @@ public:
 	{
 		Reg()
 		{
+			std::vector<MemberInfo> membersInfo( std::begin( Traits<T>::membersInfo ), std::end( Traits<T>::membersInfo ) );
+
 			EntityMetadata meta{
-				.name = Traits<T>::name()
+				.name        = Traits<T>::name(),
+				.membersInfo = std::move( membersInfo )
 			};
 
 			EntityMetadataRegistry::instMut().m_metadataList.push_back( std::move( meta ) );

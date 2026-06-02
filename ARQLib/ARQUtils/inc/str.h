@@ -18,7 +18,7 @@ namespace Str
 {
 
 /**
-* @brief A fixed-size string wrapper that can be used in compile-time contexts.
+ * @brief A fixed-size string wrapper that can be used in compile-time contexts.
  */
 template <size_t N>
 struct FixedString

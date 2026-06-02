@@ -10,6 +10,7 @@
 #include <ARQUtils/str.h>
 #include <ARQUtils/tuple_vector.h>
 #include <ARQCore/type_registry.h>
+#include <ARQCore/formats.h>
 
 #include <string>
 #include <cstdint>
@@ -30,7 +31,7 @@ namespace ARQ::RD
 
 ARQ_DEFINE_TYPE_CATEGORY( RefData );
 
-// Traits class to get compile-time metadata about an entity
+/// Traits class to get compile-time metadata about an entity
 template<c_RefData T>
 class Traits {};
 
@@ -41,7 +42,7 @@ enum class IndexType
     NonUnique // 1-to-Many
 };
 
-// Records metadata about each member in a RD type
+/// Records metadata about each member in a RD type
 struct MemberInfo
 {
     /// Name of the C++ member variable
@@ -52,6 +53,12 @@ struct MemberInfo
     std::string_view type;
     // Indicates if member is an index, and what type
     IndexType        indexType;
+    // Format to use when rendering in the UI
+    Format           format;
+    // Indicates if member is read-only in the UI
+    bool             uiReadOnly;
+    // Indicates if member is part of the primary key
+    bool             isPrimaryKey;
 };
 
 /// Metadata header common to all Reference Data records
@@ -67,6 +74,55 @@ struct RecordHeader
     std::string    lastUpdatedBy;
     /// Optimistic Concurrency Control (OCC) version number
     uint32_t       version;
+
+    static constexpr std::array<MemberInfo, 5> membersInfo =
+    {
+        MemberInfo {
+            .name         = "uuid",
+            .comment      = "The immutable, globally unique system identifier (Machine Key).",
+            .type         = "uuid",
+            .indexType    = IndexType::Unique,
+            .format       = Format::UUID,
+            .uiReadOnly   = true,
+            .isPrimaryKey = true
+        },
+        MemberInfo {
+            .name         = "isActive",
+            .comment      = "Indicates if the record is still active - false means it's been 'tombstoned'.",
+            .type         = "bool",
+            .indexType    = IndexType::None,
+            .format       = Format::Boolean,
+            .uiReadOnly   = true,
+            .isPrimaryKey = false
+        },
+        MemberInfo {
+            .name         = "lastUpdatedTs",
+            .comment      = "The timestamp of the last update to this record.",
+            .type         = "datetime",
+            .indexType    = IndexType::None,
+            .format       = Format::DateTime,
+            .uiReadOnly   = true,
+            .isPrimaryKey = false
+        },
+        MemberInfo {
+            .name         = "lastUpdatedBy",
+            .comment      = "The user who last updated the record.",
+            .type         = "string",
+            .indexType    = IndexType::NonUnique,
+            .format       = Format::String,
+            .uiReadOnly   = true,
+            .isPrimaryKey = false
+        },
+        MemberInfo {
+            .name         = "version",
+            .comment      = "Optimistic Concurrency Control (OCC) version number.",
+            .type         = "uint32",
+            .indexType    = IndexType::None,
+            .format       = Format::Integer,
+            .uiReadOnly   = true,
+            .isPrimaryKey = false
+        }
+    };
 };
 
 /// The generic storage container for all Reference Data entities
@@ -119,28 +175,40 @@ public:
     static constexpr std::array<MemberInfo, 4> membersInfo =
     {
         MemberInfo {
-            .name      = "ccyID",
-            .comment   = "The 3-letter ISO 4217 currency code (e.g., USD).",
-            .type      = "string",
-            .indexType = IndexType::Unique
+            .name         = "ccyID",
+            .comment      = "The 3-letter ISO 4217 currency code (e.g., USD).",
+            .type         = "string",
+            .indexType    = IndexType::Unique,
+            .format       = Format::String,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         },
         MemberInfo {
-            .name      = "name",
-            .comment   = "The full currency name (e.g., US Dollar).",
-            .type      = "string",
-            .indexType = IndexType::None
+            .name         = "name",
+            .comment      = "The full currency name (e.g., US Dollar).",
+            .type         = "string",
+            .indexType    = IndexType::None,
+            .format       = Format::String,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         },
         MemberInfo {
-            .name      = "decimalPlaces",
-            .comment   = "Number of decimal places for standard formatting.",
-            .type      = "uint8",
-            .indexType = IndexType::None
+            .name         = "decimalPlaces",
+            .comment      = "Number of decimal places for standard formatting.",
+            .type         = "uint8",
+            .indexType    = IndexType::None,
+            .format       = Format::Integer,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         },
         MemberInfo {
-            .name      = "settlementDays",
-            .comment   = "Standard number of days for spot settlement (commonly 2).",
-            .type      = "uint8",
-            .indexType = IndexType::None
+            .name         = "settlementDays",
+            .comment      = "Standard number of days for spot settlement (commonly 2).",
+            .type         = "uint8",
+            .indexType    = IndexType::None,
+            .format       = Format::Integer,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         }    
     };
 };
@@ -174,28 +242,40 @@ public:
     static constexpr std::array<MemberInfo, 4> membersInfo =
     {
         MemberInfo {
-            .name      = "userID",
-            .comment   = "The unique system user ID.",
-            .type      = "string",
-            .indexType = IndexType::Unique
+            .name         = "userID",
+            .comment      = "The unique system user ID.",
+            .type         = "string",
+            .indexType    = IndexType::Unique,
+            .format       = Format::String,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         },
         MemberInfo {
-            .name      = "fullName",
-            .comment   = "The user's full name for display purposes.",
-            .type      = "string",
-            .indexType = IndexType::None
+            .name         = "fullName",
+            .comment      = "The user's full name for display purposes.",
+            .type         = "string",
+            .indexType    = IndexType::None,
+            .format       = Format::String,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         },
         MemberInfo {
-            .name      = "email",
-            .comment   = "The user's contact email address.",
-            .type      = "string",
-            .indexType = IndexType::None
+            .name         = "email",
+            .comment      = "The user's contact email address.",
+            .type         = "string",
+            .indexType    = IndexType::None,
+            .format       = Format::String,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         },
         MemberInfo {
-            .name      = "tradingDesk",
-            .comment   = "The primary trading desk the user belongs to.",
-            .type      = "string",
-            .indexType = IndexType::NonUnique
+            .name         = "tradingDesk",
+            .comment      = "The primary trading desk the user belongs to.",
+            .type         = "string",
+            .indexType    = IndexType::NonUnique,
+            .format       = Format::String,
+            .uiReadOnly   = false,
+            .isPrimaryKey = false
         }    
     };
 };
