@@ -2,6 +2,7 @@
 
 %include <stdint.i>
 %include <std_string.i>
+%include <std_string_view.i>
 %include <std_vector.i>
 %include <std_map.i>
 %include <std_shared_ptr.i>
@@ -9,6 +10,8 @@
 // Strings
 %nspacemove(ARQ::Collections) std::vector<std::string>;
 %template(StringVector) std::vector<std::string>;
+%nspacemove(ARQ::Collections) std::vector<std::string_view>;
+%template(StringViewVector) std::vector<std::string_view>;
 
 // Primitives
 %nspacemove(ARQ::Collections) std::vector<int32_t>;

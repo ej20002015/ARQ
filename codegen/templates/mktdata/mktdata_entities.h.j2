@@ -35,11 +35,11 @@ namespace ARQ::MD
 
 ARQ_DEFINE_TYPE_CATEGORY( MktData );
 
-// Traits class to get compile-time metadata about a mktdata entity
+/// Traits class to get compile-time metadata about a mktdata entity
 template<c_MktData T>
 class Traits {};
 
-// Records metadata about each member in a MD type
+/// Records metadata about each member in a MD type
 struct MemberInfo
 {
     /// Name of the C++ member variable

@@ -5,18 +5,43 @@ import { DataGrid } from "@/components/ui/dataGrid/dataGrid";
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 export function RefDataGrid() {
-  // --- 2. REACT STATE & LOGIC ---
-  
-  // Track which entity the user selected in the dropdown (defaults to User)
-  const [entityType, setEntityType] = useState<string>("User");
-  
-  // Track the actual rows to feed into AG Grid
-  const [rowData, setRowData] = useState<any[]>([]);
+    // --- 2. REACT STATE & LOGIC ---
 
-  // NEW: Track whether we are currently fetching data
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+    // Track which entity the user selected in the dropdown (defaults to User)
+    const [entityType, setEntityType] = useState<string>("User");
 
-  // THE API CALL
+    // Track the list of available entities from the API
+    const [availableEntities, setAvailableEntities] = useState<string[]>([]);
+
+    // Track the actual rows to feed into AG Grid
+    const [rowData, setRowData] = useState<any[]>([]);
+
+    // NEW: Track whether we are currently fetching data
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    // API calls
+
+    useEffect(() => {
+        const fetchEntities = async () => {
+            try {
+                const response = await fetch("http://localhost:5001/api/refdata/entities");
+                if (!response.ok)
+                    throw new Error(`Failed to fetch entities: ${response.status}`);
+
+                const data = await response.json();
+                setAvailableEntities(data);
+                
+                // safety check: If "User" isn't in the DB, default to the first available entity
+                if (data.length > 0 && !data.includes(entityType))
+                    setEntityType(data[0]);
+            } catch (error) {
+                console.error("Failed to load entity list:", error);
+            }
+        };
+
+        fetchEntities();
+    }, []);
+    
     useEffect(() => {
         // 1. Define an async function inside the effect
         const fetchRefData = async () => {
@@ -25,9 +50,7 @@ export function RefDataGrid() {
             
             try {
                 // Construct the URL based on the dropdown selection
-                const endpoint = entityType === 'User' 
-                ? 'http://localhost:5001/api/refdata/user' 
-                : 'http://localhost:5001/api/refdata/currency';
+                const endpoint = `http://localhost:5001/api/refdata/records/${entityType.toLowerCase()}`;
 
                 // 2. Make the network request
                 const response = await fetch(endpoint);
@@ -99,8 +122,15 @@ export function RefDataGrid() {
                 onChange={(e) => setEntityType(e.target.value)}
                 className="bg-neutral-900 border border-border text-sm text-foreground rounded px-3 py-1 outline-none focus:border-primary cursor-pointer"
             >
-                <option value="User">Users</option>
-                <option value="Currency">Currencies</option>
+                {availableEntities.length > 0 ? (
+                    availableEntities.map((entity) => (
+                        <option key={entity} value={entity}>
+                            {entity}
+                        </option>
+                    ))
+                ) : (
+                    <option value={entityType}>Loading...</option>
+                )}
             </select>
             
             <div className="ml-auto text-xs text-muted-foreground font-mono">

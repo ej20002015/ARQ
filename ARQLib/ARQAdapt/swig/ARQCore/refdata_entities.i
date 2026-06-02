@@ -21,6 +21,32 @@ namespace RD
 *********************************************
 */
 
+enum class IndexType
+{
+    None,
+    Unique,   // 1-to-1
+    NonUnique // 1-to-Many
+};
+
+/// Records metadata about each member in a RD type
+struct MemberInfo
+{
+    /// Name of the C++ member variable
+    std::string_view name;
+    /// Documentation string
+    std::string_view comment;
+    /// The language agnostic type as a string
+    std::string_view type;
+    // Indicates if member is an index, and what type
+    IndexType        indexType;
+    // Format to use when rendering in the UI
+    Format           format;
+    // Indicates if member is read-only in the UI
+    bool             uiReadOnly;
+    // Indicates if member is part of the primary key
+    bool             isPrimaryKey;
+};
+
 /// Metadata header common to all Reference Data records
 struct RecordHeader
 {

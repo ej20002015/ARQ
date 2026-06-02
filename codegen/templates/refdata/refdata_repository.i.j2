@@ -28,7 +28,6 @@ public:
 	const Record<T>* getRecord( const ID::UUID& id ) const;
 };
 
-%typemap(csclassmodifiers) Repository_Adapter "public partial class"
 %rename(Repository) Repository_Adapter;
 
 class Repository_Adapter

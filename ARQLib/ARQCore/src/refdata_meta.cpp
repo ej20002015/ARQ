@@ -22,6 +22,12 @@ const std::vector<std::string_view>& getAllNames()
     return EntityMetadataRegistry::inst().getAllNames();
 }
 
+const std::vector<MemberInfo>& getHeaderMemberInfos()
+{
+    static std::vector<MemberInfo> headerMemberInfos( std::begin( RecordHeader::membersInfo ), std::end( RecordHeader::membersInfo ) );
+    return headerMemberInfos;
+}
+
 const EntityMetadataRegistry& EntityMetadataRegistry::inst()
 {
     return instMut();

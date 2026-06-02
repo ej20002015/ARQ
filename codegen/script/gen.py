@@ -38,7 +38,7 @@ class EntityDefinition:
         self._validate_and_process()
     
     def _validate_and_process(self) -> None:
-        """Validate the entity definition, process key type and process indices."""
+        """Validate the entity definition, process key type, process indices and process members."""
         if not self.name:
             raise CodeGenerationError(f"Entity in {self.source_file} is missing a name")
         
@@ -68,6 +68,27 @@ class EntityDefinition:
 
         # Store has_indices in template data
         self.data['has_indices'] = self.has_indices
+
+        self.process_members()
+    
+    def process_members(self) -> None:
+        """Process each member of the entity and add default values."""
+        for member in self.data.get('members', []):
+
+            # Add default values for 'format'
+            if 'format' not in member:
+                if   member.get('type') == 'string':                                                member['format'] = 'String'
+                elif member.get('type').startswith('int') or member.get('type').startswith('uint'): member['format'] = 'Integer'
+                elif member.get('type') in ['double']:                                              member['format'] = 'Decimal'
+                elif member.get('type') in ['bool']:                                                member['format'] = 'Boolean'
+                elif member.get('type') in ['date']:                                                member['format'] = 'Date'
+                elif member.get('type') in ['datetime']:                                            member['format'] = 'DateTime'
+                else:
+                    raise CodeGenerationError(f"Entity '{self.name}' in {self.source_file} has member '{member.get('name')}' with unsupported type '{member.get('type')}' - cannot determine format")
+                
+            # Add default value for ui_read_only (false for all members by default)
+            if 'ui_read_only' not in member:
+                member['ui_read_only'] = False
 
 class TemplateMetadata:
     """Represents metadata extracted from a template file."""
