@@ -32,6 +32,9 @@ REM ----------------------------
 if /I "!CMD!"=="b" goto build
 if /I "!CMD!"=="build" goto build
 
+if /I "!CMD!"=="cl" goto clean
+if /I "!CMD!"=="clean" goto clean
+
 if /I "!CMD!"=="t" goto test
 if /I "!CMD!"=="test" goto test
 
@@ -57,6 +60,10 @@ REM ----------------------------
 
 :build
 call scripts\build.bat !MODE! %*
+goto end
+
+:clean
+call scripts\clean.bat !MODE! %*
 goto end
 
 :test

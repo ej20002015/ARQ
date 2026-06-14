@@ -36,6 +36,7 @@ fi
 # ----------------------------
 case "$CMD" in
     b|build)        SCRIPT="scripts/build.sh" ;;
+    cl|clean)       SCRIPT="scripts/clean.sh" ;;
     t|test)         SCRIPT="scripts/test.sh" ;;
     i|install)      SCRIPT="scripts/install.sh" ;;
     c|configure)    SCRIPT="scripts/configure.sh" ;;

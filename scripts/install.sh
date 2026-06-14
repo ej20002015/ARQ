@@ -3,6 +3,8 @@
 CONFIG=Release
 CLEAN=1
 
+shopt -s nocasematch
+
 for arg in "$@"; do
     case "$arg" in
         dbg|debug)
@@ -13,6 +15,8 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+shopt -u nocasematch
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 

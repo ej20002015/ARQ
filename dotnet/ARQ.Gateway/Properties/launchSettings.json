@@ -1,17 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
-    "Gateway (Debug C++)": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "http://localhost:5147",
-      "nativeDebugging": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ARQ_LOCAL_TARGET": "Debug"
-      }
-    },
     "Gateway (Release C++)": {
       "commandName": "Project",
       "dotnetRunMessages": true,
@@ -21,6 +10,17 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ARQ_LOCAL_TARGET": "Release"
+      }
+    },
+    "Gateway (Debug C++)": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "applicationUrl": "http://localhost:5147",
+      "nativeDebugging": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ARQ_LOCAL_TARGET": "Debug"
       }
     },
     "Gateway (Install)": {
