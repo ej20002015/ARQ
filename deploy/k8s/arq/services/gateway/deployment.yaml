@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arq-gateway
+  labels:
+    app: arq-gateway
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: arq-gateway
+  template:
+    metadata:
+      labels:
+        app: arq-gateway
+    spec:
+      containers:
+        - name: arq-gateway
+          image: ej20002011/arq:master
+          imagePullPolicy: Always
+          workingDir: /app/ARQ/dotnet/ARQ.Gateway
+          command: ["dotnet"]
+          args: ["ARQ.Gateway.dll"]
+          ports:
+            - name: http-web
+              containerPort: 8080
+          startupProbe:
+            httpGet:
+              path: /health/startup
+              port: http-web
+            failureThreshold: 10
+            periodSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: http-web
+            failureThreshold: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http-web
+            failureThreshold: 3
+            periodSeconds: 5

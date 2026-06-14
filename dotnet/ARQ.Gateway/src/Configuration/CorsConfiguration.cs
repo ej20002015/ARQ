@@ -16,9 +16,9 @@ public static class CorsConfiguration
             .GetSection("Cors")
             .Get<CorsSettings>();
 
-        if (corsSettings != null)
+        services.AddCors(options =>
         {
-            services.AddCors(options =>
+            if (corsSettings?.Policies != null)
             {
                 foreach (var (policyName, origins) in corsSettings.Policies)
                 {
@@ -30,8 +30,8 @@ public static class CorsConfiguration
                             .AllowAnyMethod();
                     });
                 }
-            });
-        }
+            }
+        });
 
         return services;
     }

@@ -1,5 +1,6 @@
 using ARQ.Gateway.RefData.Repositories;
 using ARQ.RD;
+using System.Diagnostics;
 
 namespace ARQ.Gateway.RefData.Endpoints;
 
