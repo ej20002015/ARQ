@@ -9,10 +9,8 @@ fi
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
 pushd "$SCRIPT_DIR/.." > /dev/null
-
-ctest --test-dir .build -C "$CONFIG" --parallel --output-on-failure
+cmake --build .build --config "$CONFIG" --parallel --target clean
 ec=$?
-
 popd > /dev/null
 
 exit $ec

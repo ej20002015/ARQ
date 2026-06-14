@@ -36,6 +36,11 @@ function(ARQ_define_swig_wrapper LANGUAGE)
     endif()
 
     set(CMAKE_SWIG_FLAGS -c++ ${LANG_SPECIFIC_SWIG_OPTIONS} -I${CMAKE_CURRENT_SOURCE_DIR})
+
+    # If we are on 64-bit Linux, tell SWIG that int64_t is 'long', not 'long long'
+    if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+        list(APPEND CMAKE_SWIG_FLAGS "-DSWIGWORDSIZE64")
+    endif()
     
     set_source_files_properties(${SWIG_MAIN_FILE} PROPERTIES CPLUSPLUS ON)
 
@@ -53,7 +58,7 @@ function(ARQ_define_swig_wrapper LANGUAGE)
     )
 
     set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES FOLDER "swig/${LANGUAGE}")
-    set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     
     # Target includes for the generated C++ wrapper file
     target_include_directories(${SWIG_MODULE_TARGET} PRIVATE ${MASTER_INC_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/inc)
@@ -62,6 +67,9 @@ function(ARQ_define_swig_wrapper LANGUAGE)
         target_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ARQAdapt Python3::Python)
     elseif(${LANGUAGE} STREQUAL "csharp")
         target_link_libraries(${SWIG_MODULE_TARGET} PUBLIC ARQAdapt)
+        if(NOT WIN32)
+            set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES PREFIX "")
+        endif()
     endif()
 
     ## INSTALL

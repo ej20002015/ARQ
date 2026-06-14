@@ -2,7 +2,7 @@
 
 CONFIG=Release
 
-if [[ "$1" == "dbg" || "$1" == "debug" ]]; then
+if [[ "{$1,,}" == "dbg" || "${1,,}" == "debug" ]]; then
     CONFIG=Debug
 fi
 

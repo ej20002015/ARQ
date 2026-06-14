@@ -24,12 +24,12 @@ set(CMAKE_SHARED_LIBRARY_PREFIX "")
 
 # Set output directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 # For non-install builds, set the RPATH so executables can find local .so files.
 # $ORIGIN is a special linker variable that means "the directory of the executable".
-set(CMAKE_BUILD_RPATH "$ORIGIN:${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
+set(CMAKE_BUILD_RPATH "$ORIGIN:${CMAKE_LIBRARY_OUTPUT_DIRECTORY}")
 
 set_property(GLOBAL PROPERTY CTEST_TARGETS_ADDED 1) # hack to prevent CTest added targets
 
