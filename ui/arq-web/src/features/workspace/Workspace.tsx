@@ -1,72 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DockviewApi, DockviewReact, type DockviewReadyEvent } from 'dockview-react';
-import { Sidebar } from './Sidebar';
-// Panels
-import { RefDataGrid } from '../refdata/datagrid/RefDataGrid';
-
-function PanelPlaceholder(props: any) {
-    const title = props.params.title || "Placeholder Panel";
-    return (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-950 text-neutral-200 p-4 select-none">
-            <div className="text-center">
-                <p className="text-lg font-semibold">{title}</p>
-                <p className="text-xs text-neutral-500 font-mono mt-1">ID: {props.api.id}</p>
-            </div>
-        </div>
-    );
-}
-
-const components = {
-    placeholder: PanelPlaceholder,
-    refDataGrid: RefDataGrid
-};
+import { SidebarProvider } from '@/components/ui/sidebar';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { AppSidebar } from './Sidebar';
+import { CommandPallete } from './CommandPallete';
+import { DOCKVIEW_COMPONENTS, type PanelConfig } from './panels';
 
 export function Workspace() {
+    /*
+    ----- Client state -----
+    */
 
-    // State
     const [dockApi, setDockApi] = useState<DockviewApi | null>(null);
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
-    const [isCmdkOpen, setCmdkOpen] = useState(false);
+    const [isCmdPalleteOpen, setIsCmdPalleteOpen] = useState(false);
 
-    // The Master function to open panels - passed down to Sidebar and Cmdk
-    const openPanel = (id: string, title: string, componentName: string = "placeholder") => {
+    /*
+    ----- Global keyboard listeners -----
+    */
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "k" || e.key === "p" && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                setIsCmdPalleteOpen((prev) => !prev);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    // The Master function to open panels - passed down to Sidebar and Cmd Pallete
+    const openPanel = (panelConfig: PanelConfig, panelParams?: any) => {
         if (!dockApi)
             return;
+
+        const id = panelConfig.id;
+        const title = panelConfig.title;
+        const component = panelConfig.componentId;
         
-        const existingPanel = dockApi.getPanel(id);
+        const panelId = panelConfig.allowMultiple ? `${id}-${crypto.randomUUID().slice(0, 6)}` : id;
+
+        const existingPanel = dockApi.getPanel(panelId);
         if (existingPanel) {
             existingPanel.api.setActive();
-        } else {
+        }
+        else {
             dockApi.addPanel({
-                id,
-                component: componentName,
-                params: { title },
+                id: panelId,
+                component: component,
+                params: { title, ...panelParams },
                 title,
             });
         }
 
-        // Close Cmdk if it was open
-        setCmdkOpen(false);
+        // Close cmd pallete if it was open
+        setIsCmdPalleteOpen(false);
     };
 
     return (
         <div className="flex h-screen w-screen overflow-hidden bg-neutral-950 text-neutral-200">
+            <TooltipProvider>
+            <SidebarProvider>
 
-            <Sidebar
-                isOpen={isSidebarOpen}
-                onToggle={() => setSidebarOpen(!isSidebarOpen)}
-                onOpenPanel={openPanel}
-                onOpenCmdk={() => setCmdkOpen(true)}
-            />
-
-            <div className="flex-1 relative">
-                <DockviewReact
-                    components={components}
-                    onReady={(e: DockviewReadyEvent) => setDockApi(e.api)}
-                    className="dockview-theme-dark h-full w-full"
+                <AppSidebar
+                    onOpenPanel={openPanel}
+                    onOpenCmdPallete={() => setIsCmdPalleteOpen(true)}
                 />
-            </div>
 
+                <CommandPallete
+                    open={isCmdPalleteOpen}
+                    onOpenChange={setIsCmdPalleteOpen}
+                    onNavigate={openPanel}
+                />
+
+                <div className="flex-1 relative">
+                    <DockviewReact
+                        components={DOCKVIEW_COMPONENTS}
+                        onReady={(e: DockviewReadyEvent) => setDockApi(e.api)}
+                        className="dockview-theme-dark h-full w-full"
+                    />
+                </div>
+
+            </SidebarProvider>
+            </TooltipProvider>
         </div>
     );
 }

@@ -33,16 +33,6 @@
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ARQ_LOCAL_TARGET": "Install"
       }
-    },
-    "https (Default)": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "https://localhost:7089;http://localhost:5147",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ARQ_LOCAL_TARGET": "Release"
-      }
     }
   }
 }

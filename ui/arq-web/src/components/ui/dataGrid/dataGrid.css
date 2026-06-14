@@ -2,3 +2,20 @@
   height: 100%;
   width: 100%;
 }
+
+/* Read-Only Cell Styling */
+.arq-cell-read-only {
+  /* A bright, low-opacity white overlay stands out against both pure black and dark grey */
+  background-color: rgba(255, 255, 255, 0.05); 
+  
+  /* Aggressively dim the text so it looks "disabled" compared to editable fields */
+  color: rgba(255, 255, 255, 0.8); 
+  
+  /* Use the standard text cursor so users know they can highlight it */
+  cursor: text; 
+}
+
+/* Ensure the hover state keeps the distinction */
+.ag-row:hover .arq-cell-read-only {
+  background-color: rgba(255, 255, 255, 0.1);
+}

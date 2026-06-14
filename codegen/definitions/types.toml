@@ -2,43 +2,55 @@
 # across different technology targets (C++, ClickHouse, etc.).
 
 [types.string]
+physical_type = "String"
 cpp = "std::string"
 clickhouse = "String"
-flatbuffer = "string"
 protobuf = "string"
 
 [types.double]
+physical_type = "Double"
 cpp = "double"
 clickhouse = "Float64"
-flatbuffer = "double"
 protobuf = "double"
 
 [types.datetime]
+physical_type = "DateTime"
 cpp = "Time::DateTime"
 clickhouse = "DateTime64(6)"
-flatbuffer = "ulong" # Representing nanoseconds since epoch
 protobuf = "uint64" # Representing nanoseconds since epoch
 
 [types.bool]
+physical_type = "Boolean"
 cpp = "bool"
 clickhouse = "UInt8" # ClickHouse often uses UInt8 for booleans
-flatbuffer = "bool"
 protobuf = "bool"
 
 [types.uint8]
+physical_type = "UInt8"
 cpp = "uint8_t"
 clickhouse = "UInt8"
-flatbuffer = "ubyte"
 protobuf = "uint32" # Protobuf does not have uint8, using uint32
 
+[types.uint32]
+physical_type = "UInt32"
+cpp = "uint32_t"
+clickhouse = "UInt32"
+protobuf = "uint32"
+
 [types.int32]
+physical_type = "Int32"
 cpp = "int32_t"
 clickhouse = "Int32"
-flatbuffer = "int"
 protobuf = "int32"
 
 [types.int64]
+physical_type = "Int64"
 cpp = "int64_t"
 clickhouse = "Int64"
-flatbuffer = "long"
 protobuf = "int64"
+
+[types.uuid]
+physical_type = "UUID"
+cpp = "ID::UUID"
+clickhouse = "UUID"
+protobuf = "string" # Protobuf does not have a native UUID type, using string

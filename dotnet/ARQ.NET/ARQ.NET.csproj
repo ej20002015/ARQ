@@ -12,9 +12,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="src\Generated\" />
+    <Folder Include="src\Interop\" />
 
-    <Compile Update="src\Generated\**\*.cs">
+    <Compile Update="src\Interop\**\*.cs">
       <Pack>false</Pack>
       <ExcludeFromStyleCop>true</ExcludeFromStyleCop>
       <NoWarn>CS0114;CS0108;CS1591;CS8600;CS8601;CS8625</NoWarn>

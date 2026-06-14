@@ -54,9 +54,23 @@ export function DataGrid(props: DataGridProps) {
         sortable: true,
         filter: true,
         resizable: true,
+
+        cellClassRules: {
+            "arq-cell-read-only": (params: any) => {
+                const isEditable = params.colDef.editable;
+                
+                // If it's a dynamic function, evaluate it
+                if (typeof isEditable === "function") {
+                    return !isEditable(params);
+                }
+                
+                // If it's a strict boolean, check if it is explicitly false
+                return isEditable === false;
+            },
+        },
         
         // Merge any defaultColDefs passed in by the parent
-        ...props.defaultColDef, 
+        ...props.defaultColDef,
     }), [props.defaultColDef]);
 
     return (
@@ -69,6 +83,7 @@ export function DataGrid(props: DataGridProps) {
                 rowSelection={props.rowSelection || "single"}
                 animateRows={props.animateRows !== undefined ? props.animateRows : true}
                 pagination={props.pagination !== undefined ? props.pagination : true}
+                enableCellTextSelection={true}
             />
         </div>
     </div>

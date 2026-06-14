@@ -3,8 +3,7 @@
     "path": "ARQ.slnx",
     "projects": [
       "ARQ.NET\\ARQ.NET.csproj",
-      "ARQ.NET.Tests\\ARQ.NET.Tests.csproj",
-      "ARQ.TestExe\\ARQ.TestExe.csproj"
+      "ARQ.NET.Tests\\ARQ.NET.Tests.csproj"
     ]
   }
 }
