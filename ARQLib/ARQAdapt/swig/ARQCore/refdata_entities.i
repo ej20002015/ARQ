@@ -35,12 +35,12 @@ struct MemberInfo
     std::string_view name;
     /// Documentation string
     std::string_view comment;
-    /// The language agnostic type as a string
-    std::string_view type;
+    /// The physical type
+    PhysicalType     physicalType;
     // Indicates if member is an index, and what type
     IndexType        indexType;
     // Format to use when rendering in the UI
-    Format           format;
+    SemanticFormat   format;
     // Indicates if member is read-only in the UI
     bool             uiReadOnly;
     // Indicates if member is part of the primary key

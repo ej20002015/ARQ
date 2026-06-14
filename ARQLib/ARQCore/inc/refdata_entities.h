@@ -10,7 +10,8 @@
 #include <ARQUtils/str.h>
 #include <ARQUtils/tuple_vector.h>
 #include <ARQCore/type_registry.h>
-#include <ARQCore/formats.h>
+#include <ARQCore/semantic_format.h>
+#include <ARQCore/physical_type.h>
 
 #include <string>
 #include <cstdint>
@@ -49,12 +50,12 @@ struct MemberInfo
     std::string_view name;
     /// Documentation string
     std::string_view comment;
-    /// The language agnostic type as a string
-    std::string_view type;
+    /// The physical type
+    PhysicalType     physicalType;
     // Indicates if member is an index, and what type
     IndexType        indexType;
     // Format to use when rendering in the UI
-    Format           format;
+    SemanticFormat   format;
     // Indicates if member is read-only in the UI
     bool             uiReadOnly;
     // Indicates if member is part of the primary key
@@ -80,45 +81,45 @@ struct RecordHeader
         MemberInfo {
             .name         = "uuid",
             .comment      = "The immutable, globally unique system identifier (Machine Key).",
-            .type         = "uuid",
+            .physicalType = PhysicalType::UUID,
             .indexType    = IndexType::Unique,
-            .format       = Format::UUID,
+            .format       = SemanticFormat::UUID,
             .uiReadOnly   = true,
             .isPrimaryKey = true
         },
         MemberInfo {
             .name         = "isActive",
             .comment      = "Indicates if the record is still active - false means it's been 'tombstoned'.",
-            .type         = "bool",
+            .physicalType = PhysicalType::Boolean,
             .indexType    = IndexType::None,
-            .format       = Format::Boolean,
+            .format       = SemanticFormat::Boolean,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "lastUpdatedTs",
             .comment      = "The timestamp of the last update to this record.",
-            .type         = "datetime",
+            .physicalType = PhysicalType::DateTime,
             .indexType    = IndexType::None,
-            .format       = Format::DateTime,
+            .format       = SemanticFormat::DateTime,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "lastUpdatedBy",
             .comment      = "The user who last updated the record.",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::NonUnique,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "version",
             .comment      = "Optimistic Concurrency Control (OCC) version number.",
-            .type         = "uint32",
+            .physicalType = PhysicalType::UInt32,
             .indexType    = IndexType::None,
-            .format       = Format::Integer,
+            .format       = SemanticFormat::Integer,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         }
@@ -177,36 +178,36 @@ public:
         MemberInfo {
             .name         = "ccyID",
             .comment      = "The 3-letter ISO 4217 currency code (e.g., USD).",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::Unique,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "name",
             .comment      = "The full currency name (e.g., US Dollar).",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::None,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "decimalPlaces",
             .comment      = "Number of decimal places for standard formatting.",
-            .type         = "uint8",
+            .physicalType = PhysicalType::UInt8,
             .indexType    = IndexType::None,
-            .format       = Format::Integer,
+            .format       = SemanticFormat::Integer,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "settlementDays",
             .comment      = "Standard number of days for spot settlement (commonly 2).",
-            .type         = "uint8",
+            .physicalType = PhysicalType::UInt8,
             .indexType    = IndexType::None,
-            .format       = Format::Integer,
+            .format       = SemanticFormat::Integer,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         }    
@@ -244,36 +245,36 @@ public:
         MemberInfo {
             .name         = "userID",
             .comment      = "The unique system user ID.",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::Unique,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "fullName",
             .comment      = "The user's full name for display purposes.",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::None,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "email",
             .comment      = "The user's contact email address.",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::None,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "tradingDesk",
             .comment      = "The primary trading desk the user belongs to.",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::NonUnique,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = false,
             .isPrimaryKey = false
         }    

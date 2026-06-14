@@ -4,6 +4,11 @@
     <ProjectReference Include="..\ARQ.NET\ARQ.NET.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="src\Configuration\" />
+    <Folder Include="src\Features\RefData\Endpoints\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>

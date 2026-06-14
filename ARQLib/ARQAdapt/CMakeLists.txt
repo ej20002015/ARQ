@@ -16,6 +16,7 @@ include(UseSWIG)
 
 set(SWIG_LIB_NAME "ARQLib")
 set(SWIG_MAIN_FILE "swig/${SWIG_LIB_NAME}.i")
+set(SWIG_CSHARP_GEN_OUTPUT_DIR "${CMAKE_SOURCE_DIR}/dotnet/ARQ.NET/src/Interop")
 
 function(ARQ_define_swig_wrapper LANGUAGE)
     if(${LANGUAGE} STREQUAL "python")
@@ -25,11 +26,11 @@ function(ARQ_define_swig_wrapper LANGUAGE)
         # CMake's UseSWIG module will automatically prepend the required '_' to the final .pyd/.so file
         set(SWIG_MODULE_TARGET "${SWIG_LIB_NAME}")
         set(GENERATED_FILE_DIR "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/swig_${LANGUAGE}/$<CONFIG>")
-        elseif(${LANGUAGE} STREQUAL "csharp")
+    elseif(${LANGUAGE} STREQUAL "csharp")
         #set(LANG_SPECIFIC_SWIG_OPTIONS "-namespace;${SWIG_LIB_NAME}") # Define namespaces in the cpp
         # C# doesn't have the strict naming requirement - suffix with csharp to have a different name to the python one
         set(SWIG_MODULE_TARGET "${SWIG_LIB_NAME}_csharp")
-        set(GENERATED_FILE_DIR "${CMAKE_SOURCE_DIR}/dotnet/ARQ.NET/src/Generated")
+        set(GENERATED_FILE_DIR "${SWIG_CSHARP_GEN_OUTPUT_DIR}")
     else()
         message(FATAL_ERROR "Unsupported SWIG language: ${LANGUAGE}")
     endif()

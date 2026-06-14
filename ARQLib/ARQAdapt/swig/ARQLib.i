@@ -15,7 +15,8 @@
 %include "swig/ARQUtils/sys.i"
 
 %include "swig/ARQCore/lib.i"
-%include "swig/ARQCore/formats.i"
+%include "swig/ARQCore/semantic_format.i"
+%include "swig/ARQCore/physical_type.i"
 %include "swig/ARQCore/refdata_entities.i"
 %include "swig/ARQCore/refdata_meta.i"
 %include "swig/ARQCore/refdata_repository.i"

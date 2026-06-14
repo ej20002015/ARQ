@@ -1,74 +1,30 @@
-using ARQ.Gateway.RefData.Repositories;
-using ARQ.RD;
+using ARQ.Gateway.Configuration;
+using ARQ.Gateway.RefData;
+using ARQ.Gateway.RefData.Endpoints;
+
+/* ---------- App Builder ------------*/
 
 var builder = WebApplication.CreateBuilder(args);
 
-var arqCfg = new ARQ.LibConfig{
-    Env = "DEV",
-    LogLevel = ARQ.LogLevel.DEBUG,
-    LogDest = $"{ARQ.Sys.logDir()}/ARQ.Gateway.lib.log",
-    LogDest2 = "none"
-};
+// Global services
+builder.Services.AddJsonConfiguration();
+builder.Services.AddCorsPolicies(builder.Configuration);
 
-using var arq = ARQ.ARQLib.Init(arqCfg);
+// Feature specific services
+builder.Services.AddRefData();
 
-builder.Services.AddSingleton(provider => new ARQ.RD.Repository("ClickHouseDB"));
-builder.Services.AddSingleton<IRefDataMetaRepository, RefDataMetaRepository>();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowARQWebLocal", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
+/* ---------- App Runtime ------------*/
 
 var app = builder.Build();
 
-app.MapGet("/api/refdata/records/{entityType}", (string entityType, ARQ.RD.Repository repo) =>
-{
-    ICache? cache = repo.getByName(entityType);
-    if (cache == null)
-        return Results.NotFound();
-    
-    var records = cache.getList();
-    return Results.Ok(records);
-});
+// ARQ library init
+var arqCfg = ARQConfiguration.Create(builder.Configuration);
+using var arq = ARQ.ARQLib.Init(arqCfg);
 
-app.MapGet("/api/refdata/records/{entityType}/{id}", (string entityType, string id, Repository repo) =>
-{
-    ICache? cache = repo.getByName(entityType);
-    if (cache == null)
-        return Results.NotFound(new { Error = $"Reference data entity '{entityType}' is not supported." });
+// Feature endpoint registration
+app.MapRefDataEndpoints();
 
-    var guid = Guid.TryParse(id, out var parsedGuid) ? parsedGuid : Guid.Empty;
-    var record = cache.getRecord(guid);
+// Global config
+app.UseCors("ARQWebLocal");
 
-    if (record == null) return Results.NotFound(new { Error = $"Record with ID '{id}' not found." });
-
-    return Results.Ok(record);
-});
-
-app.MapGet("/api/refdata/metadata/{entityType}", (string entityType, IRefDataMetaRepository repo) =>
-{
-    try
-    {
-        var memberInfos = repo.GetRecordMemberInfosForEntity(entityType);
-        return Results.Ok(memberInfos);
-    }
-    catch (ArgumentException ex)
-    {
-        return Results.NotFound(new { Error = ex.Message });
-    }
-});
-
-app.MapGet("/api/refdata/entities", (IRefDataMetaRepository repo) =>
-{
-    var entityTypes = repo.GetEntityTypes();
-    return Results.Ok(entityTypes);
-});
-
-app.UseCors("AllowARQWebLocal");
 app.Run();

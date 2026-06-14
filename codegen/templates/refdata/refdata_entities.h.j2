@@ -14,7 +14,8 @@
 #include <ARQUtils/str.h>
 #include <ARQUtils/tuple_vector.h>
 #include <ARQCore/type_registry.h>
-#include <ARQCore/formats.h>
+#include <ARQCore/semantic_format.h>
+#include <ARQCore/physical_type.h>
 
 #include <string>
 #include <cstdint>
@@ -53,12 +54,12 @@ struct MemberInfo
     std::string_view name;
     /// Documentation string
     std::string_view comment;
-    /// The language agnostic type as a string
-    std::string_view type;
+    /// The physical type
+    PhysicalType     physicalType;
     // Indicates if member is an index, and what type
     IndexType        indexType;
     // Format to use when rendering in the UI
-    Format           format;
+    SemanticFormat   format;
     // Indicates if member is read-only in the UI
     bool             uiReadOnly;
     // Indicates if member is part of the primary key
@@ -84,45 +85,45 @@ struct RecordHeader
         MemberInfo {
             .name         = "uuid",
             .comment      = "The immutable, globally unique system identifier (Machine Key).",
-            .type         = "uuid",
+            .physicalType = PhysicalType::UUID,
             .indexType    = IndexType::Unique,
-            .format       = Format::UUID,
+            .format       = SemanticFormat::UUID,
             .uiReadOnly   = true,
             .isPrimaryKey = true
         },
         MemberInfo {
             .name         = "isActive",
             .comment      = "Indicates if the record is still active - false means it's been 'tombstoned'.",
-            .type         = "bool",
+            .physicalType = PhysicalType::Boolean,
             .indexType    = IndexType::None,
-            .format       = Format::Boolean,
+            .format       = SemanticFormat::Boolean,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "lastUpdatedTs",
             .comment      = "The timestamp of the last update to this record.",
-            .type         = "datetime",
+            .physicalType = PhysicalType::DateTime,
             .indexType    = IndexType::None,
-            .format       = Format::DateTime,
+            .format       = SemanticFormat::DateTime,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "lastUpdatedBy",
             .comment      = "The user who last updated the record.",
-            .type         = "string",
+            .physicalType = PhysicalType::String,
             .indexType    = IndexType::NonUnique,
-            .format       = Format::String,
+            .format       = SemanticFormat::String,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         },
         MemberInfo {
             .name         = "version",
             .comment      = "Optimistic Concurrency Control (OCC) version number.",
-            .type         = "uint32",
+            .physicalType = PhysicalType::UInt32,
             .indexType    = IndexType::None,
-            .format       = Format::Integer,
+            .format       = SemanticFormat::Integer,
             .uiReadOnly   = true,
             .isPrimaryKey = false
         }
@@ -181,9 +182,9 @@ public:
         MemberInfo {
             .name         = "{{ member.name }}",
             .comment      = "{{ member.comment | default('') }}",
-            .type         = "{{ member.type }}",
+            .physicalType = PhysicalType::{{ types[member.type].physical_type }},
             .indexType    = IndexType::{{ member.index_type | default('None') }},
-            .format       = Format::{{ member.format }},
+            .format       = SemanticFormat::{{ member.format }},
             .uiReadOnly   = {{ 'true' if member.ui_read_only else 'false' }},
             .isPrimaryKey = false
         }{% if not loop.last %},
