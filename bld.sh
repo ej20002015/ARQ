@@ -23,7 +23,7 @@ CMD="$CMD_RAW"
 
 LAST_CHAR="${CMD_RAW: -1}"
 
-if [[ "$LAST_CHAR" == "d" ]]; then
+if [[ "$LAST_CHAR" == "d" ]] && [[ "$CMD" != "d" ]]; then
     MODE="Debug"
     CMD="${CMD_RAW::-1}"
 elif [[ "$LAST_CHAR" == "r" ]]; then

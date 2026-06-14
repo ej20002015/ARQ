@@ -34,9 +34,9 @@ internal static class ARQDLLResolver
         string? resolvedPath = null;
         string? targetHomeDir = null;
 
-        // In production environment ARQ_HOME should be set
+        // In production environment ARQ_home should be set
 
-        string? envArqHome = Environment.GetEnvironmentVariable("ARQ_HOME");
+        string? envArqHome = Environment.GetEnvironmentVariable("ARQ_home");
         if (!string.IsNullOrEmpty(envArqHome))
         {
             string prodPath = isWindows
@@ -45,8 +45,8 @@ internal static class ARQDLLResolver
 
             if (!File.Exists(prodPath))
                 throw new FileNotFoundException(
-                    $"ARQ Engine binary ({dllName}) not found in ARQ_HOME. " +
-                    $"Expected path: {prodPath}. Is ARQ_HOME set correctly?");
+                    $"ARQ Engine binary ({dllName}) not found in ARQ_home. " +
+                    $"Expected path: {prodPath}. Is ARQ_home set correctly?");
 
             resolvedPath = prodPath;
             targetHomeDir = envArqHome;
@@ -61,10 +61,10 @@ internal static class ARQDLLResolver
             while (dir != null && dir.Name != "dotnet") { dir = dir.Parent; }
 
             if (dir == null)
-                throw new Exception("ARQ_HOME is not set, and the local 'dotnet' repo folder could not be found!");
+                throw new Exception("ARQ_home is not set, and the local 'dotnet' repo folder could not be found!");
 
             if (dir.Parent == null)
-                throw new Exception("ARQ_HOME is not set, and the local 'dotnet' repo folder does not have a parent directory!");
+                throw new Exception("ARQ_home is not set, and the local 'dotnet' repo folder does not have a parent directory!");
 
             string repoRoot = dir.Parent.FullName;
 

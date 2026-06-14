@@ -18,11 +18,15 @@ set CMD=%CMD_RAW%
 set LAST=!CMD_RAW:~-1!
 
 if /I "!LAST!"=="d" (
-    set MODE=Debug
-    set CMD=!CMD_RAW:~0,-1!
-) else if /I "!LAST!"=="r" (
-    set MODE=Release
-    set CMD=!CMD_RAW:~0,-1!
+    if /I "!CMD!" NEQ "d" (
+        set MODE=Debug
+        set CMD=!CMD_RAW:~0,-1!
+    )
+) else (
+    if /I "!LAST!"=="r" (
+        set MODE=Release
+        set CMD=!CMD_RAW:~0,-1!
+    )
 )
 
 REM ----------------------------
