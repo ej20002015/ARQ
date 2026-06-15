@@ -55,6 +55,9 @@ if /I "!CMD!"=="codegen" goto codegen
 if /I "!CMD!"=="d" goto dockerbuild
 if /I "!CMD!"=="dockerbuild" goto dockerbuild
 
+if /I "!CMD!"=="dw" goto dockerbuild-web
+if /I "!CMD!"=="dockerbuild-web" goto dockerbuild-web
+
 echo Unknown command: !CMD!
 exit /B 1
 
@@ -88,6 +91,10 @@ goto end
 
 :dockerbuild
 call scripts\dockerbuild.bat !MODE! %*
+goto end
+
+:dockerbuild-web
+call scripts\dockerbuild-web.bat !MODE! %*
 goto end
 
 :end

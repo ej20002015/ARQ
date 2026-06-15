@@ -1,0 +1,6 @@
+:80  {
+    root /app/arq-web
+    encode gzip
+    try_files {path} /index.html
+    file_server
+}

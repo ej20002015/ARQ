@@ -35,13 +35,14 @@ fi
 # Aliases
 # ----------------------------
 case "$CMD" in
-    b|build)        SCRIPT="scripts/build.sh" ;;
-    cl|clean)       SCRIPT="scripts/clean.sh" ;;
-    t|test)         SCRIPT="scripts/test.sh" ;;
-    i|install)      SCRIPT="scripts/install.sh" ;;
-    c|configure)    SCRIPT="scripts/configure.sh" ;;
-    g|cg|codegen)   SCRIPT="scripts/codegen.sh" ;;
-    d|dockerbuild)  SCRIPT="scripts/dockerbuild.sh" ;;
+    b|build)             SCRIPT="scripts/build.sh" ;;
+    cl|clean)            SCRIPT="scripts/clean.sh" ;;
+    t|test)              SCRIPT="scripts/test.sh" ;;
+    i|install)           SCRIPT="scripts/install.sh" ;;
+    c|configure)         SCRIPT="scripts/configure.sh" ;;
+    g|cg|codegen)        SCRIPT="scripts/codegen.sh" ;;
+    d|dockerbuild)       SCRIPT="scripts/dockerbuild.sh" ;;
+    dw|dockerbuild-web)  SCRIPT="scripts/dockerbuild-web.sh" ;;
     *)
         echo "Unknown command: $CMD"
         exit 1

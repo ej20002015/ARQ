@@ -144,7 +144,7 @@ jobs:
         fi
 
     # ----------------------------------------------------------------
-    # CONFIGURE & BUILD
+    # CONFIGURE, BUILD AND TEST C++
     # ----------------------------------------------------------------
     - name: Configure CMake (Windows)
       if: matrix.os == 'windows-latest'
@@ -178,6 +178,20 @@ jobs:
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }} --output-on-failure -C ${{ matrix.build_type }}
+
+    # ----------------------------------------------------------------
+    # SET-UP, BUILD AND TEST Dotnet
+    # ----------------------------------------------------------------
+    - name: Setup .NET 10 SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore .NET Gateway
+      run: dotnet restore dotnet/ARQ.Gateway/ARQ.Gateway.csproj
+
+    - name: Build .NET Gateway
+      run: dotnet build dotnet/ARQ.Gateway/ARQ.Gateway.csproj --configuration ${{ matrix.build_type }} --no-restore
 
   # =========================================================
   # JOB 2: DOCKER PUBLISH (Only if tests pass)
@@ -216,8 +230,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          # Ensure this path matches where you put your Dockerfile
-          file: infra/docker/Dockerfile
+          file: infra/docker/arq/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
