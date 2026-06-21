@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arq-web
+  labels:
+    app: arq-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: arq-web
+  template:
+    metadata:
+      labels:
+        app: arq-web
+    spec:
+      containers:
+        - name: arq-web
+          image: ej20002011/arq-web:master
+          imagePullPolicy: Always
+          ports:
+            - name: http-web
+              containerPort: 80
+          env:
+            - name: BACKEND_API_URL
+              value: "http://arq-gateway-svc:80"
