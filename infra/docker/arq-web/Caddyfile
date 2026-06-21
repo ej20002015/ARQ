@@ -1,6 +1,15 @@
 :80  {
     root /app/arq-web
     encode gzip
-    try_files {path} /index.html
-    file_server
+
+    # Intercept API calls, strip the prefix, and proxy to the backend
+    handle /arq-gateway/* {
+        uri strip_prefix /arq-gateway
+        reverse_proxy {$BACKEND_API_URL}
+    }
+    # Else catch all to service single page app
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
 }

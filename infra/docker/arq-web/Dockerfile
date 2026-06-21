@@ -3,12 +3,14 @@
 # ==========================================
 FROM node:alpine AS builder
 
-# Setup Build Directory
 WORKDIR /src
-COPY ./ui/arq-web .
+
+# Grab packages
+COPY /ui/arq-web/package*.json ./
+RUN npm ci
 
 # Build
-RUN npm ci
+COPY ./ui/arq-web .
 RUN npm run build
 
 # ==========================================

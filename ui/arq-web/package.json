@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --mode gateway-local",
+    "dev:local": "vite --mode gateway-local",
+    "dev:remote:dev": "vite --mode gateway-remote-dev",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"

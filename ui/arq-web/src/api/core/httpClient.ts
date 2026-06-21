@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const BASE_URL = "http://localhost:5001/api/";
+// For local development vite is configured with proxy so will replace this with local server IP
+// When deployed caddy will use a reverse proxy to call the actual service
+const BASE_URL = "/arq-gateway/api";
 
 export const httpClient = axios.create({
     baseURL: BASE_URL,
