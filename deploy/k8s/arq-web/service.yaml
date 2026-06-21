@@ -4,9 +4,6 @@ metadata:
   name: arq-web-svc
   labels:
     app: arq-web
-  annotations:
-    tailscale.com/expose: "true"
-    tailscale.com/hostname: "arq-web-${ENV_NAME}"
 spec:
   type: ClusterIP
   ports:

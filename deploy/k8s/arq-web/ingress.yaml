@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: arq-web-ingress
+  labels:
+    app: arq-web
+spec:
+  # This tells the tailscale operator to manage this route
+  ingressClassName: tailscale
+  defaultBackend:
+    service:
+      name: arq-web-svc
+      port:
+        number: 80
+  tls:
+    - hosts:
+        - arq-web-${ENV_NAME}
