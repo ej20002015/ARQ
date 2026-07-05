@@ -22,6 +22,7 @@ var app = builder.Build();
 
 // ARQ library init
 var arqCfg = ARQConfiguration.Create(builder.Configuration);
+app.Logger.LogInformation("ARQ library configuration: {@arqCfg}", arqCfg);
 using var arq = ARQ.ARQLib.Init(arqCfg);
 
 // Global config

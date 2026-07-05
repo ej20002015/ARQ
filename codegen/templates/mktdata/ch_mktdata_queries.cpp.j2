@@ -141,7 +141,7 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
             {% set arq_conv_end = ".microsecondsSinceEpoch()" if types[member.type].clickhouse == "DateTime64(6)" else ""%}
             {% if member.optional %}
             col_{{ member.name }}->Append(       obj.data.{{ member.name }} ? *obj.data.{{ member.name }}{{ arq_conv_end }} : {{ types[member.type].cpp }}{} );
-            col_{{ member.name }}_nulls->Append( obj.data.{{ member.name }} ? 1 : 0 );
+            col_{{ member.name }}_nulls->Append( obj.data.{{ member.name }} ? 0 : 1 );
             {% else %}
             col_{{ member.name }}->Append( obj.data.{{ member.name }}{{ arq_conv_end }} );
             {% endif %}

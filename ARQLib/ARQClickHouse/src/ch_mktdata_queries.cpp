@@ -277,7 +277,7 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
             col_close->Append( obj.data.close );
             col_volume->Append( obj.data.volume );
             col_vwap->Append(       obj.data.vwap ? *obj.data.vwap : double{} );
-            col_vwap_nulls->Append( obj.data.vwap ? 1 : 0 );
+            col_vwap_nulls->Append( obj.data.vwap ? 0 : 1 );
             col_asofTs->Append( obj.header.asofTs.microsecondsSinceEpoch() );
             col_isActive->Append( obj.header.isActive );
 			col_lastUpdatedTs->Append( obj.header.lastUpdatedTs.microsecondsSinceEpoch() );

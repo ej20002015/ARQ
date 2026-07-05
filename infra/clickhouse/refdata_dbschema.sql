@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS RefData.Users
     `UserID` String COMMENT 'The unique system user ID.',
     `FullName` String COMMENT 'The user&#39;s full name for display purposes.',
     `Email` String COMMENT 'The user&#39;s contact email address.',
-    `TradingDesk` String COMMENT 'The primary trading desk the user belongs to.',
+    `TradingDesk` Nullable(String) COMMENT 'The primary trading desk the user belongs to.',
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',
     `_LastUpdatedTs` DateTime64(6) DEFAULT now64(6) COMMENT 'Timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'User or system that last updated this record',

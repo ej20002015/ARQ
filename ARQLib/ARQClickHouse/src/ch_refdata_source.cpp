@@ -277,7 +277,7 @@ void CHEntitySource_User::insert( const std::vector<ARQ::RD::Record<ARQ::RD::Use
             col_fullName->Append( obj.data.fullName );
             col_email->Append( obj.data.email );
             col_tradingDesk->Append(       obj.data.tradingDesk ? *obj.data.tradingDesk : std::string{} );
-            col_tradingDesk_nulls->Append( obj.data.tradingDesk ? 1 : 0 );
+            col_tradingDesk_nulls->Append( obj.data.tradingDesk ? 0 : 1 );
             col_isActive->Append( obj.header.isActive );
 			col_lastUpdatedTs->Append( obj.header.lastUpdatedTs.microsecondsSinceEpoch() );
             col_lastUpdatedBy->Append( obj.header.lastUpdatedBy );
