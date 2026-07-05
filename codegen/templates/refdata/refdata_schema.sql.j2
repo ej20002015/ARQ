@@ -9,12 +9,12 @@ CREATE DATABASE RefData;
 
 {% for entity in entities %}
 -- Schema for {{ entity.name }}
-CREATE TABLE IF NOT EXISTS RefData.{{ entity.table_name }}
+CREATE TABLE IF NOT EXISTS RefData.{{ entity.name_plural }}
 (
     `UUID` UUID COMMENT 'The immutable, globally unique system identifier (Machine Key)',
     {# Loop through the members to create columns #}
     {% for member in entity.members %}
-    {% set CHType = "LowCardinality(String)" if "LowCardinality(String)" in member.clickhouse_modifier else types[member.type].clickhouse %}
+    {% set CHType = "Nullable(" + types[member.type].clickhouse + ")" if member.optional == 'true' else types[member.type].clickhouse %}
     `{{ member.name | capitalise_first }}` {{ CHType }} {% if member.comment %}COMMENT '{{ member.comment | e }}'{% endif %},
     {% endfor %}
     `_IsActive` UInt8 COMMENT 'Boolean flag (1=Active, 0=Inactive)',

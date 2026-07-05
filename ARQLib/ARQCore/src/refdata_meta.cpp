@@ -24,7 +24,7 @@ const std::vector<std::string_view>& getAllNames()
 
 const std::vector<MemberInfo>& getHeaderMemberInfos()
 {
-    static std::vector<MemberInfo> headerMemberInfos( std::begin( RecordHeader::membersInfo ), std::end( RecordHeader::membersInfo ) );
+    static std::vector<MemberInfo> headerMemberInfos( std::begin( recordHeaderMembersInfo ), std::end( recordHeaderMembersInfo ) );
     return headerMemberInfos;
 }
 

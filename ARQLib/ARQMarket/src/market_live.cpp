@@ -29,15 +29,16 @@ void LiveMarketUpdater::start()
 
 		// Grab lock to prevent new updates being buffered
 		// Iterate through buffered updates and apply to the market
+		// Then set state to LIVE so that new updates are applied directly to the market
 		{
 			std::lock_guard<std::mutex> lg( m_bufferedUpdatesMutex );
 			for( auto& updateBatch : m_bufferedUpdates )
 				applyUpdate( std::move( updateBatch ) );
 
 			m_bufferedUpdates.clear();
+			
+			m_state = State::LIVE;
 		}
-
-		m_state = State::LIVE;
 	}
 }
 

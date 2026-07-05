@@ -35,7 +35,7 @@ inline void buildCacheIndexes( Cache<User>& cache )
     for( const auto& [id, record] : cache.m_map )
     {
         userIDUniqIndex.emplace( record.data.userID, id );
-        tradingDeskNonUniqIndex[record.data.tradingDesk].push_back( id );
+        tradingDeskNonUniqIndex[record.data.tradingDesk.value_or( "" )].push_back( id );
     }   
 }
 

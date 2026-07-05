@@ -106,7 +106,7 @@ public partial class User : global::System.IDisposable {
     } 
   }
 
-  public string tradingDesk {
+  public string? tradingDesk {
     set {
       ARQLibPINVOKE.ARQ_RD_User_tradingDesk_set(swigCPtr, value);
       if (ARQLibPINVOKE.SWIGPendingException.Pending) throw ARQLibPINVOKE.SWIGPendingException.Retrieve();

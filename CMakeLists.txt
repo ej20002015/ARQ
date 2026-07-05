@@ -12,6 +12,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 if (MSVC)
     add_compile_options("/Zc:__cplusplus")
     option(ENABLE_VCPKG OFF)
+
+    # Enable multi-processor compilation across all projects.
+    add_compile_options(/MP)
+
+    # Swap /Zi (centralized PDB) for /Z7 (embedded symbols).
+    # This removes the massive write-lock bottleneck during compilation.
+    if(POLICY CMP0141)
+        cmake_policy(SET CMP0141 NEW)
+        set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "Embedded")
+    else()
+        # Fallback for older CMake versions: forcibly overwrite the default flags.
+        string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+        string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+    endif()
 endif()
 
 #-lstdc++exp

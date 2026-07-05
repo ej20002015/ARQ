@@ -16,7 +16,7 @@ namespace ARQ::Proto::RD
 {
 
 {% for entity in entities %}
-// --- Converters for {{ entity.name }} ({{ entity.type_string }}) ---
+// --- Converters for {{ entity.name }} ---
 
 ARQProtobuf_API void toProto( const ARQ::RD::{{ entity.name }}& arqEntity, {{ entity.name }}* const protoEntity );
 ARQProtobuf_API void toProto(ARQ::RD::{{ entity.name }}&& arqEntity, {{ entity.name }}* const protoEntity );

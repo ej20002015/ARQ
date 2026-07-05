@@ -21,8 +21,11 @@ message RecordHeader
 // A FXRate object
 message FXRate 
 {
+    /// The mid-market rate.
     double mid = 1;
+    /// The price at which a market maker is willing to buy.
     double bid = 2;
+    /// The price at which a market maker is willing to sell.
     double ask = 3;
 }
 
@@ -43,12 +46,20 @@ message FXRateRecordMessage
 // A EQPrice object
 message EQPrice 
 {
+    /// The price of the last executed trade.
     double last = 1;
+    /// The highest price a buyer is willing to pay.
     double bid = 2;
+    /// The lowest price a seller is willing to accept.
     double ask = 3;
+    /// The opening price for the current trading session.
     double open = 4;
+    /// The closing price from the previous trading session.
     double close = 5;
+    /// The cumulative volume for the current trading session.
     int64 volume = 6;
+    /// The volume-weighted average price for the current trading session, if available.
+    optional double vwap = 7;
 }
 
 // A Record<EQPrice> object

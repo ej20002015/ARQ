@@ -9,14 +9,14 @@ CREATE DATABASE MktData;
 
 {% for entity in entities %}
 -- Schema for {{ entity.name }}
-CREATE TABLE IF NOT EXISTS MktData.{{ entity.table_name }}
+CREATE TABLE IF NOT EXISTS MktData.{{ entity.name_plural }}
 (
     `MarketName` LowCardinality(String) COMMENT 'The name of the market this data belongs to (e.g., LIVE, EOD_20250724).',
     `ID` String COMMENT 'The unique identifier for the market data entity.',
     `AsofTs` Datetime64(6) COMMENT 'The point-in-time when the market data was effective',
     {# Loop through the members to create columns #}
     {% for member in entity.members %}
-    {% set CHType = "LowCardinality(String)" if "LowCardinality(String)" in member.clickhouse_modifier else types[member.type].clickhouse %}
+    {% set CHType = "Nullable(" + types[member.type].clickhouse + ")" if member.optional else types[member.type].clickhouse %}
     `{{ member.name | capitalise_first }}` {{ CHType }} {% if member.comment %}COMMENT '{{ member.comment | e }}'{% endif %},
     {% endfor %}
     `_IsActive` UInt8 COMMENT 'Indicates if the record is still active - false means it has been tombstoned',

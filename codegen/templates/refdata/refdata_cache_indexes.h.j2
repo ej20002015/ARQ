@@ -36,11 +36,12 @@ inline void buildCacheIndexes( Cache<{{ entity.name }}>& cache )
     for( const auto& [id, record] : cache.m_map )
     {
         {% for member in entity.members %}
+        {% set opt_suffix = ".value_or( \"\" )" if member.optional else "" %}
         {% if member.index_type == 'Unique' %}
-        {{ member.name }}UniqIndex.emplace( record.data.{{ member.name }}, id );
+        {{ member.name }}UniqIndex.emplace( record.data.{{ member.name }}{{ opt_suffix }}, id );
         {% endif %}
         {% if member.index_type == 'NonUnique' %}
-        {{ member.name }}NonUniqIndex[record.data.{{ member.name }}].push_back( id );
+        {{ member.name }}NonUniqIndex[record.data.{{ member.name }}{{ opt_suffix }}].push_back( id );
         {% endif %}
         {% endfor %}
     }   

@@ -19,10 +19,12 @@ void toProto( const ARQ::RD::{{ entity.name }}& arqEntity, {{ entity.name }}* co
 	*uuidBufPtr = arqEntity.uuid.toString();
 
     {% for member in entity.members %}
-    {% if member.type == "datetime" %}
-    protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }}.microsecondsSinceEpoch() );
+    {% set arq_conv_end = ".microsecondsSinceEpoch()" if member.type == "datetime" else ""%}
+    {% if member.optional %}
+    if( arqEntity.{{ member.name }} )
+        protoEntity->set_{{ member.name | snake_case }}( *arqEntity.{{ member.name }}{{ arq_conv_end }} );
     {% else %}
-    protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }} );
+    protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }}{{ arq_conv_end }} );
     {% endif %}
     {% endfor %}
 }
@@ -33,12 +35,12 @@ void toProto( ARQ::RD::{{ entity.name }}&& arqEntity, {{ entity.name }}* const p
 	*uuidBufPtr = arqEntity.uuid.toString();
 
     {% for member in entity.members %}
-    {% if member.type == "datetime" %}
-    protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }}.microsecondsSinceEpoch() );
-    {% elif member.type == "string" %}
-    protoEntity->set_{{ member.name | snake_case }}( std::move( arqEntity.{{ member.name }} ) );
+    {% set arq_conv_end = ".microsecondsSinceEpoch()" if member.type == "datetime" else ""%}
+    {% if member.optional %}
+    if( arqEntity.{{ member.name }} )
+        protoEntity->set_{{ member.name | snake_case }}( std::move( *arqEntity.{{ member.name }} ){{ arq_conv_end }} );
     {% else %}
-    protoEntity->set_{{ member.name | snake_case }}( arqEntity.{{ member.name }} );
+    protoEntity->set_{{ member.name | snake_case }}( std::move( arqEntity.{{ member.name }} ) );
     {% endif %}
     {% endfor %}
 }
@@ -48,10 +50,12 @@ ARQ::RD::{{ entity.name }} fromProto( const {{ entity.name }}& protoEntity )
     ARQ::RD::{{ entity.name }} arqEntity;
     arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     {% for member in entity.members %}
-    {% if member.type == "datetime" %}
-    arqEntity.{{ member.name }} = Time::DateTime( Time::Microseconds( protoEntity.{{ member.name | snake_case }}() ) );
+    {% set arq_conv_start = "Time::DateTime( Time::Microseconds( " if member.type == "datetime" else "" %}
+    {% set arq_conv_end = " ) )" if member.type == "datetime" else "" %}
+    {% if member.optional %}
+    arqEntity.{{ member.name }} = protoEntity.has_{{ member.name | snake_case }}() ? std::optional<{{ types[member.type].cpp }}>( {{ arq_conv_start }}protoEntity.{{ member.name | snake_case }}(){{ arq_conv_end }} ) : std::nullopt;
     {% else %}
-    arqEntity.{{ member.name }} = protoEntity.{{ member.name | snake_case }}();
+    arqEntity.{{ member.name }} = {{ arq_conv_start }}protoEntity.{{ member.name | snake_case }}(){{ arq_conv_end }};
     {% endif %}
     {% endfor %}
     return arqEntity;
@@ -62,12 +66,13 @@ ARQ::RD::{{ entity.name }} fromProto( {{ entity.name }}&& protoEntity )
     ARQ::RD::{{ entity.name }} arqEntity;
     arqEntity.uuid = ARQ::ID::UUID::fromString( protoEntity.uuid().id() );
     {% for member in entity.members %}
-    {% if member.type == "datetime" %}
-    arqEntity.{{ member.name }} = Time::DateTime( Time::Microseconds( protoEntity.{{ member.name | snake_case }}() ) );
-    {% elif member.type == "string" %}
-    arqEntity.{{ member.name }} = std::move( *protoEntity.mutable_{{ member.name | snake_case }}() );
+    {% set arq_conv_start = "Time::DateTime( Time::Microseconds( " if member.type == "datetime" else "" %}
+    {% set arq_conv_end = " ) )" if member.type == "datetime" else "" %}
+    {% set proto_member = "std::move( *protoEntity.mutable_" + member.name | snake_case + "() )" if member.type == "string" else "protoEntity." + member.name | snake_case + "()" %}
+    {% if member.optional %}
+    arqEntity.{{ member.name }} = protoEntity.has_{{ member.name | snake_case }}() ? std::optional<{{ types[member.type].cpp }}>( {{ arq_conv_start }}{{ proto_member }}{{ arq_conv_end }} ) : std::nullopt;
     {% else %}
-    arqEntity.{{ member.name }} = protoEntity.{{ member.name | snake_case }}();
+    arqEntity.{{ member.name }} = {{ arq_conv_start }}{{ proto_member }}{{ arq_conv_end }};
     {% endif %}
     {% endfor %}
     return arqEntity;

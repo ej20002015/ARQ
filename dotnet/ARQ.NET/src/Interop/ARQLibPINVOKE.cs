@@ -224,6 +224,204 @@ class ARQLibPINVOKE {
   }
 
 
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptBool__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptBool__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptBool__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptBool__SWIG_1(bool jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptBool__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptBool__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptBool_has_value")]
+  public static extern bool std_OptBool_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptBool_value")]
+  public static extern bool std_OptBool_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptBool")]
+  public static extern void delete_std_OptBool(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedByte__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptSignedByte__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedByte__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptSignedByte__SWIG_1(sbyte jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedByte__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptSignedByte__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedByte_has_value")]
+  public static extern bool std_OptSignedByte_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedByte_value")]
+  public static extern sbyte std_OptSignedByte_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptSignedByte")]
+  public static extern void delete_std_OptSignedByte(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedShort__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptSignedShort__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedShort__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptSignedShort__SWIG_1(short jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedShort__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptSignedShort__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedShort_has_value")]
+  public static extern bool std_OptSignedShort_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedShort_value")]
+  public static extern short std_OptSignedShort_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptSignedShort")]
+  public static extern void delete_std_OptSignedShort(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedInt__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptSignedInt__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedInt__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptSignedInt__SWIG_1(int jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedInt__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptSignedInt__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedInt_has_value")]
+  public static extern bool std_OptSignedInt_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedInt_value")]
+  public static extern int std_OptSignedInt_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptSignedInt")]
+  public static extern void delete_std_OptSignedInt(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedByte__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptUnsignedByte__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedByte__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptUnsignedByte__SWIG_1(byte jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedByte__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptUnsignedByte__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedByte_has_value")]
+  public static extern bool std_OptUnsignedByte_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedByte_value")]
+  public static extern byte std_OptUnsignedByte_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptUnsignedByte")]
+  public static extern void delete_std_OptUnsignedByte(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedShort__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptUnsignedShort__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedShort__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptUnsignedShort__SWIG_1(ushort jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedShort__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptUnsignedShort__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedShort_has_value")]
+  public static extern bool std_OptUnsignedShort_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedShort_value")]
+  public static extern ushort std_OptUnsignedShort_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptUnsignedShort")]
+  public static extern void delete_std_OptUnsignedShort(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedInt__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptUnsignedInt__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedInt__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptUnsignedInt__SWIG_1(uint jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedInt__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptUnsignedInt__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedInt_has_value")]
+  public static extern bool std_OptUnsignedInt_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedInt_value")]
+  public static extern uint std_OptUnsignedInt_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptUnsignedInt")]
+  public static extern void delete_std_OptUnsignedInt(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedLong__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptSignedLong__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedLong__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptSignedLong__SWIG_1(long jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptSignedLong__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptSignedLong__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedLong_has_value")]
+  public static extern bool std_OptSignedLong_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptSignedLong_value")]
+  public static extern long std_OptSignedLong_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptSignedLong")]
+  public static extern void delete_std_OptSignedLong(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedLong__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptUnsignedLong__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedLong__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptUnsignedLong__SWIG_1(ulong jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptUnsignedLong__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptUnsignedLong__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedLong_has_value")]
+  public static extern bool std_OptUnsignedLong_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptUnsignedLong_value")]
+  public static extern ulong std_OptUnsignedLong_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptUnsignedLong")]
+  public static extern void delete_std_OptUnsignedLong(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptFloat__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptFloat__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptFloat__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptFloat__SWIG_1(float jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptFloat__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptFloat__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptFloat_has_value")]
+  public static extern bool std_OptFloat_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptFloat_value")]
+  public static extern float std_OptFloat_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptFloat")]
+  public static extern void delete_std_OptFloat(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptDouble__SWIG_0")]
+  public static extern global::System.IntPtr new_std_OptDouble__SWIG_0();
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptDouble__SWIG_1")]
+  public static extern global::System.IntPtr new_std_OptDouble__SWIG_1(double jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_std_OptDouble__SWIG_2")]
+  public static extern global::System.IntPtr new_std_OptDouble__SWIG_2(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptDouble_has_value")]
+  public static extern bool std_OptDouble_has_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_std_OptDouble_value")]
+  public static extern double std_OptDouble_value(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_delete_std_OptDouble")]
+  public static extern void delete_std_OptDouble(global::System.Runtime.InteropServices.HandleRef jarg1);
+
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_Collections_StringVector__SWIG_0")]
   public static extern global::System.IntPtr new_ARQ_Collections_StringVector__SWIG_0();
 
@@ -724,6 +922,12 @@ class ARQLibPINVOKE {
 
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_isPrimaryKey_get")]
   public static extern bool ARQ_RD_MemberInfo_isPrimaryKey_get(global::System.Runtime.InteropServices.HandleRef jarg1);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_isOptional_set")]
+  public static extern void ARQ_RD_MemberInfo_isOptional_set(global::System.Runtime.InteropServices.HandleRef jarg1, bool jarg2);
+
+  [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_ARQ_RD_MemberInfo_isOptional_get")]
+  public static extern bool ARQ_RD_MemberInfo_isOptional_get(global::System.Runtime.InteropServices.HandleRef jarg1);
 
   [global::System.Runtime.InteropServices.DllImport("ARQLib_csharp", EntryPoint="CSharp_new_ARQ_RD_MemberInfo")]
   public static extern global::System.IntPtr new_ARQ_RD_MemberInfo();

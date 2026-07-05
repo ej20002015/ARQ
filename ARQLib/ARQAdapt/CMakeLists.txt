@@ -58,7 +58,12 @@ function(ARQ_define_swig_wrapper LANGUAGE)
     )
 
     set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES FOLDER "swig/${LANGUAGE}")
-    set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    if(WIN32)
+        set(SWIG_BUILD_MODULE_DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    else()
+        set(SWIG_BUILD_MODULE_DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    endif()
+    set_target_properties(${SWIG_MODULE_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${SWIG_BUILD_MODULE_DESTINATION})
     
     # Target includes for the generated C++ wrapper file
     target_include_directories(${SWIG_MODULE_TARGET} PRIVATE ${MASTER_INC_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/inc)

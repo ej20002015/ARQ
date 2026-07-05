@@ -45,6 +45,8 @@ struct MemberInfo
     bool             uiReadOnly;
     // Indicates if member is part of the primary key
     bool             isPrimaryKey;
+    // Indicates if member is optional/nullable
+    bool             isOptional;
 };
 
 /// Metadata header common to all Reference Data records
@@ -115,7 +117,7 @@ struct User
     /// The user's contact email address.
     std::string email;
     /// The primary trading desk the user belongs to.
-    std::string tradingDesk;
+    std::optional<std::string> tradingDesk;
 };
 
 // Auto-instantiate the SWIG wrappers for this entity

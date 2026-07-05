@@ -26,8 +26,8 @@ void toProto( ARQ::RD::Currency&& arqEntity, Currency* const protoEntity )
 
     protoEntity->set_ccy_id( std::move( arqEntity.ccyID ) );
     protoEntity->set_name( std::move( arqEntity.name ) );
-    protoEntity->set_decimal_places( arqEntity.decimalPlaces );
-    protoEntity->set_settlement_days( arqEntity.settlementDays );
+    protoEntity->set_decimal_places( std::move( arqEntity.decimalPlaces ) );
+    protoEntity->set_settlement_days( std::move( arqEntity.settlementDays ) );
 }
 
 ARQ::RD::Currency fromProto( const Currency& protoEntity )
@@ -62,7 +62,8 @@ void toProto( const ARQ::RD::User& arqEntity, User* const protoEntity )
     protoEntity->set_user_id( arqEntity.userID );
     protoEntity->set_full_name( arqEntity.fullName );
     protoEntity->set_email( arqEntity.email );
-    protoEntity->set_trading_desk( arqEntity.tradingDesk );
+    if( arqEntity.tradingDesk )
+        protoEntity->set_trading_desk( *arqEntity.tradingDesk );
 }
 
 void toProto( ARQ::RD::User&& arqEntity, User* const protoEntity )
@@ -73,7 +74,8 @@ void toProto( ARQ::RD::User&& arqEntity, User* const protoEntity )
     protoEntity->set_user_id( std::move( arqEntity.userID ) );
     protoEntity->set_full_name( std::move( arqEntity.fullName ) );
     protoEntity->set_email( std::move( arqEntity.email ) );
-    protoEntity->set_trading_desk( std::move( arqEntity.tradingDesk ) );
+    if( arqEntity.tradingDesk )
+        protoEntity->set_trading_desk( std::move( *arqEntity.tradingDesk ) );
 }
 
 ARQ::RD::User fromProto( const User& protoEntity )
@@ -83,7 +85,7 @@ ARQ::RD::User fromProto( const User& protoEntity )
     arqEntity.userID = protoEntity.user_id();
     arqEntity.fullName = protoEntity.full_name();
     arqEntity.email = protoEntity.email();
-    arqEntity.tradingDesk = protoEntity.trading_desk();
+    arqEntity.tradingDesk = protoEntity.has_trading_desk() ? std::optional<std::string>( protoEntity.trading_desk() ) : std::nullopt;
     return arqEntity;
 }
 
@@ -94,7 +96,7 @@ ARQ::RD::User fromProto( User&& protoEntity )
     arqEntity.userID = std::move( *protoEntity.mutable_user_id() );
     arqEntity.fullName = std::move( *protoEntity.mutable_full_name() );
     arqEntity.email = std::move( *protoEntity.mutable_email() );
-    arqEntity.tradingDesk = std::move( *protoEntity.mutable_trading_desk() );
+    arqEntity.tradingDesk = protoEntity.has_trading_desk() ? std::optional<std::string>( std::move( *protoEntity.mutable_trading_desk() ) ) : std::nullopt;
     return arqEntity;
 }
 

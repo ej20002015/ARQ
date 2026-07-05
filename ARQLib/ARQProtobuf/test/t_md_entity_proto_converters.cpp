@@ -158,3 +158,85 @@ TEST( MktDataProtoConvertersTest, RecordCollection_Conversions )
     EXPECT_EQ( parsedCollMove.get<ARQ::MD::Record<ARQ::MD::FXRate>>()[0].header.id, "BATCH-001" );
     EXPECT_DOUBLE_EQ( parsedCollMove.get<ARQ::MD::Record<ARQ::MD::FXRate>>()[0].data.bid, 1.700 );
 }
+
+TEST( MktDataProtoConvertersTest, EQPrice_Conversions_Optional_Set )
+{
+    // --- LValue toProto ---
+    ARQ::MD::EQPrice cppPrice;
+    cppPrice.last = 150.50; // Assuming standard fields exist alongside vwap
+    cppPrice.vwap = 150.25; // Optional is SET
+
+    ARQ::Proto::MD::EQPrice protoPrice;
+    toProto( cppPrice, &protoPrice );
+
+    EXPECT_DOUBLE_EQ( protoPrice.last(), 150.50 );
+    EXPECT_TRUE( protoPrice.has_vwap() );
+    EXPECT_DOUBLE_EQ( protoPrice.vwap(), 150.25 );
+
+    // --- RValue toProto ---
+    ARQ::Proto::MD::EQPrice protoPriceMove;
+    toProto( std::move( cppPrice ), &protoPriceMove );
+    EXPECT_TRUE( protoPriceMove.has_vwap() );
+    EXPECT_DOUBLE_EQ( protoPriceMove.vwap(), 150.25 );
+
+    // --- LValue fromProto ---
+    ARQ::MD::EQPrice parsedCppPrice = fromProto( protoPrice );
+    EXPECT_DOUBLE_EQ( parsedCppPrice.last, 150.50 );
+    EXPECT_TRUE( parsedCppPrice.vwap.has_value() );
+    EXPECT_DOUBLE_EQ( parsedCppPrice.vwap.value(), 150.25 );
+
+    // --- RValue fromProto ---
+    ARQ::MD::EQPrice parsedCppPriceMove = fromProto( std::move( protoPriceMove ) );
+    EXPECT_TRUE( parsedCppPriceMove.vwap.has_value() );
+    EXPECT_DOUBLE_EQ( parsedCppPriceMove.vwap.value(), 150.25 );
+}
+
+TEST( MktDataProtoConvertersTest, EQPrice_Conversions_Optional_Empty )
+{
+    // --- LValue toProto ---
+    ARQ::MD::EQPrice cppPrice;
+    cppPrice.last = 150.50;
+    cppPrice.vwap = std::nullopt; // Optional is EMPTY
+
+    ARQ::Proto::MD::EQPrice protoPrice;
+    toProto( cppPrice, &protoPrice );
+
+    EXPECT_DOUBLE_EQ( protoPrice.last(), 150.50 );
+    EXPECT_FALSE( protoPrice.has_vwap() ); // Should not be set in proto
+
+    // --- RValue toProto ---
+    ARQ::Proto::MD::EQPrice protoPriceMove;
+    toProto( std::move( cppPrice ), &protoPriceMove );
+    EXPECT_FALSE( protoPriceMove.has_vwap() );
+
+    // --- LValue fromProto ---
+    ARQ::MD::EQPrice parsedCppPrice = fromProto( protoPrice );
+    EXPECT_DOUBLE_EQ( parsedCppPrice.last, 150.50 );
+    EXPECT_FALSE( parsedCppPrice.vwap.has_value() ); // Should remain nullopt
+
+    // --- RValue fromProto ---
+    ARQ::MD::EQPrice parsedCppPriceMove = fromProto( std::move( protoPriceMove ) );
+    EXPECT_FALSE( parsedCppPriceMove.vwap.has_value() );
+}
+
+TEST( MktDataProtoConvertersTest, Record_EQPrice_Conversions )
+{
+    ARQ::MD::Record<ARQ::MD::EQPrice> cppRecord;
+    cppRecord.header.id = "SEQ-789";
+    cppRecord.data.last = 200.00;
+    cppRecord.data.vwap = 199.50; // Optional is SET
+
+    // --- LValue toProto ---
+    ARQ::Proto::MD::EQPriceRecord protoRecord;
+    toProto<ARQ::MD::EQPrice>( cppRecord, &protoRecord );
+
+    EXPECT_EQ( protoRecord.header().id(), "SEQ-789" );
+    EXPECT_TRUE( protoRecord.data().has_vwap() );
+    EXPECT_DOUBLE_EQ( protoRecord.data().vwap(), 199.50 );
+
+    // --- LValue fromProto ---
+    ARQ::MD::Record<ARQ::MD::EQPrice> parsedRecord = fromProto<ARQ::MD::EQPrice>( protoRecord );
+    EXPECT_EQ( parsedRecord.header.id, "SEQ-789" );
+    EXPECT_TRUE( parsedRecord.data.vwap.has_value() );
+    EXPECT_DOUBLE_EQ( parsedRecord.data.vwap.value(), 199.50 );
+}

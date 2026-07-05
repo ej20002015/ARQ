@@ -19,3 +19,18 @@
 .ag-row:hover .arq-cell-read-only {
   background-color: rgba(255, 255, 255, 0.1);
 }
+
+.arq-grid-wrapper .arq-cell-not-set {
+    color: rgba(255, 255, 255, 0.4);
+    user-select: none; /* Prevents users from accidentally copying the em-dash */
+}
+
+.arq-grid-wrapper .ag-header-cell-filtered .ag-header-icon {
+    --ag-icon-button-active-color: #ffffff;
+    opacity: 1 !important;
+}
+
+.ag-header-icon.ag-header-cell-filter-button.ag-filter-active::after {
+  --ag-icon-button-active-indicator-color: #ffffff;
+  opacity: 1 !important;
+}

@@ -141,6 +141,18 @@ public partial class MemberInfo : global::System.IDisposable {
     } 
   }
 
+  public bool isOptional {
+    set {
+      ARQLibPINVOKE.ARQ_RD_MemberInfo_isOptional_set(swigCPtr, value);
+      if (ARQLibPINVOKE.SWIGPendingException.Pending) throw ARQLibPINVOKE.SWIGPendingException.Retrieve();
+    } 
+    get {
+      bool ret = ARQLibPINVOKE.ARQ_RD_MemberInfo_isOptional_get(swigCPtr);
+      if (ARQLibPINVOKE.SWIGPendingException.Pending) throw ARQLibPINVOKE.SWIGPendingException.Retrieve();
+      return ret;
+    } 
+  }
+
   public MemberInfo() : this(ARQLibPINVOKE.new_ARQ_RD_MemberInfo(), true) {
     if (ARQLibPINVOKE.SWIGPendingException.Pending) throw ARQLibPINVOKE.SWIGPendingException.Retrieve();
   }

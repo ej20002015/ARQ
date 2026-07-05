@@ -17,6 +17,7 @@
 #include <string_view>
 #include <array>
 #include <utility>
+#include <optional>
 
 namespace ARQ::MD
 {
@@ -44,6 +45,8 @@ struct MemberInfo
     std::string_view comment;
     /// The language agnostic type as a string
     std::string_view type;
+    /// Indicates if member is optional/nullable
+    bool             isOptional;
 };
 
 /// Metadata header common to all Market Data records
@@ -131,17 +134,20 @@ public:
         MemberInfo {
             .name      = "mid",
             .comment   = "The mid-market rate.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "bid",
             .comment   = "The price at which a market maker is willing to buy.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "ask",
             .comment   = "The price at which a market maker is willing to sell.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         }    
     };
 };
@@ -164,6 +170,8 @@ struct EQPrice
     double close;
     /// The cumulative volume for the current trading session.
     int64_t volume;
+    /// The volume-weighted average price for the current trading session, if available.
+    std::optional<double> vwap;
 };
 
 ARQ_REG_CATEGORY( MktData, EQPrice )
@@ -176,37 +184,49 @@ public:
     static constexpr std::string_view const type()     { return "EQP"; }
     static constexpr Type             const typeEnum() { return Type::EQP; }
 
-    static constexpr std::array<MemberInfo, 6> membersInfo =
+    static constexpr std::array<MemberInfo, 7> membersInfo =
     {
         MemberInfo {
             .name      = "last",
             .comment   = "The price of the last executed trade.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "bid",
             .comment   = "The highest price a buyer is willing to pay.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "ask",
             .comment   = "The lowest price a seller is willing to accept.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "open",
             .comment   = "The opening price for the current trading session.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "close",
             .comment   = "The closing price from the previous trading session.",
-            .type      = "double"
+            .type      = "double",
+            .isOptional = false
         },
         MemberInfo {
             .name      = "volume",
             .comment   = "The cumulative volume for the current trading session.",
-            .type      = "int64"
+            .type      = "int64",
+            .isOptional = false
+        },
+        MemberInfo {
+            .name      = "vwap",
+            .comment   = "The volume-weighted average price for the current trading session, if available.",
+            .type      = "double",
+            .isOptional = true
         }    
     };
 };

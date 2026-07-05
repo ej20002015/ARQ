@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <string_view>
 #include <array>
-#include <utility>
+#include <optional>
 
 namespace ARQ::RD
 {
@@ -60,6 +60,8 @@ struct MemberInfo
     bool             uiReadOnly;
     // Indicates if member is part of the primary key
     bool             isPrimaryKey;
+    // Indicates if member is optional/nullable
+    bool             isOptional;
 };
 
 /// Metadata header common to all Reference Data records
@@ -75,55 +77,59 @@ struct RecordHeader
     std::string    lastUpdatedBy;
     /// Optimistic Concurrency Control (OCC) version number
     uint32_t       version;
+};
 
-    static constexpr std::array<MemberInfo, 5> membersInfo =
-    {
-        MemberInfo {
-            .name         = "uuid",
-            .comment      = "The immutable, globally unique system identifier (Machine Key).",
-            .physicalType = PhysicalType::UUID,
-            .indexType    = IndexType::Unique,
-            .format       = SemanticFormat::UUID,
-            .uiReadOnly   = true,
-            .isPrimaryKey = true
-        },
-        MemberInfo {
-            .name         = "isActive",
-            .comment      = "Indicates if the record is still active - false means it's been 'tombstoned'.",
-            .physicalType = PhysicalType::Boolean,
-            .indexType    = IndexType::None,
-            .format       = SemanticFormat::Boolean,
-            .uiReadOnly   = true,
-            .isPrimaryKey = false
-        },
-        MemberInfo {
-            .name         = "lastUpdatedTs",
-            .comment      = "The timestamp of the last update to this record.",
-            .physicalType = PhysicalType::DateTime,
-            .indexType    = IndexType::None,
-            .format       = SemanticFormat::DateTime,
-            .uiReadOnly   = true,
-            .isPrimaryKey = false
-        },
-        MemberInfo {
-            .name         = "lastUpdatedBy",
-            .comment      = "The user who last updated the record.",
-            .physicalType = PhysicalType::String,
-            .indexType    = IndexType::NonUnique,
-            .format       = SemanticFormat::String,
-            .uiReadOnly   = true,
-            .isPrimaryKey = false
-        },
-        MemberInfo {
-            .name         = "version",
-            .comment      = "Optimistic Concurrency Control (OCC) version number.",
-            .physicalType = PhysicalType::UInt32,
-            .indexType    = IndexType::None,
-            .format       = SemanticFormat::Integer,
-            .uiReadOnly   = true,
-            .isPrimaryKey = false
-        }
-    };
+static constexpr std::array<MemberInfo, 5> recordHeaderMembersInfo = {
+    MemberInfo {
+        .name         = "uuid",
+        .comment      = "The immutable, globally unique system identifier (Machine Key).",
+        .physicalType = PhysicalType::UUID,
+        .indexType    = IndexType::Unique,
+        .format       = SemanticFormat::UUID,
+        .uiReadOnly   = true,
+        .isPrimaryKey = true,
+        .isOptional   = false
+    },
+    MemberInfo {
+        .name         = "isActive",
+        .comment      = "Indicates if the record is still active - false means it's been 'tombstoned'.",
+        .physicalType = PhysicalType::Boolean,
+        .indexType    = IndexType::None,
+        .format       = SemanticFormat::Boolean,
+        .uiReadOnly   = true,
+        .isPrimaryKey = false,
+        .isOptional   = false
+    },
+    MemberInfo {
+        .name         = "lastUpdatedTs",
+        .comment      = "The timestamp of the last update to this record.",
+        .physicalType = PhysicalType::DateTime,
+        .indexType    = IndexType::None,
+        .format       = SemanticFormat::DateTime,
+        .uiReadOnly   = true,
+        .isPrimaryKey = false,
+        .isOptional   = false
+    },
+    MemberInfo {
+        .name         = "lastUpdatedBy",
+        .comment      = "The user who last updated the record.",
+        .physicalType = PhysicalType::String,
+        .indexType    = IndexType::NonUnique,
+        .format       = SemanticFormat::String,
+        .uiReadOnly   = true,
+        .isPrimaryKey = false,
+        .isOptional   = false
+    },
+    MemberInfo {
+        .name         = "version",
+        .comment      = "Optimistic Concurrency Control (OCC) version number.",
+        .physicalType = PhysicalType::UInt32,
+        .indexType    = IndexType::None,
+        .format       = SemanticFormat::Integer,
+        .uiReadOnly   = true,
+        .isPrimaryKey = false,
+        .isOptional   = false
+    }
 };
 
 /// The generic storage container for all Reference Data entities
@@ -182,7 +188,8 @@ public:
             .indexType    = IndexType::Unique,
             .format       = SemanticFormat::String,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         },
         MemberInfo {
             .name         = "name",
@@ -191,7 +198,8 @@ public:
             .indexType    = IndexType::None,
             .format       = SemanticFormat::String,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         },
         MemberInfo {
             .name         = "decimalPlaces",
@@ -200,7 +208,8 @@ public:
             .indexType    = IndexType::None,
             .format       = SemanticFormat::Integer,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         },
         MemberInfo {
             .name         = "settlementDays",
@@ -209,7 +218,8 @@ public:
             .indexType    = IndexType::None,
             .format       = SemanticFormat::Integer,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         }    
     };
 };
@@ -229,7 +239,7 @@ struct User
     /// The user's contact email address.
     std::string email;
     /// The primary trading desk the user belongs to.
-    std::string tradingDesk;
+    std::optional<std::string> tradingDesk;
 };
 
 ARQ_REG_CATEGORY( RefData, User )
@@ -249,7 +259,8 @@ public:
             .indexType    = IndexType::Unique,
             .format       = SemanticFormat::String,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         },
         MemberInfo {
             .name         = "fullName",
@@ -258,7 +269,8 @@ public:
             .indexType    = IndexType::None,
             .format       = SemanticFormat::String,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         },
         MemberInfo {
             .name         = "email",
@@ -267,7 +279,8 @@ public:
             .indexType    = IndexType::None,
             .format       = SemanticFormat::String,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = false
         },
         MemberInfo {
             .name         = "tradingDesk",
@@ -276,7 +289,8 @@ public:
             .indexType    = IndexType::NonUnique,
             .format       = SemanticFormat::String,
             .uiReadOnly   = false,
-            .isPrimaryKey = false
+            .isPrimaryKey = false,
+            .isOptional   = true
         }    
     };
 };

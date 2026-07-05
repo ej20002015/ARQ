@@ -62,7 +62,7 @@ std::vector<ARQ::RD::Record<ARQ::RD::{{ entity.name }}>> CHEntitySource_{{ entit
             max(_LastUpdatedTs) AS max_LastUpdatedTs,
             argMax(_LastUpdatedBy, _LastUpdatedTs) AS max_LastUpdatedBy,
             argMax(_Version, _LastUpdatedTs) AS max_Version
-		FROM RefData.{{ entity.table_name }}
+		FROM RefData.{{ entity.name_plural }}
         GROUP BY UUID
 		HAVING max_IsActive = 1;
 	)";
@@ -76,7 +76,8 @@ std::vector<ARQ::RD::Record<ARQ::RD::{{ entity.name }}>> CHEntitySource_{{ entit
 
 			auto col_uuid = block[0]->As<clickhouse::ColumnUUID>();
             {% for member in entity.members %}
-            auto col_{{ member.name }} = block[{{ loop.index0 + 1 }}]->As<clickhouse::Column{{ types[member.type].clickhouse}}>();
+            {% set ch_col_type = "clickhouse::Column" + types[member.type].clickhouse if not member.optional else "clickhouse::ColumnNullable" %}
+            auto col_{{ member.name }} = block[{{ loop.index0 + 1 }}]->As<{{ ch_col_type }}>();
             {% endfor %}
             auto col_isActive = block[{{ entity.members | length + 1 }}]->As<clickhouse::ColumnUInt8>();
             auto col_lastUpdatedTs = block[{{ entity.members | length + 2 }}]->As<clickhouse::ColumnDateTime64>();
@@ -90,12 +91,14 @@ std::vector<ARQ::RD::Record<ARQ::RD::{{ entity.name }}>> CHEntitySource_{{ entit
 				obj.data.uuid = toArqUUID( col_uuid->At( i ) );
 				obj.header.uuid =  obj.data.uuid;
                 {% for member in entity.members %}
-                {% if types[member.type].clickhouse == "DateTime64(6)" %}
-                obj.data.{{ member.name }} = Time::DateTime( Time::Microseconds( col_{{ member.name }}->At( i ) ) );
+                {% set arq_conv_start = "Time::DateTime( Time::Microseconds( " if types[member.type].clickhouse == "DateTime64(6)" else "" %}
+                {% set arq_conv_end = " ) )" if types[member.type].clickhouse == "DateTime64(6)" else "" %}
+                {% if member.optional %}
+                obj.data.{{ member.name }} = col_{{ member.name }}->IsNull( i ) ? std::nullopt : std::optional<{{ types[member.type].cpp }}>( {{ arq_conv_start }}col_{{ member.name }}->Nested()->As<clickhouse::Column{{ types[member.type].clickhouse }}>()->At( i ){{ arq_conv_end }} );
                 {% else %}
-                obj.data.{{ member.name }} = col_{{ member.name }}->At( i );
+                obj.data.{{ member.name }} = {{ arq_conv_start }}col_{{ member.name }}->At( i ){{ arq_conv_end }};
                 {% endif %}
-                {%- endfor %}
+                {% endfor %}
                 obj.header.isActive = col_isActive->At( i );
                 obj.header.lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj.header.lastUpdatedBy = col_lastUpdatedBy->At( i );
@@ -124,11 +127,13 @@ void CHEntitySource_{{ entity.name }}::insert( const std::vector<ARQ::RD::Record
     {
 		auto col_uuid = std::make_shared<clickhouse::ColumnUUID>();
         {% for member in entity.members %}
-        {% if types[member.type].clickhouse == "DateTime64(6)" %}
-        auto col_{{ member.name }} = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
-        {% else %}
-        auto col_{{ member.name }} = std::make_shared<clickhouse::Column{{ types[member.type].clickhouse }}>();
-        {% endif %}
+        {% set ch_col_type =  "ColumnDateTime64" if types[member.type].clickhouse == "DateTime64(6)" else "clickhouse::Column" + types[member.type].clickhouse %}
+        {% set ch_col_cstr_args = " 6 " if types[member.type].clickhouse == "DateTime64(6)" else "" %}
+        auto col_{{ member.name }} = std::make_shared<{{ ch_col_type }}>({{ ch_col_cstr_args }});
+        {% if member.optional %}
+        auto col_{{ member.name }}_nulls = std::make_shared<clickhouse::ColumnUInt8>();
+        {% endif -%}
+        
         {% endfor %}
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
 		auto col_lastUpdatedTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
@@ -138,6 +143,9 @@ void CHEntitySource_{{ entity.name }}::insert( const std::vector<ARQ::RD::Record
         col_uuid->Reserve( data.size() );
         {% for member in entity.members %}
         col_{{ member.name }}->Reserve( data.size() );
+        {% if member.optional %}
+        col_{{ member.name }}_nulls->Reserve( data.size() );
+        {% endif %}
         {% endfor %}
 		col_isActive->Reserve( data.size() );
 		col_lastUpdatedTs->Reserve( data.size() );
@@ -148,10 +156,12 @@ void CHEntitySource_{{ entity.name }}::insert( const std::vector<ARQ::RD::Record
         {
 			col_uuid->Append( toClickHouseUUID( obj.header.uuid ) );
             {% for member in entity.members %}
-            {% if types[member.type].clickhouse == "DateTime64(6)" %}
-            col_{{ member.name }}->Append( obj.data.{{ member.name }}.microsecondsSinceEpoch() );
+            {% set arq_conv_end = ".microsecondsSinceEpoch()" if types[member.type].clickhouse == "DateTime64(6)" else ""%}
+            {% if member.optional %}
+            col_{{ member.name }}->Append(       obj.data.{{ member.name }} ? *obj.data.{{ member.name }}{{ arq_conv_end }} : {{ types[member.type].cpp }}{} );
+            col_{{ member.name }}_nulls->Append( obj.data.{{ member.name }} ? 1 : 0 );
             {% else %}
-            col_{{ member.name }}->Append( obj.data.{{ member.name }} );
+            col_{{ member.name }}->Append( obj.data.{{ member.name }}{{ arq_conv_end }} );
             {% endif %}
             {% endfor %}
             col_isActive->Append( obj.header.isActive );
@@ -163,14 +173,18 @@ void CHEntitySource_{{ entity.name }}::insert( const std::vector<ARQ::RD::Record
         clickhouse::Block block;
 		block.AppendColumn( "UUID", col_uuid );
         {% for member in entity.members %}
+        {% if member.optional %}
+        block.AppendColumn( "{{ member.name | capitalise_first }}", std::make_shared<clickhouse::ColumnNullable>( col_{{ member.name }}, col_{{ member.name }}_nulls ) );
+        {% else %}
         block.AppendColumn( "{{ member.name | capitalise_first }}", col_{{ member.name }} );
+        {% endif %}
         {% endfor %}
         block.AppendColumn( "_IsActive", col_isActive );
         block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
 		block.AppendColumn( "_LastUpdatedTs", col_lastUpdatedTs );
         block.AppendColumn( "_Version", col_Version );
 
-        conn.client().Insert( "RefData.{{ entity.table_name }}", block );
+        conn.client().Insert( "RefData.{{ entity.name_plural }}", block );
     }
     catch( const std::exception& e )
     {

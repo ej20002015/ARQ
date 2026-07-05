@@ -27,7 +27,10 @@ message RecordHeader
 message {{ entity.name }} 
 {
     {% for member in entity.members %}
-    {{ types[member.type].protobuf }} {{ member.name | snake_case }} = {{ loop.index }};
+    {% if member.comment %}    /// {{ member.comment }}
+    {% endif %}
+    {% set member_prefix = "optional " if member.optional else "" %}
+    {{ member_prefix }}{{ types[member.type].protobuf }} {{ member.name | snake_case }} = {{ loop.index }};
     {% endfor %}
 }
 

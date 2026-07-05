@@ -40,8 +40,10 @@ int main( int argc, char* argv[] )
 		std::cout << "\nemail: " << std::flush;
 		std::getline( std::cin, cmd.data.email );
 
+		std::string desk;
 		std::cout << "\ntradingDesk: " << std::flush;
-		std::getline( std::cin, cmd.data.tradingDesk );
+		std::getline( std::cin, desk );
+		cmd.data.tradingDesk = desk;
 
 		std::cout << "\nupdatedBy: " << std::flush;
 		std::getline( std::cin, cmd.updatedBy );
@@ -59,7 +61,7 @@ int main( int argc, char* argv[] )
 		std::cout << "  User ID         : " << cmd.data.userID << "\n";
 		std::cout << "  Full Name       : " << cmd.data.fullName << "\n";
 		std::cout << "  Email           : " << cmd.data.email << "\n";
-		std::cout << "  Trading Desk    : " << cmd.data.tradingDesk << "\n";
+		std::cout << "  Trading Desk    : " << cmd.data.tradingDesk.value_or( "" ) << "\n";
 		std::cout << "  Updated By      : " << cmd.updatedBy << "\n";
 		std::cout << "  Expected Ver    : " << cmd.expectedVersion << "\n";
 		std::cout << "--------------------------------------------------\n";

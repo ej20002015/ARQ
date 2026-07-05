@@ -21,6 +21,7 @@
 #include <string_view>
 #include <array>
 #include <utility>
+#include <optional>
 
 namespace ARQ::MD
 {
@@ -48,6 +49,8 @@ struct MemberInfo
     std::string_view comment;
     /// The language agnostic type as a string
     std::string_view type;
+    /// Indicates if member is optional/nullable
+    bool             isOptional;
 };
 
 /// Metadata header common to all Market Data records
@@ -117,7 +120,7 @@ struct {{ entity.name }}
     {% for member in entity.members -%}
     {% if member.comment %}    /// {{ member.comment }}
     {% endif %}
-    {{ types[member.type].cpp }} {{ member.name }};
+    {{ member.cpp_storage_type }} {{ member.name }};
     {% endfor %}
 };
 
@@ -137,7 +140,8 @@ public:
         MemberInfo {
             .name      = "{{ member.name }}",
             .comment   = "{{ member.comment | default('') }}",
-            .type      = "{{ member.type }}"
+            .type      = "{{ member.type }}",
+            .isOptional = {{ 'true' if member.optional else 'false' }}
         }{% if not loop.last %},
         {% endif %}
         {% endfor %}

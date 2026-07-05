@@ -7,6 +7,16 @@
 %include <std_map.i>
 %include <std_shared_ptr.i>
 
+// For std::optional
+#define SWIG_STD_OPTIONAL_DEFAULT_TYPES
+#ifdef SWIGCSHARP
+#define SWIG_STD_OPTIONAL_USE_NULLABLE_REFERENCE_TYPES
+%include "std/std_optional_csharp.i"
+#endif
+#ifdef SWIGPYTHON
+%include "std/std_optional_python.i"
+#endif
+
 // Strings
 %nspacemove(ARQ::Collections) std::vector<std::string>;
 %template(StringVector) std::vector<std::string>;

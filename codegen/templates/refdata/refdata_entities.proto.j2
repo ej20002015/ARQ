@@ -30,7 +30,10 @@ message {{ entity.name }}
 {
     ARQ.Proto.ID.UUID uuid = 1;
     {% for member in entity.members %}
-    {{ types[member.type].protobuf }} {{ member.name | snake_case }} = {{ loop.index + 1 }};
+    {% if member.comment %}    /// {{ member.comment }}
+    {% endif %}
+    {% set member_prefix = "optional " if member.optional else "" %}
+    {{ member_prefix }}{{ types[member.type].protobuf }} {{ member.name | snake_case }} = {{ loop.index + 1 }};
     {% endfor %}
 }
 

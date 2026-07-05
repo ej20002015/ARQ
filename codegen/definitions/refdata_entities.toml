@@ -12,12 +12,6 @@
 # # The plural form of the name.
 # name_plural = "<StructNamePlural>"
 #
-# # A short, unique uppercase string for identifying this type (e.g., "CPTY").
-# type_string = "<TypeString>"
-#
-# # The corresponding table name in the database (e.g., "Counterparties").
-# table_name = "<TableName>"
-#
 # # The member field within the struct that acts as its unique key,
 # # often used for map storage (e.g., "counterpartyId").
 # key = "<KeyMemberName>"
@@ -28,9 +22,6 @@
 # # List of members for this entity.
 # members = [
 #   # 'type' must be an alias defined in types.toml (e.g., "string", "double").
-#   # 'clickhouse_modifier' is optional for database-specific tweaks.
-#   { name = "<member1_name>", type = "<type_alias>", clickhouse_modifier = "LowCardinality" },
-#   { name = "<member2_name>", type = "<type_alias>" },
 #   # Add an optional comment for each member (e.g., for column comments).
 #   { name = "<member3_name>", type = "<type_alias>", comment = "<A description of this member>" },
 #   # Add an optional index type for a member ("Unique" or "NonUnique")
@@ -42,8 +33,6 @@
 [[entities]]
 name = "Currency"
 name_plural = "Currencies"
-type_string = "CCY"
-table_name = "Currencies"
 comment = "Represents an ISO 4217 currency and its conventions."
 members = [
     { name = "ccyID",          type = "string", comment = "The 3-letter ISO 4217 currency code (e.g., USD).", index_type = "Unique" },
@@ -55,12 +44,10 @@ members = [
 [[entities]]
 name = "User"
 name_plural = "Users"
-type_string = "USER"
-table_name = "Users"
 comment = "Represents an individual user of the system."
 members = [
     { name = "userID",        type = "string", comment = "The unique system user ID.", index_type = "Unique" },
     { name = "fullName",      type = "string", comment = "The user's full name for display purposes." },
     { name = "email",         type = "string", comment = "The user's contact email address." },
-    { name = "tradingDesk",   type = "string", comment = "The primary trading desk the user belongs to.", index_type = "NonUnique", clickhouse_modifier = "LowCardinality(String)" },
+    { name = "tradingDesk",   type = "string", comment = "The primary trading desk the user belongs to.", index_type = "NonUnique", optional = true },
 ]

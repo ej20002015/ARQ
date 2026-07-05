@@ -39,16 +39,18 @@ struct MemberInfo
     std::string_view name;
     /// Documentation string
     std::string_view comment;
-    /// The language agnostic type as a string
-    std::string_view type;
+    /// The physical type
+    PhysicalType     physicalType;
     // Indicates if member is an index, and what type
     IndexType        indexType;
     // Format to use when rendering in the UI
-    Format           format;
+    SemanticFormat   format;
     // Indicates if member is read-only in the UI
     bool             uiReadOnly;
     // Indicates if member is part of the primary key
     bool             isPrimaryKey;
+    // Indicates if member is optional/nullable
+    bool             isOptional;
 };
 
 /// Metadata header common to all Reference Data records
@@ -96,7 +98,7 @@ struct {{ entity.name }}
     {% for member in entity.members -%}
     {% if member.comment %}    /// {{ member.comment }}
     {% endif %}
-    {{ types[member.type].cpp }} {{ member.name }};
+    {{ member.cpp_storage_type }} {{ member.name }};
     {% endfor %}
 };
 

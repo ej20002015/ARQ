@@ -206,7 +206,7 @@ std::vector<ARQ::RD::Record<ARQ::RD::User>> CHEntitySource_User::fetch() const
             auto col_userID = block[1]->As<clickhouse::ColumnString>();
             auto col_fullName = block[2]->As<clickhouse::ColumnString>();
             auto col_email = block[3]->As<clickhouse::ColumnString>();
-            auto col_tradingDesk = block[4]->As<clickhouse::ColumnString>();
+            auto col_tradingDesk = block[4]->As<clickhouse::ColumnNullable>();
             auto col_isActive = block[5]->As<clickhouse::ColumnUInt8>();
             auto col_lastUpdatedTs = block[6]->As<clickhouse::ColumnDateTime64>();
             auto col_lastUpdatedBy = block[7]->As<clickhouse::ColumnString>();
@@ -221,7 +221,7 @@ std::vector<ARQ::RD::Record<ARQ::RD::User>> CHEntitySource_User::fetch() const
                 obj.data.userID = col_userID->At( i );
                 obj.data.fullName = col_fullName->At( i );
                 obj.data.email = col_email->At( i );
-                obj.data.tradingDesk = col_tradingDesk->At( i );
+                obj.data.tradingDesk = col_tradingDesk->IsNull( i ) ? std::nullopt : std::optional<std::string>( col_tradingDesk->Nested()->As<clickhouse::ColumnString>()->At( i ) );
                 obj.header.isActive = col_isActive->At( i );
                 obj.header.lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
                 obj.header.lastUpdatedBy = col_lastUpdatedBy->At( i );
@@ -253,6 +253,7 @@ void CHEntitySource_User::insert( const std::vector<ARQ::RD::Record<ARQ::RD::Use
         auto col_fullName = std::make_shared<clickhouse::ColumnString>();
         auto col_email = std::make_shared<clickhouse::ColumnString>();
         auto col_tradingDesk = std::make_shared<clickhouse::ColumnString>();
+        auto col_tradingDesk_nulls = std::make_shared<clickhouse::ColumnUInt8>();
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
 		auto col_lastUpdatedTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         auto col_lastUpdatedBy = std::make_shared<clickhouse::ColumnString>();
@@ -263,6 +264,7 @@ void CHEntitySource_User::insert( const std::vector<ARQ::RD::Record<ARQ::RD::Use
         col_fullName->Reserve( data.size() );
         col_email->Reserve( data.size() );
         col_tradingDesk->Reserve( data.size() );
+        col_tradingDesk_nulls->Reserve( data.size() );
 		col_isActive->Reserve( data.size() );
 		col_lastUpdatedTs->Reserve( data.size() );
 		col_lastUpdatedBy->Reserve( data.size() );
@@ -274,7 +276,8 @@ void CHEntitySource_User::insert( const std::vector<ARQ::RD::Record<ARQ::RD::Use
             col_userID->Append( obj.data.userID );
             col_fullName->Append( obj.data.fullName );
             col_email->Append( obj.data.email );
-            col_tradingDesk->Append( obj.data.tradingDesk );
+            col_tradingDesk->Append(       obj.data.tradingDesk ? *obj.data.tradingDesk : std::string{} );
+            col_tradingDesk_nulls->Append( obj.data.tradingDesk ? 1 : 0 );
             col_isActive->Append( obj.header.isActive );
 			col_lastUpdatedTs->Append( obj.header.lastUpdatedTs.microsecondsSinceEpoch() );
             col_lastUpdatedBy->Append( obj.header.lastUpdatedBy );
@@ -286,7 +289,7 @@ void CHEntitySource_User::insert( const std::vector<ARQ::RD::Record<ARQ::RD::Use
         block.AppendColumn( "UserID", col_userID );
         block.AppendColumn( "FullName", col_fullName );
         block.AppendColumn( "Email", col_email );
-        block.AppendColumn( "TradingDesk", col_tradingDesk );
+        block.AppendColumn( "TradingDesk", std::make_shared<clickhouse::ColumnNullable>( col_tradingDesk, col_tradingDesk_nulls ) );
         block.AppendColumn( "_IsActive", col_isActive );
         block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );
 		block.AppendColumn( "_LastUpdatedTs", col_lastUpdatedTs );

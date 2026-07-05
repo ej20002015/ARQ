@@ -49,11 +49,23 @@ interface DataGridProps extends AgGridReactProps {
 }
 
 export function DataGrid(props: DataGridProps) {
+    const valueIsNotSet = (value: any) => value === null || value === undefined;
+
     // Define default column settings that apply to all
     const defaultColDef = useMemo(() => ({
         sortable: true,
         filter: true,
         resizable: true,
+
+        valueFormatter: (params: any) => {
+            // If the value is not set return a dash to indicate no value
+            if (valueIsNotSet(params.value))
+                return '—'; 
+            else if (params.colDef.customValueFormatter) // Else if the column has a custom formatter, use it
+                return params.colDef.customValueFormatter(params);
+            else
+                return params.value;
+        },
 
         cellClassRules: {
             "arq-cell-read-only": (params: any) => {
@@ -67,6 +79,9 @@ export function DataGrid(props: DataGridProps) {
                 // If it's a strict boolean, check if it is explicitly false
                 return isEditable === false;
             },
+            "arq-cell-not-set": (params: any) => {
+                return valueIsNotSet(params.value);
+            }
         },
         
         // Merge any defaultColDefs passed in by the parent

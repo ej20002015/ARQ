@@ -24,9 +24,13 @@ message RecordHeader
 message Currency 
 {
     ARQ.Proto.ID.UUID uuid = 1;
+    /// The 3-letter ISO 4217 currency code (e.g., USD).
     string ccy_id = 2;
+    /// The full currency name (e.g., US Dollar).
     string name = 3;
+    /// Number of decimal places for standard formatting.
     uint32 decimal_places = 4;
+    /// Standard number of days for spot settlement (commonly 2).
     uint32 settlement_days = 5;
 }
 
@@ -41,10 +45,14 @@ message CurrencyRecord
 message User 
 {
     ARQ.Proto.ID.UUID uuid = 1;
+    /// The unique system user ID.
     string user_id = 2;
+    /// The user's full name for display purposes.
     string full_name = 3;
+    /// The user's contact email address.
     string email = 4;
-    string trading_desk = 5;
+    /// The primary trading desk the user belongs to.
+    optional string trading_desk = 5;
 }
 
 // A Record<User> object

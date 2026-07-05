@@ -50,7 +50,7 @@ std::vector<Record<FXRate>> select( CHConn& conn, const std::string_view mktName
             if( block.GetRowCount() == 0 )
                 return; // End of data
 
-			auto col_id = block[0]->As<clickhouse::ColumnString>();
+            auto col_id = block[0]->As<clickhouse::ColumnString>();
             auto col_mid = block[1]->As<clickhouse::ColumnFloat64>();
             auto col_bid = block[2]->As<clickhouse::ColumnFloat64>();
             auto col_ask = block[3]->As<clickhouse::ColumnFloat64>();
@@ -63,7 +63,7 @@ std::vector<Record<FXRate>> select( CHConn& conn, const std::string_view mktName
             for( size_t i = 0; i < block.GetRowCount(); ++i )
             {
                 ARQ::MD::Record<ARQ::MD::FXRate> obj;
-				obj.header.id = col_id->At( i );
+                obj.header.id = col_id->At( i );
                 obj.data.mid = col_mid->At( i );
                 obj.data.bid = col_bid->At( i );
                 obj.data.ask = col_ask->At( i );
@@ -164,6 +164,7 @@ std::vector<Record<EQPrice>> select( CHConn& conn, const std::string_view mktNam
             argMax(Open, (AsofTs, _LastUpdatedTs)) AS max_Open,
             argMax(Close, (AsofTs, _LastUpdatedTs)) AS max_Close,
             argMax(Volume, (AsofTs, _LastUpdatedTs)) AS max_Volume,
+            argMax(Vwap, (AsofTs, _LastUpdatedTs)) AS max_Vwap,
             argMax(AsofTs, (AsofTs, _LastUpdatedTs)) AS max_AsofTs,
             argMax(_IsActive, (AsofTs, _LastUpdatedTs)) AS max_IsActive,
             argMax(_LastUpdatedTs, (AsofTs, _LastUpdatedTs)) AS max_LastUpdatedTs,
@@ -185,29 +186,31 @@ std::vector<Record<EQPrice>> select( CHConn& conn, const std::string_view mktNam
             if( block.GetRowCount() == 0 )
                 return; // End of data
 
-			auto col_id = block[0]->As<clickhouse::ColumnString>();
+            auto col_id = block[0]->As<clickhouse::ColumnString>();
             auto col_last = block[1]->As<clickhouse::ColumnFloat64>();
             auto col_bid = block[2]->As<clickhouse::ColumnFloat64>();
             auto col_ask = block[3]->As<clickhouse::ColumnFloat64>();
             auto col_open = block[4]->As<clickhouse::ColumnFloat64>();
             auto col_close = block[5]->As<clickhouse::ColumnFloat64>();
             auto col_volume = block[6]->As<clickhouse::ColumnInt64>();
-            auto col_asofTs = block[7]->As<clickhouse::ColumnDateTime64>();
-            auto col_isActive = block[8]->As<clickhouse::ColumnUInt8>();
-            auto col_lastUpdatedTs = block[9]->As<clickhouse::ColumnDateTime64>();
-            auto col_lastUpdatedBy = block[10]->As<clickhouse::ColumnString>();
+            auto col_vwap = block[7]->As<clickhouse::ColumnNullable>();
+            auto col_asofTs = block[8]->As<clickhouse::ColumnDateTime64>();
+            auto col_isActive = block[9]->As<clickhouse::ColumnUInt8>();
+            auto col_lastUpdatedTs = block[10]->As<clickhouse::ColumnDateTime64>();
+            auto col_lastUpdatedBy = block[11]->As<clickhouse::ColumnString>();
 
             results.reserve( results.size() + block.GetRowCount() );
             for( size_t i = 0; i < block.GetRowCount(); ++i )
             {
                 ARQ::MD::Record<ARQ::MD::EQPrice> obj;
-				obj.header.id = col_id->At( i );
+                obj.header.id = col_id->At( i );
                 obj.data.last = col_last->At( i );
                 obj.data.bid = col_bid->At( i );
                 obj.data.ask = col_ask->At( i );
                 obj.data.open = col_open->At( i );
                 obj.data.close = col_close->At( i );
                 obj.data.volume = col_volume->At( i );
+                obj.data.vwap = col_vwap->IsNull( i ) ? std::nullopt : std::optional<double>( col_vwap->Nested()->As<clickhouse::ColumnFloat64>()->At( i ) );
                 obj.header.asofTs = Time::DateTime( Time::Microseconds( col_asofTs->At( i ) ) );
                 obj.header.isActive = col_isActive->At( i );
                 obj.header.lastUpdatedTs = Time::DateTime( Time::Microseconds( col_lastUpdatedTs->At( i ) ) );
@@ -241,6 +244,8 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
         auto col_open = std::make_shared<clickhouse::ColumnFloat64>();
         auto col_close = std::make_shared<clickhouse::ColumnFloat64>();
         auto col_volume = std::make_shared<clickhouse::ColumnInt64>();
+        auto col_vwap = std::make_shared<clickhouse::ColumnFloat64>();
+        auto col_vwap_nulls = std::make_shared<clickhouse::ColumnUInt8>();
         auto col_asofTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
         auto col_isActive = std::make_shared<clickhouse::ColumnUInt8>();
 		auto col_lastUpdatedTs = std::make_shared<clickhouse::ColumnDateTime64>( 6 );
@@ -254,6 +259,8 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
         col_open->Reserve( data.size() );
         col_close->Reserve( data.size() );
         col_volume->Reserve( data.size() );
+        col_vwap->Reserve( data.size() );
+        col_vwap_nulls->Reserve( data.size() );
         col_asofTs->Reserve( data.size() );
 		col_isActive->Reserve( data.size() );
 		col_lastUpdatedTs->Reserve( data.size() );
@@ -269,6 +276,8 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
             col_open->Append( obj.data.open );
             col_close->Append( obj.data.close );
             col_volume->Append( obj.data.volume );
+            col_vwap->Append(       obj.data.vwap ? *obj.data.vwap : double{} );
+            col_vwap_nulls->Append( obj.data.vwap ? 1 : 0 );
             col_asofTs->Append( obj.header.asofTs.microsecondsSinceEpoch() );
             col_isActive->Append( obj.header.isActive );
 			col_lastUpdatedTs->Append( obj.header.lastUpdatedTs.microsecondsSinceEpoch() );
@@ -284,6 +293,7 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
         block.AppendColumn( "Open", col_open );
         block.AppendColumn( "Close", col_close );
         block.AppendColumn( "Volume", col_volume );
+        block.AppendColumn( "Vwap", std::make_shared<clickhouse::ColumnNullable>( col_vwap, col_vwap_nulls ) );
         block.AppendColumn( "AsofTs", col_asofTs );
         block.AppendColumn( "_IsActive", col_isActive );
         block.AppendColumn( "_LastUpdatedBy", col_lastUpdatedBy );

@@ -23,9 +23,9 @@ void toProto( const ARQ::MD::FXRate& arqEntity, FXRate* const protoEntity )
 
 void toProto( ARQ::MD::FXRate&& arqEntity, FXRate* const protoEntity )
 {
-    protoEntity->set_mid( arqEntity.mid );
-    protoEntity->set_bid( arqEntity.bid );
-    protoEntity->set_ask( arqEntity.ask );
+    protoEntity->set_mid( std::move( arqEntity.mid ) );
+    protoEntity->set_bid( std::move( arqEntity.bid ) );
+    protoEntity->set_ask( std::move( arqEntity.ask ) );
 }
 
 ARQ::MD::FXRate fromProto( const FXRate& protoEntity )
@@ -56,16 +56,20 @@ void toProto( const ARQ::MD::EQPrice& arqEntity, EQPrice* const protoEntity )
     protoEntity->set_open( arqEntity.open );
     protoEntity->set_close( arqEntity.close );
     protoEntity->set_volume( arqEntity.volume );
+    if( arqEntity.vwap )
+        protoEntity->set_vwap( *arqEntity.vwap );
 }
 
 void toProto( ARQ::MD::EQPrice&& arqEntity, EQPrice* const protoEntity )
 {
-    protoEntity->set_last( arqEntity.last );
-    protoEntity->set_bid( arqEntity.bid );
-    protoEntity->set_ask( arqEntity.ask );
-    protoEntity->set_open( arqEntity.open );
-    protoEntity->set_close( arqEntity.close );
-    protoEntity->set_volume( arqEntity.volume );
+    protoEntity->set_last( std::move( arqEntity.last ) );
+    protoEntity->set_bid( std::move( arqEntity.bid ) );
+    protoEntity->set_ask( std::move( arqEntity.ask ) );
+    protoEntity->set_open( std::move( arqEntity.open ) );
+    protoEntity->set_close( std::move( arqEntity.close ) );
+    protoEntity->set_volume( std::move( arqEntity.volume ) );
+    if( arqEntity.vwap )
+        protoEntity->set_vwap( std::move( *arqEntity.vwap ) );
 }
 
 ARQ::MD::EQPrice fromProto( const EQPrice& protoEntity )
@@ -77,6 +81,7 @@ ARQ::MD::EQPrice fromProto( const EQPrice& protoEntity )
     arqEntity.open = protoEntity.open();
     arqEntity.close = protoEntity.close();
     arqEntity.volume = protoEntity.volume();
+    arqEntity.vwap = protoEntity.has_vwap() ? std::optional<double>( protoEntity.vwap() ) : std::nullopt;
     return arqEntity;
 }
 
@@ -89,6 +94,7 @@ ARQ::MD::EQPrice fromProto( EQPrice&& protoEntity )
     arqEntity.open = protoEntity.open();
     arqEntity.close = protoEntity.close();
     arqEntity.volume = protoEntity.volume();
+    arqEntity.vwap = protoEntity.has_vwap() ? std::optional<double>( protoEntity.vwap() ) : std::nullopt;
     return arqEntity;
 }
 

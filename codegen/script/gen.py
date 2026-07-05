@@ -26,10 +26,11 @@ class CodeGenerationError(Exception):
 class EntityDefinition:
     """Represents a single entity definition with its metadata."""
     
-    def __init__(self, data: Dict[str, Any], entity_type: str, source_file: str):
+    def __init__(self, data: Dict[str, Any], entity_type: str, source_file: str, types_data: Dict[str, Any]):
         self.data = data
         self.entity_type = entity_type
         self.source_file = source_file
+        self.types_data = types_data.get('types', {})
         self.name = data.get('name', '')
         self.key = data.get('key')
         self.key_type = None
@@ -89,6 +90,12 @@ class EntityDefinition:
             # Add default value for ui_read_only (false for all members by default)
             if 'ui_read_only' not in member:
                 member['ui_read_only'] = False
+            # Add default value for optional (false for all members by default)
+            if 'optional' not in member:
+                member['optional'] = False
+
+            cpp_type = self.types_data.get(member.get('type')).get('cpp')
+            member['cpp_storage_type'] = cpp_type if not member['optional'] else f"std::optional<{cpp_type}>"
 
 class TemplateMetadata:
     """Represents metadata extracted from a template file."""
@@ -206,7 +213,7 @@ class CodeGenerator:
             entities = []
             for entity_data in entity_file_data['entities']:
                 try:
-                    entity = EntityDefinition(entity_data, entity_type, filepath.name)
+                    entity = EntityDefinition(entity_data, entity_type, filepath.name, self.types_data)
                     entities.append(entity)
                 except CodeGenerationError as e:
                     raise CodeGenerationError(f"Error processing entity in {filepath.name}: {e}")

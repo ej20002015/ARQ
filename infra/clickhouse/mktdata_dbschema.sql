@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS MktData.EQPrices
     `Open` Float64 COMMENT 'The opening price for the current trading session.',
     `Close` Float64 COMMENT 'The closing price from the previous trading session.',
     `Volume` Int64 COMMENT 'The cumulative volume for the current trading session.',
+    `Vwap` Nullable(Float64) COMMENT 'The volume-weighted average price for the current trading session, if available.',
     `_IsActive` UInt8 COMMENT 'Indicates if the record is still active - false means it has been tombstoned',
     `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'The timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'The user who last updated the record'
