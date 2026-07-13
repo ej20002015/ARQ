@@ -17,7 +17,8 @@ void RefDataAuditProjectorService::onStartup()
 								"ARQ.RefData.AuditProjectors",
 								StreamConsumerOptions::FetchPreset::HighThroughput,
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
-								StreamConsumerOptions::AutoOffsetReset::Earliest );
+								StreamConsumerOptions::AutoOffsetReset::Earliest,
+								StreamConsumerOptions::IsolationLevel::ReadCommitted );
 	m_updateConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
 
 	const auto updateTopics = m_updateTopicToEntity | std::views::keys | std::ranges::to<std::set>();

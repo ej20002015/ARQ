@@ -87,17 +87,28 @@ public:
 		DEFAULT = Latest
 	};
 
+	// Controls whether records from open or aborted transactions are visible
+	enum class IsolationLevel
+	{
+		ReadUncommitted,
+		ReadCommitted,
+
+		DEFAULT = ReadUncommitted
+	};
+
 public:
 	StreamConsumerOptions( const std::string_view name,
 						   const std::string_view groupID,
 						   const FetchPreset fetchPreset = FetchPreset::DEFAULT,
 						   const AutoCommitOffsets autoCommitOffsets = AutoCommitOffsets::DEFAULT,
-						   const AutoOffsetReset autoOffsetReset = AutoOffsetReset::DEFAULT )
+						   const AutoOffsetReset autoOffsetReset = AutoOffsetReset::DEFAULT,
+						   const IsolationLevel isolationLevel = IsolationLevel::DEFAULT )
 		: StreamOptions( name )
 		, m_groupID( groupID )
 		, m_fetchPreset( fetchPreset )
 		, m_autoCommitOffsets( autoCommitOffsets )
 		, m_autoOffsetReset( autoOffsetReset )
+		, m_isolationLevel( isolationLevel )
 	{
 	}
 
@@ -105,12 +116,14 @@ public:
 	[[nodiscard]] FetchPreset        fetchPreset()       const { return m_fetchPreset; }
 	[[nodiscard]] AutoOffsetReset    autoOffsetReset()   const { return m_autoOffsetReset; }
 	[[nodiscard]] AutoCommitOffsets  autoCommitOffsets() const { return m_autoCommitOffsets; }
+	[[nodiscard]] IsolationLevel     isolationLevel()    const { return m_isolationLevel; }
 
 private:
 	std::string       m_groupID;
 	FetchPreset	      m_fetchPreset;
 	AutoCommitOffsets m_autoCommitOffsets;
 	AutoOffsetReset   m_autoOffsetReset;
+	IsolationLevel    m_isolationLevel;
 };
 
 using CreateStreamProducerFunc = std::add_pointer<IStreamProducer* ( const std::string_view dsh, const StreamProducerOptions& options )>::type;

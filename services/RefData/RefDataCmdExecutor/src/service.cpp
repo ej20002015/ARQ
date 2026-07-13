@@ -289,7 +289,8 @@ void RefDataCmdExecutorService::hydrateState( const std::set<StreamTopicPartitio
 								"ARQ.RefData.CommandExecutors.UpdateHydration",
 								StreamConsumerOptions::FetchPreset::Standard,
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
-								StreamConsumerOptions::AutoOffsetReset::Earliest );
+								StreamConsumerOptions::AutoOffsetReset::Earliest,
+								StreamConsumerOptions::IsolationLevel::ReadCommitted );
 	std::shared_ptr<IStreamConsumer> updateConsumer = StreamingServiceFactory::inst().createConsumer( "Kafka", opts );
 
 	const std::set<StreamTopicPartition> equivUpdateTPs = mapToUpdatePartitions( cmdTPs );

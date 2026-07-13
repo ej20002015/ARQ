@@ -855,6 +855,19 @@ kafka::Properties KafkaStreamConsumer::buildProperties()
 	// Commit Strategy
 	props.put( "enable.auto.commit", m_options.autoCommitOffsets() == StreamConsumerOptions::AutoCommitOffsets::Enabled ? "true" : "false" );
 
+	// Transaction isolation - authoritative consumers must not observe aborted transactions
+	std::string isolationLevelStr;
+	switch( m_options.isolationLevel() )
+	{
+		case StreamConsumerOptions::IsolationLevel::ReadUncommitted: isolationLevelStr = "read_uncommitted"; break;
+		case StreamConsumerOptions::IsolationLevel::ReadCommitted:   isolationLevelStr = "read_committed";   break;
+		default:
+			ARQ_ASSERT( false ); // Unknown option
+			isolationLevelStr = "read_uncommitted";
+			break;
+	}
+	props.put( "isolation.level", isolationLevelStr );
+
 	// Fetch Preset - tuning for latency vs throughput
 	switch( m_options.fetchPreset() )
 	{
