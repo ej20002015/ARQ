@@ -126,7 +126,7 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
         }
 
         clickhouse::Block block;
-		block.AppendColumn( "MktName", col_mktName );
+		block.AppendColumn( "MarketName", col_mktName );
         block.AppendColumn( "ID", col_id );
         block.AppendColumn( "Mid", col_mid );
         block.AppendColumn( "Bid", col_bid );
@@ -285,7 +285,7 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
         }
 
         clickhouse::Block block;
-		block.AppendColumn( "MktName", col_mktName );
+		block.AppendColumn( "MarketName", col_mktName );
         block.AppendColumn( "ID", col_id );
         block.AppendColumn( "Last", col_last );
         block.AppendColumn( "Bid", col_bid );

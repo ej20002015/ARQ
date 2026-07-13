@@ -153,7 +153,7 @@ void insert( CHConn& conn, const std::string_view mktName, const std::vector<Rec
         }
 
         clickhouse::Block block;
-		block.AppendColumn( "MktName", col_mktName );
+		block.AppendColumn( "MarketName", col_mktName );
         block.AppendColumn( "ID", col_id );
         {% for member in entity.members %}
         {% if member.optional %}
