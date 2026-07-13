@@ -6,16 +6,16 @@ This roadmap is optimized for a small team and evolves the existing repository r
 
 Stabilise the existing reference-data and market-data foundations before extending them.
 
-1. Fix the ClickHouse `MktName`/`MarketName` mismatch.
-2. Configure authoritative Kafka consumers with `read_committed`.
-3. Give transactional producers stable identities and verify restart/fencing behaviour.
-4. Make Redis market-state and offset updates atomic.
-5. Fix market tombstones.
-6. Reconcile snapshot updates per partition without offset regression.
-7. Make late or equal-as-of market updates deterministic.
-8. Fix code-generation invalidation so definition changes regenerate every affected artifact.
-9. Add integration tests for duplicates, aborted transactions, restarts, rebalances and projection replay.
-10. Provide a coherent live-update or invalidation path for reference-data read caches.
+1. [x] Fix the ClickHouse `MktName`/`MarketName` mismatch.
+2. [x] Configure authoritative Kafka consumers with `read_committed`.
+3. [ ] Give transactional producers stable identities and verify restart/fencing behaviour.
+4. [ ] Make Redis market-state and offset updates atomic.
+5. [ ] Fix market tombstones.
+6. [ ] Reconcile snapshot updates per partition without offset regression.
+7. [ ] Make late or equal-as-of market updates deterministic.
+8. [ ] Fix code-generation invalidation so definition changes regenerate every affected artifact.
+9. [ ] Add integration tests for duplicates, aborted transactions, restarts, rebalances and projection replay.
+10. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
 
 **Exit condition:** Existing reference and market pipelines can be replayed repeatedly and converge on the same state.
 
