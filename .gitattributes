@@ -1,0 +1,9 @@
+Proposed line-ending normalization rules.
+
+Enable these rules in a dedicated normalization commit so that line-ending
+changes are not mixed with functional changes.
+
+# All files use LF line endings except for windows specific scripts which use CRLF
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
