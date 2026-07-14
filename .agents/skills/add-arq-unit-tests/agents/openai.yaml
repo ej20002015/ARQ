@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add ARQ Unit Tests"
+  short_description: "Add deterministic C++ unit tests for ARQ"
+  default_prompt: "Use $add-arq-unit-tests to add focused unit tests for this ARQ C++ change."
