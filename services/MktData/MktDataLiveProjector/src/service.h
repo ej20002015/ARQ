@@ -2,8 +2,8 @@
 #include <ARQUtils/hashers.h>
 #include <ARQCore/service_base.h>
 #include <ARQCore/streaming_service.h>
-#include <ARQCore/stream_offset_source.h>
 #include <ARQMarket/market.h>
+#include <ARQMarket/mktdata_live_store.h>
 #include <ARQMarket/mktdata_source.h>
 #include <ARQMarket/mktdata_entities.h>
 #include <ARQMarket/market_live.h>
@@ -48,16 +48,12 @@ private:
 private:
 	void processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches );
 	void insertIntoLiveMarketSource( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches );
-	void insertMktData( const std::string_view marketName, const MD::RecordCollection& rcdColl );
-	void insertOffsets( const std::string_view marketName, const StreamTopicPartitionOffsets& offsets );
 	void publishToMessagingService( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches );
 
 private:
 	std::shared_ptr<Serialiser> m_serialiser;
 
-	std::shared_ptr<MD::IMarketSource> m_liveMarketSource;
-
-	std::shared_ptr<IStreamOffsetSource> m_offsetSource;
+	std::shared_ptr<MD::ILiveMarketStore> m_liveMarketStore;
 
 	std::shared_ptr<IStreamConsumer> m_updateConsumer;
 	std::shared_ptr<IStreamProducer> m_dlqProducer;

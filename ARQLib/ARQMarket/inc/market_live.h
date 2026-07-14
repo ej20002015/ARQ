@@ -5,17 +5,11 @@
 #include <ARQCore/stream_offset_source.h>
 #include <ARQCore/serialiser.h>
 #include <ARQMarket/mktdata_source.h>
+#include <ARQMarket/mktdata_live_store.h>
 #include <ARQMarket/market.h>
 
 namespace ARQ::MD
 {
-
-struct MarketUpdateBatch
-{
-	MarketName                  marketName;
-	RecordCollection            records;
-	StreamTopicPartitionOffsets offsets;
-};
 
 class LiveMarketUpdater : public ISubscriptionHandler,
 	                      public std::enable_shared_from_this<LiveMarketUpdater>
@@ -98,5 +92,3 @@ private:
 };
 
 }
-
-ARQ_REG_TYPE( ARQ::MD::MarketUpdateBatch )

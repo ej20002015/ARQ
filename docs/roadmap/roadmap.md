@@ -8,11 +8,11 @@ Stabilise the existing reference-data and market-data foundations before extendi
 
 1. [x] Fix the ClickHouse `MktName`/`MarketName` mismatch.
 2. [x] Configure authoritative Kafka consumers with `read_committed`.
-3. [ ] Give transactional producers stable identities and verify restart/fencing behaviour.
-4. [ ] Make Redis market-state and offset updates atomic.
-5. [ ] Fix market tombstones.
-6. [ ] Reconcile snapshot updates per partition without offset regression.
-7. [ ] Make late or equal-as-of market updates deterministic.
+3. [x] Make Redis market-state and offset updates atomic.
+4. [ ] Fix market tombstones.
+5. [ ] Reconcile snapshot updates per partition without offset regression.
+6. [ ] Make late or equal-as-of market updates deterministic.
+7. [ ] Remove the `ARQCore`/`ARQMarket` dependency cycle.
 8. [ ] Fix code-generation invalidation so definition changes regenerate every affected artifact.
 9. [ ] Add integration tests for duplicates, aborted transactions, restarts, rebalances and projection replay.
 10. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
@@ -70,13 +70,13 @@ CI should reject:
 
 ## Phase 2 — Correct package boundaries and shared semantics
 
-1. Remove the `ARQCore`/`ARQMarket` dependency cycle.
-2. Keep stable platform foundations free of generated asset/customer types.
-3. Introduce compile-time distribution composition for selected modules.
-4. Define a common durable event envelope containing event ID, aggregate ID/version, schema version, correlation, causation, actor, source and relevant timestamps.
-5. Standardise business-effective, source, recorded/ingestion and processing times.
-6. Define immutable reference and market snapshot identity/revision.
-7. Define correction, cancellation, replay and idempotency behaviour.
+1. Keep stable platform foundations free of generated asset/customer types.
+2. Introduce compile-time distribution composition for selected modules.
+3. Define a common durable event envelope containing event ID, aggregate ID/version, schema version, correlation, causation, actor, source and relevant timestamps.
+4. Standardise business-effective, source, recorded/ingestion and processing times.
+5. Define immutable reference and market snapshot identity/revision.
+6. Define correction, cancellation, replay and idempotency behaviour.
+7. Define a common command-outcome contract that separates transport acknowledgement, durable business completion and ephemeral notification. Include command ID, idempotency key, durable/queryable status and recovery after a lost response.
 8. Add consumer lag, projection watermark, DLQ count, command latency and snapshot age metrics.
 
 **Exit condition:** Platform foundations can support long-lived trade facts without depending on one asset class or one schema version.
@@ -98,6 +98,7 @@ Add the minimum domain required for FX spot and forwards:
 11. Manual correction workflow with effective and recorded times.
 12. Original-as-known and latest-corrected historical queries.
 13. Durable official EOD market retention.
+14. Migrate reference-data commands away from NATS-only outcomes. Command results must be durable, idempotent and queryable; Kafka command ingress may remain, while NATS is used only to notify clients that status or projected state has changed.
 
 All additions must exercise the schema-evolution process from Phase 1.
 
@@ -132,6 +133,7 @@ Implement:
 8. Query current and historical trade versions.
 9. Durable command status and idempotency keys.
 10. Complete audit and provenance.
+11. Apply the shared command-outcome contract from the outset: no trade command may depend on receiving an ephemeral NATS reply to determine its authoritative result.
 
 Orders remain a separate future aggregate.
 

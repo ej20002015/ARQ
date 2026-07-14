@@ -3,7 +3,7 @@
 
 #include <ARQCore/stream_offset_source.h>
 
-namespace ARQ
+namespace ARQ::Redis
 {
 
 extern "C" ARQRedis_API IStreamOffsetSource* createStreamOffsetSource( const std::string_view dsh );

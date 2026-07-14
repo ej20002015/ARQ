@@ -6,6 +6,7 @@
 #include <ARQUtils/cfg_wrangler.h>
 #include <ARQCore/dynalib_cache.h>
 #include <ARQCore/stream_offset_source.h>
+#include <ARQMarket/mktdata_live_store.h>
 #include <ARQCore/messaging_service.h>
 #include <ARQCore/refdata_source.h>
 #include <ARQCore/serialiser.h>
@@ -83,12 +84,13 @@ private:
 	std::unique_ptr<DynaLibCache> m_dynaLibCache;
 	std::unique_ptr<Logger>       m_logger;
 
-	std::unique_ptr<RD::SourceFactory>         m_rdSourceFactory;
-	std::unique_ptr<SerialiserFactory>         m_serialiserFactory;
-	std::unique_ptr<MessagingServiceFactory>   m_messagingServiceFactory;
-	std::unique_ptr<StreamingServiceFactory>   m_streamingServiceFactory;
-	std::unique_ptr<StreamOffsetSourceFactory> m_streamOffsetSourceFactory;
-	std::unique_ptr<MD::MarketSourceFactory>   m_mdMarketSourceFactory; // TODO: If factories are going to be outside ARQCore, we need a mechanism to inject the factories instances into LibContext
+	std::unique_ptr<RD::SourceFactory>          m_rdSourceFactory;
+	std::unique_ptr<SerialiserFactory>          m_serialiserFactory;
+	std::unique_ptr<MessagingServiceFactory>    m_messagingServiceFactory;
+	std::unique_ptr<StreamingServiceFactory>    m_streamingServiceFactory;
+	std::unique_ptr<StreamOffsetSourceFactory>  m_streamOffsetSourceFactory;
+	std::unique_ptr<MD::MarketSourceFactory>    m_mdMarketSourceFactory; // TODO: If factories are going to be outside ARQCore, we need a mechanism to inject the factories instances into LibContext
+	std::unique_ptr<MD::LiveMarketStoreFactory> m_liveMarketStoreFactory;
 };
 
 }

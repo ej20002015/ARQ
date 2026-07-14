@@ -110,6 +110,8 @@ LibContext::LibContext( const Config& cfg )
 	StreamOffsetSourceFactory::setGlobalInst( m_streamOffsetSourceFactory.get() );
 	m_mdMarketSourceFactory = std::make_unique<MD::MarketSourceFactory>();
 	MD::MarketSourceFactory::setGlobalInst( m_mdMarketSourceFactory.get() );
+	m_liveMarketStoreFactory = std::make_unique<MD::LiveMarketStoreFactory>();
+	MD::LiveMarketStoreFactory::setGlobalInst( m_liveMarketStoreFactory.get() );
 
 	Log( Module::CORE ).info( "ARQLib initialised" );
 }
@@ -118,6 +120,8 @@ LibContext::~LibContext()
 {
 	// Global factories
 
+	MD::LiveMarketStoreFactory::setGlobalInst( nullptr );
+	m_liveMarketStoreFactory.reset();
 	MD::MarketSourceFactory::setGlobalInst( nullptr );
 	m_mdMarketSourceFactory.reset();
 	StreamOffsetSourceFactory::setGlobalInst( nullptr );

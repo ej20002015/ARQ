@@ -1,14 +1,13 @@
 #include "redis_stream_offset_source.h"
 
 #include <redis_connection.h>
+#include "redis_keys.h"
 
 #include <ARQUtils/logger.h>
 #include <ARQUtils/instr.h>
 
-namespace ARQ
+namespace ARQ::Redis
 {
-
-static constexpr auto KEY_ROOT = "ARQ:StreamOffsets";
 
 IStreamOffsetSource* createStreamOffsetSource( const std::string_view dsh )
 {
@@ -27,7 +26,7 @@ void RedisStreamOffsetSource::saveOffsets( const std::string_view key, const Str
 
 	Instr::Timer tmPrep;
 
-	const std::string redisKey = std::format( "{}:{}", KEY_ROOT, key );
+	const std::string redisKey = Redis::Keys::streamOffsets( key );
 	std::map<std::string, std::string> redisFields;
 	for( const auto& [tp, offset] : offsets )
 	{
@@ -63,7 +62,7 @@ std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( 
 
 	Instr::Timer tmPrep;
 
-	const std::string redisKey = std::format( "{}:{}", KEY_ROOT, key );
+	const std::string redisKey = Redis::Keys::streamOffsets( key );
 	std::map<std::string, std::string> redisFields;
 
 	const auto prepTime = tmPrep.duration();

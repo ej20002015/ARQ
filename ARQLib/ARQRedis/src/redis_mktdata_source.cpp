@@ -1,20 +1,19 @@
 #include "redis_mktdata_source.h"
 
 #include "redis_connection.h"
+#include "redis_keys.h"
+#include "redis_mktdata_common.h"
 
 #include <ARQUtils/buffer.h>
 #include <ARQUtils/logger.h>
 #include <ARQUtils/instr.h>
 
-#include <vector>
 #include <unordered_map>
 
 using namespace ARQ::MD;
 
 namespace ARQ::Redis::MD
 {
-
-static constexpr auto KEY_ROOT = "ARQ:Markets";
 
 IMarketSource* createMarketSource( const std::string_view dsh )
 {
@@ -39,7 +38,7 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 	// -----------------
 
 	Instr::Timer tmPrep;
-	const std::string marketKeyRoot = std::format( "{}:{}", KEY_ROOT, marketName );
+	const std::string marketKeyRoot = Keys::market( marketName );
 
 	try
 	{
@@ -150,48 +149,21 @@ RecordCollection RedisMarketSource::load( const std::string_view marketName, con
 void RedisMarketSource::save( const std::string_view marketName, const RecordCollection& records )
 {
 	Instr::Timer tmTotal;
+	Instr::Timer tmPrep;
+
+	RedisHashUpdates updates = prepareMarketUpdates( marketName, records, *m_serialiser );
+	const auto prepTime = tmPrep.duration();
+
 	Instr::Timer tmConn;
 
 	RedisConn conn( m_dsh );
-	sw::redis::Redis&   redis = conn.client();
-	sw::redis::Pipeline pl    = redis.pipeline( false ); // Don't create a new connection for the pipeline - take from conn pool
+	sw::redis::Redis&   redis    = conn.client();
+	sw::redis::Pipeline pl       = redis.pipeline( false ); // Don't create a new connection for the pipeline - take from conn pool
 
 	const auto connTime = tmConn.duration();
 
-	// -----------------
-	// 1. Queue commands
-	// -----------------
-
-	Instr::Timer tmPrep;
-	const std::string marketKeyRoot = std::format( "{}:{}", KEY_ROOT, marketName );
-
-	records.visitVectors( [&] <c_MktData T> ( const std::vector<Record<T>>& vector )
-	{
-		const std::string hashKey = std::format( "{}:{}", marketKeyRoot, Traits<T>::type() );
-		std::unordered_map<std::string, std::string> redisFields;
-		redisFields.reserve( vector.size() );
-
-		for( const Record<T>& record : vector )
-		{
-			const std::string& id = record.header.id;
-			Buffer buffer;
-			ARQ_DO_IN_TRY( arqExc, errMsg );
-			{
-				Buffer buffer = m_serialiser->serialise( record );
-				redisFields.emplace( id, std::move( buffer.toString() ) );
-			}
-			ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
-			if( arqExc.what().size() )
-				Log( Module::REDIS ).error( arqExc, "RedisMarketSource: Exception serialising {} [{}] for market [{}]", Traits<T>::type(), id, marketName );
-			else if( errMsg.size() )
-				Log( Module::REDIS ).error( "RedisMarketSource: Error serialising {} [{}] for market [{}]: {}", Traits<T>::type(), id, marketName, errMsg );
-		}
-
-		if( !redisFields.empty() )
-			pl.hset( hashKey, redisFields.begin(), redisFields.end() );
-	} );
-
-	const auto prepTime = tmPrep.duration();
+	for( const auto& [hashKey, redisFields] : updates )
+		pl.hset( hashKey, redisFields.begin(), redisFields.end() );
 
 	// -------------------
 	// 2. Execute pipeline

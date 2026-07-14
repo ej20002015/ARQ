@@ -11,8 +11,7 @@ void MktDataLiveProjectorService::onStartup()
 
 	m_serialiser = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
 
-	m_offsetSource     = StreamOffsetSourceFactory::inst().create( m_config.liveDSH );
-	m_liveMarketSource = MD::MarketSourceFactory::inst().create( m_config.liveDSH );
+	m_liveMarketStore = MD::LiveMarketStoreFactory::inst().create( m_config.liveDSH );
 
 	StreamConsumerOptions opts( "MktDataLiveProjector::UpdateConsumer",
 								"ARQ.MktData.LiveProjectors",
@@ -37,8 +36,7 @@ void MktDataLiveProjectorService::onShutdown()
 {
 	m_updateConsumer.reset();
 	m_dlqProducer.reset();
-	m_liveMarketSource.reset();
-	m_offsetSource.reset();
+	m_liveMarketStore.reset();
 	m_messagingService.reset();
 }
 
@@ -135,66 +133,30 @@ void MktDataLiveProjectorService::insertIntoLiveMarketSource( const std::unorder
 		if( updateBatch.records.empty() )
 			continue;
 
-		insertMktData( mktName, updateBatch.records );
-		insertOffsets( mktName, updateBatch.offsets );
-	}
-}
-
-void MktDataLiveProjectorService::insertMktData( const std::string_view marketName, const MD::RecordCollection& rcdColl )
-{
-	m_backoffPolicy.reset();
-	while( shouldRun() )
-	{
-		try
+		m_backoffPolicy.reset();
+		while( shouldRun() )
 		{
-			Log( Module::EXE ).debug( "Saving {} mkdata entities for market [{}] into the live market source", rcdColl.size(), marketName );
-			m_liveMarketSource->save( marketName, rcdColl );
-			break;
-		}
-		catch( ARQException& e )
-		{
-			auto delayTimeOpt = m_backoffPolicy.nextDelay();
-			if( delayTimeOpt )
+			try
 			{
-				Log( Module::EXE ).error( e, "Exception thrown when saving mkdata entities into the live market source - trying again in {}ms ({})", *delayTimeOpt, m_backoffPolicy.attemptStr() );
-				std::this_thread::sleep_for( *delayTimeOpt );
+				Log( Module::EXE ).debug( "Applying {} market data entities and their offsets for market [{}] to the live market store", updateBatch.records.size(), mktName );
+				m_liveMarketStore->apply( updateBatch );
+				break;
 			}
-			else
+			catch( ARQException& e )
 			{
-				static constexpr std::string_view errMsg = "Exception thrown when saving mkdata entities into the live market source - max save attempts exceeded - STOPPING SERVICE!";
-				Log( Module::EXE ).critical( errMsg );
-				e.str() += " - " + std::string( errMsg );
-				throw;
-			}
-		}
-	}
-}
-
-void MktDataLiveProjectorService::insertOffsets( const std::string_view marketName, const StreamTopicPartitionOffsets& offsets )
-{
-	m_backoffPolicy.reset();
-	while( shouldRun() )
-	{
-		try
-		{
-			Log( Module::EXE ).debug( "Saving topic partition offsets for market [{}] into the live market source", marketName );
-			m_offsetSource->saveOffsets( std::format( "{}:{}", MARKETS_KEY_NAMESPACE, marketName ), offsets );
-			break;
-		}
-		catch( ARQException& e )
-		{
-			auto delayTimeOpt = m_backoffPolicy.nextDelay();
-			if( delayTimeOpt )
-			{
-				Log( Module::EXE ).error( e, "Exception thrown when saving offsets into the live market source - trying again in {}ms ({})", *delayTimeOpt, m_backoffPolicy.attemptStr() );
-				std::this_thread::sleep_for( *delayTimeOpt );
-			}
-			else
-			{
-				static constexpr std::string_view errMsg = "Exception thrown when saving offsets into the live market source - max save attempts exceeded - STOPPING SERVICE!";
-				Log( Module::EXE ).critical( errMsg );
-				e.str() += " - " + std::string( errMsg );
-				throw;
+				auto delayTimeOpt = m_backoffPolicy.nextDelay();
+				if( delayTimeOpt )
+				{
+					Log( Module::EXE ).error( e, "Exception thrown when applying a batch to the live market store - trying again in {}ms ({})", *delayTimeOpt, m_backoffPolicy.attemptStr() );
+					std::this_thread::sleep_for( *delayTimeOpt );
+				}
+				else
+				{
+					static constexpr std::string_view errMsg = "Exception thrown when applying a batch to the live market store - max save attempts exceeded - STOPPING SERVICE!";
+					Log( Module::EXE ).critical( errMsg );
+					e.str() += " - " + std::string( errMsg );
+					throw;
+				}
 			}
 		}
 	}
