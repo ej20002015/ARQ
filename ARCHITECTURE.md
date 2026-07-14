@@ -45,7 +45,7 @@ Implemented financial types are currently limited to Currency/User reference dat
 | Accepted reference state | Kafka reference update log; executor hydrates OCC state from it |
 | Reference history/read view | ClickHouse append-only projection; gateway caches latest active records |
 | Market input | Kafka compacted per-type update topics |
-| Current market | Redis rebuildable projection plus stored source offsets |
+| Current market | Redis rebuildable projection plus stored source offsets, applied together atomically |
 | In-process market | Immutable typed snapshot built from Redis baseline and NATS updates |
 | Market history | ClickHouse adapter/schema exist, but no complete durable market-history projector exists |
 

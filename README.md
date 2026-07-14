@@ -27,6 +27,7 @@ Trade capture, trade lifecycle, positions, P&L, financial pricing, risk, quoting
 - [Product vision](docs/product/vision.md) — users, goals, principles, scope and non-goals.
 - [Architecture](ARCHITECTURE.md) — current shape, target boundaries and state/messaging responsibilities.
 - [Roadmap](docs/roadmap/roadmap.md) — consolidated order of work and phase exit conditions.
+- [Code style](CODE_STYLE.md) — conventions that supplement `.editorconfig`.
 - [Agent instructions](AGENTS.md) — mandatory guidance for coding agents and contributors.
 
 These documents distinguish implemented functionality from intended architecture. Directory names, generated schemas and technology references are not proof that a capability is operational.
