@@ -98,3 +98,88 @@ Do not infer implemented capability from directory names, generated schemas, REA
 - Do not add infrastructure, messaging systems or abstraction layers without identifying the concrete product or operational problem they solve.
 - Update the relevant documentation when changing product scope, architectural boundaries, schema rules or roadmap phase completion.
 - Clearly distinguish implemented functionality, scaffolding, documentation intent and inference in reviews and change descriptions.
+
+## Human learning and participation
+
+Development in this repository should preserve opportunities for the repository
+owner to practise programming, debugging, API design and technical design. Do
+not assume that every implementation request authorises completing all
+intellectually valuable work on the owner's behalf.
+
+For a material coding or design task, consider whether there is a meaningful
+part that the owner could undertake. This may be a bounded implementation slice,
+the design of an API or abstraction, or a proposal for a larger architectural
+problem. Good learning work exercises reasoning about C++, financial-domain
+behaviour, APIs, tests, debugging, concurrency or architecture.
+
+Bounded implementation slices should normally be completable in roughly 15-45
+minutes and leave the repository in a safe state while unfinished. API and
+architectural design exercises may be larger or more open-ended; when useful,
+divide them into stages such as problem framing, proposal, critique and
+refinement rather than reducing them to a small coding exercise.
+
+When a suitable implementation or design exercise exists:
+
+1. Investigate enough of the repository to define the problem accurately.
+2. Explain the relevant context and why the exercise is useful.
+3. Give the owner:
+   - the intended behaviour or problem to solve;
+   - relevant files and existing examples;
+   - architectural, domain and compatibility constraints;
+   - clear acceptance or evaluation criteria;
+   - the command or tests that will verify implementation work, where applicable.
+4. Do not provide the complete implementation or pre-empt the central design
+   decision unless requested. Begin with directional hints and reveal more
+   detail progressively if the owner becomes stuck.
+5. For an API or architectural exercise, first ask the owner to propose a design
+   and explain its responsibilities, boundaries and trade-offs. Then evaluate it
+   against the repository's product direction, architecture, dependency rules,
+   failure modes and likely evolution. Challenge weak points constructively and
+   compare alternatives only after the owner has had a genuine opportunity to
+   reason about the problem.
+6. After the owner implements or proposes the work, review it constructively,
+   run or recommend appropriate verification, explain any defects or trade-offs,
+   and help complete the surrounding integration or refinement.
+
+Prefer reserving for the owner work involving:
+
+- financial or temporal domain logic;
+- API, interface, type and abstraction design;
+- architectural boundaries and larger design problems where the owner can
+  develop and defend a proposal;
+- contained bug diagnosis;
+- lifecycle and state-transition behaviour;
+- deterministic unit or regression tests;
+- algorithms and data-structure choices;
+- comprehension of an unfamiliar subsystem.
+
+Agents should normally perform mechanical or low-learning-value work, including:
+
+- generated output and schema propagation;
+- repetitive edits and broad renames;
+- formatting and routine build wiring;
+- dependency and environment setup;
+- exhaustive repository searches;
+- routine documentation synchronization;
+- test execution and collection of diagnostic evidence.
+
+Do not manufacture an exercise when the task is trivial, urgent, primarily
+mechanical, unsafe to divide, or when a partial implementation would create a
+misleading or hazardous state. Never delegate generated-file edits or actions
+that require unavailable context, credentials or operational authority.
+
+The owner's explicit instruction controls the collaboration mode:
+
+- "Take this end-to-end" or "implement this for me" means the agent may complete
+  the implementation autonomously.
+- "Pair with me" means investigate and work interactively, pausing at meaningful
+  decisions, design problems and implementation slices.
+- "Give me an exercise" means define a bounded implementation or design task and
+  withhold the solution until asked.
+- "Review this" means critique and explain without rewriting it unless asked.
+
+If the requested mode is unclear, preserve one suitable learning opportunity
+while continuing independently with investigation, mechanical work and
+verification. This may be an implementation slice, an API design or a larger
+architectural proposal. Do not repeatedly ask whether the owner wants to
+participate.
