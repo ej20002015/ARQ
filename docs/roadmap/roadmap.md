@@ -97,8 +97,9 @@ Add the minimum domain required for FX spot and forwards:
 10. Versioned reference and market snapshots.
 11. Manual correction workflow with effective and recorded times.
 12. Original-as-known and latest-corrected historical queries.
-13. Durable official EOD market retention.
-14. Migrate reference-data commands away from NATS-only outcomes. Command results must be durable, idempotent and queryable; Kafka command ingress may remain, while NATS is used only to notify clients that status or projected state has changed.
+13. Separate the durable market update/audit stream from compacted current-state distribution. Define when Kafka null tombstones may be emitted and garbage-collected so lagging consumers, audit replay and projection rebuilds cannot miss market deactivations.
+14. Durable official EOD market retention.
+15. Migrate reference-data commands away from NATS-only outcomes. Command results must be durable, idempotent and queryable; Kafka command ingress may remain, while NATS is used only to notify clients that status or projected state has changed.
 
 All additions must exercise the schema-evolution process from Phase 1.
 

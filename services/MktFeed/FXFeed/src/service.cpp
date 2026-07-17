@@ -102,9 +102,10 @@ void FXFeedService::run()
 			Log( Module::EXE ).debug( "Publishing {} rate update: mid={:.5f}, bid={:.5f}, ask={:.5f}", ccy, rate.mid, rate.bid, rate.ask );
 
 			MD::Record<MD::FXRate> record;
-			record.data = rate;
-            record.header.id = ccy;
-			record.header.asofTs = Time::DateTime::nowUTC();
+			record.data            = rate;
+            record.header.id       = ccy;
+			record.header.asofTs   = Time::DateTime::nowUTC();
+            record.header.isActive = true;
 
             m_publisher->publish( MD::MarketName::LIVE, std::move( record ) );
         }

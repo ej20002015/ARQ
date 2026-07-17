@@ -15,8 +15,16 @@
 namespace ARQ::Redis::MD
 {
 
-using RedisFields      = std::unordered_map<std::string, std::string>;
-using RedisHashUpdates = std::vector<std::pair<std::string, RedisFields>>;
+using RedisFields     = std::unordered_map<std::string, std::string>;
+using RedisFieldNames = std::vector<std::string>;
+using RedisHashSets   = std::vector<std::pair<std::string, RedisFields>>;
+using RedisHashDels   = std::vector<std::pair<std::string, RedisFieldNames>>;
+
+struct RedisHashUpdates
+{
+	RedisHashSets sets;
+	RedisHashDels dels;
+};
 
 ARQRedis_API RedisHashUpdates                   prepareMarketUpdates( const std::string_view marketName, const ARQ::MD::RecordCollection& records, const Serialiser& serialiser );
 ARQRedis_API std::map<std::string, std::string> prepareOffsetUpdates( const StreamTopicPartitionOffsets& offsets );

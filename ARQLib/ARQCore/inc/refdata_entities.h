@@ -69,8 +69,8 @@ struct RecordHeader
 {
     /// The immutable, globally unique system identifier (Machine Key)
     ID::UUID       uuid;
-    /// Indicates if the record is still active - false means it's been 'tombstoned'
-    bool           isActive;
+    /// Indicates if the record is still active - defaults to true
+    bool           isActive = true;
     /// The timestamp of the last update to this record
     Time::DateTime lastUpdatedTs;
     /// The user who last updated the record
@@ -92,7 +92,7 @@ static constexpr std::array<MemberInfo, 5> recordHeaderMembersInfo = {
     },
     MemberInfo {
         .name         = "isActive",
-        .comment      = "Indicates if the record is still active - false means it's been 'tombstoned'.",
+        .comment      = "Indicates if the record is still active.",
         .physicalType = PhysicalType::Boolean,
         .indexType    = IndexType::None,
         .format       = SemanticFormat::Boolean,

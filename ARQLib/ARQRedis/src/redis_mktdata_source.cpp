@@ -157,13 +157,15 @@ void RedisMarketSource::save( const std::string_view marketName, const RecordCol
 	Instr::Timer tmConn;
 
 	RedisConn conn( m_dsh );
-	sw::redis::Redis&   redis    = conn.client();
-	sw::redis::Pipeline pl       = redis.pipeline( false ); // Don't create a new connection for the pipeline - take from conn pool
+	sw::redis::Redis&   redis = conn.client();
+	sw::redis::Pipeline pl    = redis.pipeline( false ); // Don't create a new connection for the pipeline - take from conn pool
 
 	const auto connTime = tmConn.duration();
 
-	for( const auto& [hashKey, redisFields] : updates )
+	for( const auto& [hashKey, redisFields] : updates.sets )
 		pl.hset( hashKey, redisFields.begin(), redisFields.end() );
+	for( const auto& [hashKey, redisFields] : updates.dels )
+		pl.hdel( hashKey, redisFields.begin(), redisFields.end() );
 
 	// -------------------
 	// 2. Execute pipeline

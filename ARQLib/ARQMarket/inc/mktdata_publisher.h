@@ -47,8 +47,7 @@ public:
 	template<c_MktData T>
 	void publish( const MarketName& mktName, Record<T> record, const std::optional<PublisherErrorCallback>& errorCallback = std::nullopt )
 	{
-		// Inject infrastructure metadata into the record header
-		record.header.isActive      = true;
+		// Inject metadata into the record header
 		record.header.lastUpdatedTs = Time::DateTime::nowUTC();
 		if( record.header.lastUpdatedBy.empty() )
 			record.header.lastUpdatedBy = m_config.updatedByStr;
@@ -62,15 +61,6 @@ public:
 		std::string key = std::format( "{0}|{1}#{2}", mktName.str(), Traits<T>::type(), record.header.id );
 
 		publishImpl( std::move( buf ), std::move( key ), Topics<T>::updateTopic(), RecordMessageTraits<T>::type(), errorCallback );
-	}
-
-	template<c_MktData T>
-	void tombstone( const MarketName& mktName, const std::string_view entityType, const std::string_view recordID, const std::optional<PublisherErrorCallback>& errorCallback = std::nullopt )
-	{
-		Buffer      buf = Buffer::Null(); // Tombstone messages have null payload
-		std::string key = std::format( "{0}|{1}#{2}", mktName.str(), entityType, recordID );
-
-		publishImpl( std::move( buf ), std::move( key ), Topics<T>::updateTopic(), "NULL", errorCallback );
 	}
 
 	void flush() { m_streamProducer->flush(); }

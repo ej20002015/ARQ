@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS MktData.{{ entity.name_plural }}
     {% set CHType = "Nullable(" + types[member.type].clickhouse + ")" if member.optional else types[member.type].clickhouse %}
     `{{ member.name | capitalise_first }}` {{ CHType }} {% if member.comment %}COMMENT '{{ member.comment | e }}'{% endif %},
     {% endfor %}
-    `_IsActive` UInt8 COMMENT 'Indicates if the record is still active - false means it has been tombstoned',
+    `_IsActive` UInt8 COMMENT 'Indicates if the record is still active',
     `_LastUpdatedTs` Datetime64(6) DEFAULT now64(6) COMMENT 'The timestamp of the last update to this record',
     `_LastUpdatedBy` String COMMENT 'The user who last updated the record'
 )

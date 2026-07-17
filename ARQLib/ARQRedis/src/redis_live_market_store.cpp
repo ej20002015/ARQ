@@ -54,8 +54,10 @@ void RedisLiveMarketStore::apply( const ARQ::MD::MarketUpdateBatch& updateBatch 
 
 	try
 	{
-		for( const auto& [hashKey, redisFields] : marketUpdates )
+		for( const auto& [hashKey, redisFields] : marketUpdates.sets )
 			tx.hset( hashKey, redisFields.begin(), redisFields.end() );
+		for( const auto& [hashKey, redisFields] : marketUpdates.dels )
+			tx.hdel( hashKey, redisFields.begin(), redisFields.end() );
 
 		const std::string offsetKey = Keys::liveMarketOffsets( marketName );
 		tx.hset( offsetKey, offsetUpdates.begin(), offsetUpdates.end() );
