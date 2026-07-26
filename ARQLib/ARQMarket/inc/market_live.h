@@ -68,11 +68,6 @@ private: // ISubscriptionHandler implementation
 private:
 	void applyUpdate( MarketUpdateBatch&& updateBatch );
 
-	using MktEntity2OffsetsMap = std::unordered_map<Type, StreamTopicPartitionOffsets>;
-
-	MktEntity2OffsetsMap convertOffsets( StreamTopicPartitionOffsets&& tpOffsets ) const;
-	bool                 isOffsetsNewer( const StreamTopicPartitionOffsets& lhs, const StreamTopicPartitionOffsets& rhs ) const;
-
 private:
 	std::shared_ptr<Market>            m_mkt;
 	std::string                        m_mktSrcDSH;
@@ -83,7 +78,7 @@ private:
 	std::string                        m_desc;
 
 	std::atomic<State>                 m_state;
-	MktEntity2OffsetsMap               m_offsets;
+	StreamTopicPartitionOffsets        m_offsets;
 
 	std::shared_ptr<Serialiser>        m_serialiser;
 	std::unique_ptr<ISubscription>     m_msgSub;

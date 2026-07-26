@@ -14,6 +14,7 @@
 #include <any>
 #include <set>
 #include <format>
+#include <compare>
 
 using namespace std::chrono_literals;
 
@@ -66,13 +67,24 @@ struct StreamProducerMessageMetadata
 	StreamMessagePersistedStatus persistedStatus;
 };
 
+using StreamTopicPartition = std::pair<std::string, int32_t>;
+
+struct StreamTopicPartitionOffset
+{
+	StreamTopicPartition tp;
+	int64_t              offset;
+
+	std::strong_ordering operator<=>( const StreamTopicPartitionOffset& other ) const = default;
+};
+
+// Map of TopicPartition -> Offset
+using StreamTopicPartitionOffsets = std::map<StreamTopicPartition, int64_t>;
+
 /// Opaque wrapper for innternal consumer group metadata
 struct StreamGroupMetadata
 {
 	std::any impl;
 };
-
-using StreamTopicPartition = std::pair<std::string, int32_t>;
 
 using StreamProducerDeliveryCallbackFunc = std::function<void( const StreamProducerMessageMetadata& messageMetadata, std::optional<StreamError> error )>;
 
@@ -228,8 +240,6 @@ enum class StreamRebalanceEventType
 };
 
 using StreamConsumerRebalanceCallbackFunc = std::function<void( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& topicPartitions )>;
-
-using StreamTopicPartitionOffsets = std::map<StreamTopicPartition, int64_t>;
 
 using StreamConsumerOffsetCommitCallbackFunc = std::function<void( const StreamTopicPartitionOffsets& topicPartitionOffsets, const std::optional<StreamError>& error )>;
 
@@ -418,5 +428,20 @@ struct std::formatter<ARQ::StreamTopicPartition>
 	auto format( const ARQ::StreamTopicPartition& p, FormatContext& ctx ) const
 	{
 		return std::format_to( ctx.out(), "{}-{}", p.first, p.second );
+	}
+};
+
+template<>
+struct std::formatter<ARQ::StreamTopicPartitionOffset>
+{
+	constexpr auto parse( std::format_parse_context& ctx )
+	{
+		return ctx.begin();
+	}
+
+	template<typename FormatContext>
+	auto format( const ARQ::StreamTopicPartitionOffset& position, FormatContext& ctx ) const
+	{
+		return std::format_to( ctx.out(), "{}:{}", position.tp, position.offset );
 	}
 };

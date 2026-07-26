@@ -42,8 +42,8 @@ void MktDataLiveProjectorService::onShutdown()
 
 void MktDataLiveProjectorService::run()
 {
-	std::unordered_map<std::string, MD::MarketUpdateBatch> updateBatches;
-	
+	UpdateBatches updateBatches;
+
 	while( shouldRun() )
 	{
 		updateBatches.clear();
@@ -70,7 +70,7 @@ void MktDataLiveProjectorService::registerConfigOptions( Cfg::ConfigWrangler& cf
 	cfg.add( m_config.dbBackoffPolicy,  "--dbBackoffPolicy",  "The backoff policy to use when retrying saves to the live market source\n" + std::string( BackoffPolicy::HelpText ) );
 }
 
-void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches )
+void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, UpdateBatches& updateBatches )
 {
 	Log( Module::EXE ).debug( "Processing {} update messages", msgBatch->size() );
 
@@ -87,9 +87,21 @@ void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsum
 			MD::dispatch( entityType, [this, &msg, &updateBatches] <MD::c_MktData T> ()
 			{
 				auto rcdMsg = m_serialiser->deserialise<MD::RecordMessage<T>>( msg.data );
-				MD::MarketUpdateBatch& updateBatch = updateBatches[rcdMsg.mktName];
-				updateBatch.records.get<MD::Record<T>>().push_back( std::move( rcdMsg.record ) );
-				updateBatch.offsets[StreamTopicPartition{ msg.topic, msg.partition }] = msg.offset;
+
+				UpdateBatchKey batchKey{
+					.marketName     = rcdMsg.mktName,
+					.topicPartition = StreamTopicPartition{ msg.topic, msg.partition }
+				};
+
+				const auto [batch, inserted] = updateBatches.try_emplace( batchKey );
+				if( inserted ) // First time seeing a record for this market batch so set details
+				{
+					batch->second.marketName     = MD::MarketName::fromStr( rcdMsg.mktName );
+					batch->second.sourcePosition = StreamTopicPartitionOffset{ batchKey.topicPartition, msg.offset };
+				}
+
+				batch->second.records.get<MD::Record<T>>().push_back( std::move( rcdMsg.record ) );
+				batch->second.sourcePosition.offset = msg.offset;
 			} );
 		}
 		ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
@@ -121,14 +133,11 @@ void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsum
 
 	if( anyDLQ )
 		m_dlqProducer->flush();
-
-	for( auto& [mktName, updateBatch] : updateBatches )
-		updateBatch.marketName = MD::MarketName::fromStr( mktName );
 }
 
-void MktDataLiveProjectorService::insertIntoLiveMarketSource( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches )
+void MktDataLiveProjectorService::insertIntoLiveMarketSource( const UpdateBatches& updateBatches )
 {
-	for( const auto& [mktName, updateBatch] : updateBatches )
+	for( const auto& [key, updateBatch] : updateBatches )
 	{
 		if( updateBatch.records.empty() )
 			continue;
@@ -138,7 +147,8 @@ void MktDataLiveProjectorService::insertIntoLiveMarketSource( const std::unorder
 		{
 			try
 			{
-				Log( Module::EXE ).debug( "Applying {} market data entities and their offsets for market [{}] to the live market store", updateBatch.records.size(), mktName );
+				Log( Module::EXE ).debug( "Applying market update batch with {} entities for market=[{}], sourcePosition=[{}] to the live market store",
+					updateBatch.records.size(), updateBatch.marketName, updateBatch.sourcePosition );
 				m_liveMarketStore->apply( updateBatch );
 				break;
 			}
@@ -162,9 +172,9 @@ void MktDataLiveProjectorService::insertIntoLiveMarketSource( const std::unorder
 	}
 }
 
-void MktDataLiveProjectorService::publishToMessagingService( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches )
+void MktDataLiveProjectorService::publishToMessagingService( const UpdateBatches& updateBatches )
 {
-	for( const auto& [mktName, updateBatch] : updateBatches )
+	for( const auto& [key, updateBatch] : updateBatches )
 	{
 		if( updateBatch.records.empty() )
 			continue;
@@ -174,12 +184,13 @@ void MktDataLiveProjectorService::publishToMessagingService( const std::unordere
 		{
 			try
 			{
-				Log( Module::EXE ).debug( "Publishing market update batch for market [{}] to the messaging service", mktName );
+				Log( Module::EXE ).debug( "Publishing market update batch with {} entities for market=[{}], sourcePosition=[{}] to the messaging service",
+										  updateBatch.records.size(), updateBatch.marketName, updateBatch.sourcePosition );
 
 				Message msg{
 					.data = m_serialiser->serialise( updateBatch )
 				};
-				const std::string topic = std::string( UPDATES_PUB_TOPIC_PFX ) + mktName;
+				const std::string topic = std::string( UPDATES_PUB_TOPIC_PFX ) + updateBatch.marketName.str();
 
 				// Note: We assume that the publish message is small enough that it's below the max message size of the messaging service. If this is not the case, we would need to implement chunking logic here to split the batch into multiple messages.
 				m_messagingService->publish( topic, std::move( msg ) );

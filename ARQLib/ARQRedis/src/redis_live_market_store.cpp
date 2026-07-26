@@ -36,11 +36,11 @@ void RedisLiveMarketStore::apply( const ARQ::MD::MarketUpdateBatch& updateBatch 
 	const std::string marketName = updateBatch.marketName.str();
 	if( marketName.empty() )
 		throw ARQException( "RedisLiveMarketStore: Cannot apply a live market batch without a market name" );
-	if( updateBatch.offsets.empty() )
-		throw ARQException( std::format( "RedisLiveMarketStore: Cannot apply live market batch [{}] without source offsets", marketName ) );
+	if( updateBatch.sourcePosition.tp.first.empty() || updateBatch.sourcePosition.tp.second < 0 || updateBatch.sourcePosition.offset < 0 )
+		throw ARQException( std::format( "RedisLiveMarketStore: Cannot apply live market batch [{}] with invalid source position", marketName ) );
 
 	const RedisHashUpdates marketUpdates = prepareMarketUpdates( marketName, updateBatch.records, *m_serialiser );
-	const auto             offsetUpdates = prepareOffsetUpdates( updateBatch.offsets );
+	const auto             offsetUpdate  = prepareOffsetUpdate( updateBatch.sourcePosition );
 
 	const auto prepTime = tmPrep.duration();
 
@@ -60,12 +60,12 @@ void RedisLiveMarketStore::apply( const ARQ::MD::MarketUpdateBatch& updateBatch 
 			tx.hdel( hashKey, redisFields.begin(), redisFields.end() );
 
 		const std::string offsetKey = Keys::liveMarketOffsets( marketName );
-		tx.hset( offsetKey, offsetUpdates.begin(), offsetUpdates.end() );
+		tx.hset( offsetKey, offsetUpdate.first, offsetUpdate.second );
 
 		Instr::Timer tmNet;
 		auto replies = tx.exec();
 		validateTransactionReplies( replies );
-		Log( Module::REDIS ).debug( "Applied live market batch [{}] to Redis with {} objects and {} offsets atomically in total: {} (conn: {}, prep: {}, net: {})", marketName, updateBatch.records.size(), updateBatch.offsets.size(), tmTotal.duration(), connTime, prepTime, tmNet.duration() );
+		Log( Module::REDIS ).debug( "Applied live market batch [{}] to Redis with {} objects and source position [{}] atomically in total: {} (conn: {}, prep: {}, net: {})", updateBatch.marketName, updateBatch.records.size(), updateBatch.sourcePosition, tmTotal.duration(), connTime, prepTime, tmNet.duration() );
 	}
 	catch( const std::exception& e )
 	{

@@ -9,6 +9,7 @@
 #include <memory>
 #include <tuple>
 #include <mutex>
+#include <format>
 
 namespace ARQ::MD
 {
@@ -149,3 +150,12 @@ private:
 using Market = MarketImpl<AllEntityRecords>;
 
 }
+
+template<>
+struct std::formatter<ARQ::MD::MarketName> : std::formatter<std::string>
+{
+	auto format( const ARQ::MD::MarketName& marketName, std::format_context& ctx ) const
+	{
+		return std::formatter<std::string>::format( marketName.str(), ctx );
+	}
+};

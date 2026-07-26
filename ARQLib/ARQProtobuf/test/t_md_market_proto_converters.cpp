@@ -12,7 +12,7 @@ protected:
         ARQ::MD::MarketUpdateBatch cppBatch;
         cppBatch.marketName = ARQ::MD::MarketName( "NYSE" );
 
-        // 1. Add an FXRate Record
+        // Add an FXRate Record
         ARQ::MD::Record<ARQ::MD::FXRate> fxRecord;
         fxRecord.header.id = "GBPUSD";
         fxRecord.data.mid = 1.250;
@@ -20,7 +20,7 @@ protected:
         fxRecord.data.ask = 1.251;
         cppBatch.records.get<ARQ::MD::Record<ARQ::MD::FXRate>>().push_back( fxRecord );
 
-        // 2. Add an EQPrice Record
+        // Add an EQPrice Record
         ARQ::MD::Record<ARQ::MD::EQPrice> eqRecord;
         eqRecord.header.id = "AAPL";
         eqRecord.data.last = 175.50;
@@ -31,9 +31,8 @@ protected:
         eqRecord.data.volume = 1500000;
         cppBatch.records.get<ARQ::MD::Record<ARQ::MD::EQPrice>>().push_back( eqRecord );
 
-        // 3. Add Offsets 
-        cppBatch.offsets[ARQ::StreamTopicPartition{ "NYSE.Equities", 0 }] = 10045;
-        cppBatch.offsets[ARQ::StreamTopicPartition{ "NYSE.Equities", 1 }] = 20089;
+        // Add source position 
+        cppBatch.sourcePosition = { ARQ::StreamTopicPartition{ "NYSE.Equities", 0 }, 10045 };
 
         return cppBatch;
     }
@@ -58,8 +57,10 @@ TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_LValue_Conversions )
     EXPECT_DOUBLE_EQ( protoBatch.records().eq_prices( 0 ).data().last(), 175.50 );
     EXPECT_EQ( protoBatch.records().eq_prices( 0 ).data().volume(), 1500000 );
 
-    // Verify Offsets map size (assuming Protobuf map semantics)
-    EXPECT_EQ( protoBatch.offsets().offsets().size(), 2 );
+    // Verify source position map size (assuming Protobuf map semantics)
+    EXPECT_EQ( protoBatch.source_position().offset(), 10045 );
+    EXPECT_EQ( protoBatch.source_position().topic_partition().topic(), "NYSE.Equities" );
+    EXPECT_EQ( protoBatch.source_position().topic_partition().partition(), 0 );
 
     // --- Proto to C++ (LValue) ---
     ARQ::MD::MarketUpdateBatch parsedBatch = fromProto( protoBatch );
@@ -73,7 +74,9 @@ TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_LValue_Conversions )
     EXPECT_EQ( parsedBatch.records.get<ARQ::MD::Record<ARQ::MD::EQPrice>>()[0].header.id, "AAPL" );
     EXPECT_DOUBLE_EQ( parsedBatch.records.get<ARQ::MD::Record<ARQ::MD::EQPrice>>()[0].data.last, 175.50 );
 
-    EXPECT_EQ( parsedBatch.offsets.size(), 2 );
+    EXPECT_EQ( parsedBatch.sourcePosition.offset, 10045 );
+    EXPECT_EQ( parsedBatch.sourcePosition.tp.first, "NYSE.Equities" );
+    EXPECT_EQ( parsedBatch.sourcePosition.tp.second, 0 );
 }
 
 TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_RValue_Conversions )
@@ -88,7 +91,9 @@ TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_RValue_Conversions )
     EXPECT_EQ( protoBatchMove.mkt_name(), "NYSE" );
     ASSERT_EQ( protoBatchMove.records().eq_prices_size(), 1 );
     EXPECT_DOUBLE_EQ( protoBatchMove.records().eq_prices( 0 ).data().open(), 174.00 );
-    EXPECT_EQ( protoBatchMove.offsets().offsets().size(), 2 );
+    EXPECT_EQ( protoBatchMove.source_position().offset(), 10045 );
+    EXPECT_EQ( protoBatchMove.source_position().topic_partition().topic(), "NYSE.Equities" );
+    EXPECT_EQ( protoBatchMove.source_position().topic_partition().partition(), 0 );
 
     // --- Proto to C++ (RValue) ---
     ARQ::MD::MarketUpdateBatch parsedBatchMove = fromProto( std::move( protoBatchMove ) );
@@ -100,5 +105,7 @@ TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_RValue_Conversions )
     ASSERT_EQ( parsedBatchMove.records.get<ARQ::MD::Record<ARQ::MD::EQPrice>>().size(), 1 );
     EXPECT_DOUBLE_EQ( parsedBatchMove.records.get<ARQ::MD::Record<ARQ::MD::EQPrice>>()[0].data.close, 173.50 );
 
-    EXPECT_EQ( parsedBatchMove.offsets.size(), 2 );
+    EXPECT_EQ( parsedBatchMove.sourcePosition.offset, 10045 );
+    EXPECT_EQ( parsedBatchMove.sourcePosition.tp.first, "NYSE.Equities" );
+    EXPECT_EQ( parsedBatchMove.sourcePosition.tp.second, 0 );
 }

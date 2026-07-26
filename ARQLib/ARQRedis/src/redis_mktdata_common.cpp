@@ -64,13 +64,12 @@ RedisHashUpdates prepareMarketUpdates( const std::string_view marketName, const 
 	return updates;
 }
 
-std::map<std::string, std::string> prepareOffsetUpdates( const StreamTopicPartitionOffsets& offsets )
+std::pair<std::string, std::string> prepareOffsetUpdate( const StreamTopicPartitionOffset& sourcePosition )
 {
-	std::map<std::string, std::string> redisFields;
-	for( const auto& [tp, offset] : offsets )
-		redisFields[std::format( "{}-{}", tp.first, tp.second )] = std::to_string( offset );
-
-	return redisFields;
+	return {
+		std::format( "{}-{}", sourcePosition.tp.first, sourcePosition.tp.second ),
+		std::to_string( sourcePosition.offset )
+	};
 }
 
 }

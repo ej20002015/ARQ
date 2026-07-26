@@ -1,7 +1,6 @@
 #include <ARQMarket/market_live.h>
 
 #include <ARQUtils/logger.h>
-#include <ARQMarket/mktdata_topics.h>
 
 namespace ARQ::MD
 {
@@ -21,9 +20,9 @@ void LiveMarketUpdater::start()
 
 		// Load baseline market along with its offsets
 
-		auto offsets = offsetSrc->getOffsets( std::format( "{}:{}", MARKETS_KEY_NAMESPACE, mktNameStr ) );
-		if( offsets )
-			m_offsets = convertOffsets( std::move( *offsets ) );
+		auto srcOffsets = offsetSrc->getOffsets( std::format( "{}:{}", MARKETS_KEY_NAMESPACE, mktNameStr ) );
+		if( srcOffsets )
+			m_offsets = std::move( *srcOffsets );
 		auto records = mktSrc->load( mktNameStr, m_mktSrcTIDSet );
 		m_mkt->update( std::move( records ) );
 
@@ -66,8 +65,12 @@ void LiveMarketUpdater::onMsg( Message&& msg )
 		case State::BUFFERING:
 		{
 			std::lock_guard<std::mutex> lg( m_bufferedUpdatesMutex );
-			m_bufferedUpdates.emplace_back( std::move( batch ) );
-			break;
+			if( m_state == State::BUFFERING )
+			{
+				m_bufferedUpdates.emplace_back( std::move( batch ) );
+				break;
+			}
+			// If state changed to LIVE while we were waiting for the lock, fall through to apply the update
 		}
 		case State::LIVE:
 			applyUpdate( std::move( batch ) );
@@ -79,21 +82,16 @@ void LiveMarketUpdater::onMsg( Message&& msg )
 
 void LiveMarketUpdater::applyUpdate( MarketUpdateBatch&& updateBatch )
 {
-	MktEntity2OffsetsMap offsetUpdates;
-	MktEntity2OffsetsMap batchOffsets = convertOffsets( std::move( updateBatch.offsets ) );
-	updateBatch.records.visitVectors( [this, &batchOffsets, &offsetUpdates] <c_MktData T> ( std::vector<Record<T>>& newRecords )
+	// Drop records if offsets are old
+	if( auto it = m_offsets.find( updateBatch.sourcePosition.tp ); it != m_offsets.end() )
 	{
-		// Drop records if offsets are old
-		StreamTopicPartitionOffsets& tpOffsetsInBatch = batchOffsets[Traits<T>::typeEnum()];
-		if( auto it = m_offsets.find( Traits<T>::typeEnum() ); it != m_offsets.end() )
-		{
-			if( !isOffsetsNewer( it->second, tpOffsetsInBatch ) )
-			{
-				newRecords.clear();
-				return;
-			}
-		}
+		const auto& [tp, currentOffset] = *it;
+		if( updateBatch.sourcePosition.offset <= currentOffset )
+			return;
+	}
 
+	updateBatch.records.visitVectors( [this, &updateBatch] <c_MktData T> ( std::vector<Record<T>>&newRecords )
+	{
 		// Filter update by TIDSet
 		if( !m_msgTIDSet.empty() && newRecords.size() )
 		{
@@ -109,43 +107,12 @@ void LiveMarketUpdater::applyUpdate( MarketUpdateBatch&& updateBatch )
 				} );
 			}
 		}
-
-		offsetUpdates[Traits<T>::typeEnum()] = std::move( tpOffsetsInBatch );
 	} );
 
-	// Update mkt state and offsets
-	if( offsetUpdates.size() )
-	{
+	// Update mkt state
+	if( updateBatch.records.size() )
 		m_mkt->update( std::move( updateBatch.records ) );
-		for( auto& [k, v] : offsetUpdates )
-			m_offsets.insert_or_assign( k, std::move( v ) );
-	}
-}
-
-LiveMarketUpdater::MktEntity2OffsetsMap LiveMarketUpdater::convertOffsets( StreamTopicPartitionOffsets&& tpOffsets ) const
-{
-	LiveMarketUpdater::MktEntity2OffsetsMap map;
-
-	for( auto& [tp, offset] : tpOffsets )
-	{
-		const auto mktEntityType = getTypeFromUpdateTopic( tp.first );
-		StreamTopicPartitionOffsets& innerMap = map[mktEntityType];
-		innerMap.emplace( tp, offset );
-	}
-
-	return map;
-}
-
-bool LiveMarketUpdater::isOffsetsNewer( const StreamTopicPartitionOffsets& lhs, const StreamTopicPartitionOffsets& rhs ) const
-{
-	// If the rhs contains AT LEAST ONE offset that is newer than lhs, return true
-	for( const auto& [tp, offset] : rhs )
-	{
-		if( const auto it = lhs.find( tp ); it == lhs.end() || offset > it->second )
-			return true;
-	}
-
-	return false;
+	m_offsets[updateBatch.sourcePosition.tp] = updateBatch.sourcePosition.offset;
 }
 
 }

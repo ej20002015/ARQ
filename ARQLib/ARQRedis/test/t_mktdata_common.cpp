@@ -6,7 +6,6 @@
 #include <gtest/gtest.h>
 
 #include <format>
-#include <map>
 #include <memory>
 #include <ranges>
 #include <stdexcept>
@@ -191,18 +190,15 @@ TEST( RedisMktDataCommonTest, LaterActiveRecordReplacesEarlierValue )
 	EXPECT_EQ( fields.at( "GBPUSD" ), "fx:GBPUSD:version-2" );
 }
 
-TEST( RedisMktDataCommonTest, PrepareOffsetUpdatesProducesExpectedTopicPartitionFields )
+TEST( RedisMktDataCommonTest, PrepareOffsetUpdateProducesExpectedTopicPartitionField )
 {
-	const StreamTopicPartitionOffsets offsets{
-		{ StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 }, 42 },
-		{ StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 3 }, 97 },
-		{ StreamTopicPartition{ "ARQ.MktData.Updates.EQP", 1 }, 1'234 }
+	const StreamTopicPartitionOffset sourcePosition{
+		.tp     = StreamTopicPartition{ "ARQ.MktData.Updates.EQP", 1 },
+		.offset = 1'234
 	};
 
-	const std::map<std::string, std::string> fields = Redis::MD::prepareOffsetUpdates( offsets );
+	const auto [field, value] = Redis::MD::prepareOffsetUpdate( sourcePosition );
 
-	ASSERT_EQ( fields.size(), 3 );
-	EXPECT_EQ( fields.at( "ARQ.MktData.Updates.FXR-0" ), "42" );
-	EXPECT_EQ( fields.at( "ARQ.MktData.Updates.FXR-3" ), "97" );
-	EXPECT_EQ( fields.at( "ARQ.MktData.Updates.EQP-1" ), "1234" );
+	EXPECT_EQ( field, "ARQ.MktData.Updates.EQP-1" );
+	EXPECT_EQ( value, "1234" );
 }

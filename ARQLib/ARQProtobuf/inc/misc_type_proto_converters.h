@@ -21,10 +21,10 @@ ARQProtobuf_API void toProto( const ARQ::RD::CommandResponse& arqObj, RefDataCom
 
 }
 
-// --- Converters for StreamTopicPartitionOffsets ---
+// --- Converters for StreamTopicPartitionOffset ---
 
-ARQProtobuf_API void toProto( const ARQ::StreamTopicPartitionOffsets& arqObj, StreamTopicPartitionOffsets* const protoObj );
+ARQProtobuf_API void toProto( const ARQ::StreamTopicPartitionOffset& arqObj, StreamTopicPartitionOffset* const protoObj );
 
-[[nodiscard]] ARQProtobuf_API ARQ::StreamTopicPartitionOffsets fromProto( const StreamTopicPartitionOffsets& protoObj );
+[[nodiscard]] ARQProtobuf_API ARQ::StreamTopicPartitionOffset fromProto( const StreamTopicPartitionOffset& protoObj );
 
 }

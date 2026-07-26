@@ -201,7 +201,10 @@ TEST_F( LiveMarketUpdaterTest, FiltersByMsgTIDSetInLiveMode )
     // Prepare a mocked network batch containing both EUR and GBP
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 1.08, 100 ) );
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "GBP", 1.29, 100 ) );
-    this->nextBatchToReturn.offsets.emplace( std::make_pair( "ARQ.MktData.Updates.FXR", 0 ), 10 );
+    this->nextBatchToReturn.sourcePosition = {
+        StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 },
+        10
+    };
 
     // Fire the NATS message
     activeHandler->onMsg( Message{} );
@@ -221,21 +224,79 @@ TEST_F( LiveMarketUpdaterTest, RejectsStaleOffsets )
     updater->start();
 
     // 1. Send Batch 1 (Offset 100)
-    this->nextBatchToReturn.offsets.emplace( std::make_pair( "ARQ.MktData.Updates.FXR", 0 ), 100 );
+    this->nextBatchToReturn.sourcePosition = {
+        StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 },
+        100
+    };
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 1.08, 100 ) );
     activeHandler->onMsg( Message{} );
 
     EXPECT_DOUBLE_EQ( market->snapshot()->get<FXRate>( "EUR" )->data.mid, 1.08 );
 
     // 2. Send Batch 2 (Stale Offset 50, wildly different price)
-    this->nextBatchToReturn.offsets.clear();
-    this->nextBatchToReturn.offsets.emplace( std::make_pair( "ARQ.MktData.Updates.FXR", 0 ), 50 );
+    this->nextBatchToReturn.sourcePosition.offset = 50;
     this->nextBatchToReturn.records.get<Record<FXRate>>().clear();
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 9.99, 200 ) );
     activeHandler->onMsg( Message{} );
 
     // 3. Assert: The stale batch was completely ignored
     EXPECT_DOUBLE_EQ( market->snapshot()->get<FXRate>( "EUR" )->data.mid, 1.08 );
+}
+
+TEST_F( LiveMarketUpdaterTest, TracksOffsetsIndependentlyAcrossPartitions )
+{
+    auto updater = LiveMarketUpdater::create( LiveMarketUpdater::Params{
+        market, "", "MOCK_NATS", MarketName( "PROD_FX" ), TIDSet(), TIDSet()
+    } );
+    updater->start();
+
+    auto sendUpdate = [this] ( int32_t partition, int64_t offset, Record<FXRate> record )
+    {
+        this->nextBatchToReturn.sourcePosition = {
+            StreamTopicPartition{ "ARQ.MktData.Updates.FXR", partition },
+            offset
+        };
+
+        auto& records = this->nextBatchToReturn.records.get<Record<FXRate>>();
+        records.clear();
+        records.push_back( std::move( record ) );
+
+        activeHandler->onMsg( Message{} );
+    };
+
+    sendUpdate( 0, 100, makeFXRecord( "EUR", 1.08, 100 ) );
+    sendUpdate( 1, 200, makeFXRecord( "GBP", 1.29, 100 ) );
+
+    auto snap = market->snapshot();
+    ASSERT_TRUE( snap->get<FXRate>( "EUR" ) );
+    ASSERT_TRUE( snap->get<FXRate>( "GBP" ) );
+    EXPECT_DOUBLE_EQ( snap->get<FXRate>( "EUR" )->data.mid, 1.08 );
+    EXPECT_DOUBLE_EQ( snap->get<FXRate>( "GBP" )->data.mid, 1.29 );
+
+    // A newer market timestamp ensures the market itself would accept this
+    // update if the offset for partition 0 had been lost when partition 1 advanced.
+    sendUpdate( 0, 50, makeFXRecord( "EUR", 9.99, 300 ) );
+
+    // Assert that the stale offset for partition 0 was ignored (partition 0 is independent of partition 1)
+    snap = market->snapshot();
+    ASSERT_TRUE( snap->get<FXRate>( "EUR" ) );
+    EXPECT_DOUBLE_EQ( snap->get<FXRate>( "EUR" )->data.mid, 1.08 );
+
+    // Replaying the current offset must also be ignored.
+    sendUpdate( 0, 100, makeFXRecord( "EUR", 8.88, 400 ) );
+
+    snap = market->snapshot();
+    ASSERT_TRUE( snap->get<FXRate>( "EUR" ) );
+    EXPECT_DOUBLE_EQ( snap->get<FXRate>( "EUR" )->data.mid, 1.08 );
+
+    // The next offset for partition 0 is accepted without disturbing partition 1.
+    sendUpdate( 0, 101, makeFXRecord( "EUR", 1.09, 500 ) );
+
+    snap = market->snapshot();
+    ASSERT_TRUE( snap->get<FXRate>( "EUR" ) );
+    ASSERT_TRUE( snap->get<FXRate>( "GBP" ) );
+    EXPECT_DOUBLE_EQ( snap->get<FXRate>( "EUR" )->data.mid, 1.09 );
+    EXPECT_DOUBLE_EQ( snap->get<FXRate>( "GBP" )->data.mid, 1.29 );
 }
 
 TEST_F( LiveMarketUpdaterTest, BuffersAndReconcilesDuringStartup )
@@ -256,7 +317,10 @@ TEST_F( LiveMarketUpdaterTest, BuffersAndReconcilesDuringStartup )
     EXPECT_CALL( *mockMarketSrc, load( _, _ ) ).WillOnce( Invoke( [&] ( const std::string_view, const TIDSet& )
     {
         // Setup the incoming NATS payload (Offset 101, Price 1.08)
-        this->nextBatchToReturn.offsets.emplace( std::make_pair( "ARQ.MktData.Updates.FXR", 0 ), 101 );
+        this->nextBatchToReturn.sourcePosition = {
+            StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 },
+            101
+        };
         this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 1.08, 150 ) );
 
         activeHandler->onMsg( Message{} );

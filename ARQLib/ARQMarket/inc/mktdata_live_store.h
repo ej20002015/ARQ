@@ -16,9 +16,9 @@ namespace ARQ::MD
 
 struct MarketUpdateBatch
 {
-	MarketName                  marketName;
-	RecordCollection            records;
-	StreamTopicPartitionOffsets offsets;
+	MarketName                 marketName;
+	RecordCollection           records;
+	StreamTopicPartitionOffset sourcePosition;
 };
 
 class ILiveMarketStore

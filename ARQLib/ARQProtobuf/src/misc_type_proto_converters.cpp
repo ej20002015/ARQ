@@ -41,33 +41,21 @@ ARQ::RD::CommandResponse fromProto( const RefDataCommandResponse& protoObj )
 
 }
 
-void toProto( const ARQ::StreamTopicPartitionOffsets& arqObj, StreamTopicPartitionOffsets* const protoObj )
+void toProto( const ARQ::StreamTopicPartitionOffset& arqObj, StreamTopicPartitionOffset* const protoObj )
 {
-	for( const auto& [tp, offset] : arqObj )
-	{
-		StreamTopicPartitionOffset* protoEntry = protoObj->add_offsets();
-
-		auto* protoTp = protoEntry->mutable_topic_partition();
-		protoTp->set_topic( tp.first );
-		protoTp->set_partition( tp.second );
-
-		protoEntry->set_offset( offset );
-	}
+	auto* protoTp = protoObj->mutable_topic_partition();
+	protoTp->set_topic( arqObj.tp.first );
+	protoTp->set_partition( arqObj.tp.second );
+	protoObj->set_offset( arqObj.offset );
 }
 
-ARQ::StreamTopicPartitionOffsets fromProto( const StreamTopicPartitionOffsets& protoObj )
+ARQ::StreamTopicPartitionOffset fromProto( const StreamTopicPartitionOffset& protoObj )
 {
-	ARQ::StreamTopicPartitionOffsets arqObj;
+	ARQ::StreamTopicPartitionOffset arqObj;
 
-	for( const auto& entry : protoObj.offsets() )
-	{
-		ARQ::StreamTopicPartition key{
-			entry.topic_partition().topic(),
-			entry.topic_partition().partition()
-		};
-
-		arqObj.emplace( key, entry.offset() );
-	}
+	arqObj.tp.first = protoObj.topic_partition().topic();
+	arqObj.tp.second = protoObj.topic_partition().partition();
+	arqObj.offset = protoObj.offset();
 
 	return arqObj;
 }

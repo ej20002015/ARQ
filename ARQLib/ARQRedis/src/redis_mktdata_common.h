@@ -6,7 +6,6 @@
 #include <ARQCore/streaming_service.h>
 #include <ARQMarket/mktdata_entities.h>
 
-#include <map>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -27,6 +26,6 @@ struct RedisHashUpdates
 };
 
 ARQRedis_API RedisHashUpdates                   prepareMarketUpdates( const std::string_view marketName, const ARQ::MD::RecordCollection& records, const Serialiser& serialiser );
-ARQRedis_API std::map<std::string, std::string> prepareOffsetUpdates( const StreamTopicPartitionOffsets& offsets );
+ARQRedis_API std::pair<std::string, std::string> prepareOffsetUpdate( const StreamTopicPartitionOffset& sourcePosition );
 
 }

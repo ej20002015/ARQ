@@ -9,7 +9,7 @@
 #include <ARQMarket/market_live.h>
 
 #include <set>
-#include <unordered_map>
+#include <map>
 
 using namespace ARQ;
 
@@ -45,10 +45,20 @@ private:
 
 	static constexpr std::string_view UPDATES_PUB_TOPIC_PFX = "ARQ.MktData.Updates.";
 
+	struct UpdateBatchKey
+	{
+		std::string          marketName;
+		StreamTopicPartition topicPartition;
+
+		std::strong_ordering operator<=>( const UpdateBatchKey& ) const = default;
+	};
+
+	using UpdateBatches = std::map<UpdateBatchKey, MD::MarketUpdateBatch>;
+
 private:
-	void processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches );
-	void insertIntoLiveMarketSource( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches );
-	void publishToMessagingService( const std::unordered_map<std::string, MD::MarketUpdateBatch>& updateBatches );
+	void processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, UpdateBatches& updateBatches );
+	void insertIntoLiveMarketSource( const UpdateBatches& updateBatches );
+	void publishToMessagingService( const UpdateBatches& updateBatches );
 
 private:
 	std::shared_ptr<Serialiser> m_serialiser;

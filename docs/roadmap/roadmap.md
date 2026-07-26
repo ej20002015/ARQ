@@ -9,7 +9,7 @@ Stabilise the existing reference-data and market-data foundations before extendi
 1. [x] Fix the ClickHouse `MktName`/`MarketName` mismatch.
 2. [x] Configure authoritative Kafka consumers with `read_committed`.
 3. [x] Make Redis market-state and offset updates atomic.
-4. [ ] Fix market tombstones.
+4. [x] Fix market tombstones.
 5. [ ] Reconcile snapshot updates per partition without offset regression.
 6. [ ] Make late or equal-as-of market updates deterministic.
 7. [ ] Remove the `ARQCore`/`ARQMarket` dependency cycle.
