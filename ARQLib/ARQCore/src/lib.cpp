@@ -2,6 +2,7 @@
 
 #include <ARQUtils/os.h>
 #include <ARQCore/dynalib_cache.h>
+#include <ARQCore/lib_component.h>
 
 #include <thread>
 
@@ -108,22 +109,45 @@ LibContext::LibContext( const Config& cfg )
 	StreamingServiceFactory::setGlobalInst( m_streamingServiceFactory.get() );
 	m_streamOffsetSourceFactory = std::make_unique<StreamOffsetSourceFactory>();
 	StreamOffsetSourceFactory::setGlobalInst( m_streamOffsetSourceFactory.get() );
-	m_mdMarketSourceFactory = std::make_unique<MD::MarketSourceFactory>();
-	MD::MarketSourceFactory::setGlobalInst( m_mdMarketSourceFactory.get() );
-	m_liveMarketStoreFactory = std::make_unique<MD::LiveMarketStoreFactory>();
-	MD::LiveMarketStoreFactory::setGlobalInst( m_liveMarketStoreFactory.get() );
+
+	// Registered lib components
+
+	const std::vector<LibComponentRegistration> components = LibComponentRegistry::getComponents();
+	try
+	{
+		m_libComponents.reserve( components.size() );
+		for( const LibComponentRegistration& component : components )
+		{
+			std::unique_ptr<ILibComponent> instance = component.factory();
+			if( !instance )
+				throw ARQException( std::format( "ARQ library component factory [{}] returned null", component.name ) );
+
+			m_libComponents.push_back( std::move( instance ) );
+		}
+	}
+	catch( ... )
+	{
+		shutdown();
+		throw;
+	}
 
 	Log( Module::CORE ).info( "ARQLib initialised" );
 }
 
 LibContext::~LibContext()
 {
+	shutdown();
+}
+
+void LibContext::shutdown() noexcept
+{
+	// Registered lib components depend on core facilities and must be destroyed first
+
+	while( !m_libComponents.empty() )
+		m_libComponents.pop_back();
+
 	// Global factories
 
-	MD::LiveMarketStoreFactory::setGlobalInst( nullptr );
-	m_liveMarketStoreFactory.reset();
-	MD::MarketSourceFactory::setGlobalInst( nullptr );
-	m_mdMarketSourceFactory.reset();
 	StreamOffsetSourceFactory::setGlobalInst( nullptr );
 	m_streamOffsetSourceFactory.reset();
 	StreamingServiceFactory::setGlobalInst( nullptr );

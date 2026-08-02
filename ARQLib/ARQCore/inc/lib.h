@@ -5,13 +5,12 @@
 #include <ARQUtils/logger.h>
 #include <ARQUtils/cfg_wrangler.h>
 #include <ARQCore/dynalib_cache.h>
+#include <ARQCore/lib_component.h>
 #include <ARQCore/stream_offset_source.h>
-#include <ARQMarket/mktdata_live_store.h>
 #include <ARQCore/messaging_service.h>
 #include <ARQCore/refdata_source.h>
 #include <ARQCore/serialiser.h>
 #include <ARQCore/streaming_service.h>
-#include <ARQMarket/mktdata_source.h>
 
 #include <vector>
 #include <string>
@@ -78,6 +77,8 @@ private:
 	ARQCore_API friend void libInit( int argc, char* argv[], Cfg::IConfigWrangler& cfgWrangler );
 	ARQCore_API friend void libShutdown();
 
+	void shutdown() noexcept;
+
 private:
 	// Global objects that are initialized in LibContext constructor and destroyed in LibContext destructor
 
@@ -89,8 +90,8 @@ private:
 	std::unique_ptr<MessagingServiceFactory>    m_messagingServiceFactory;
 	std::unique_ptr<StreamingServiceFactory>    m_streamingServiceFactory;
 	std::unique_ptr<StreamOffsetSourceFactory>  m_streamOffsetSourceFactory;
-	std::unique_ptr<MD::MarketSourceFactory>    m_mdMarketSourceFactory; // TODO: If factories are going to be outside ARQCore, we need a mechanism to inject the factories instances into LibContext
-	std::unique_ptr<MD::LiveMarketStoreFactory> m_liveMarketStoreFactory;
+
+	std::vector<std::unique_ptr<ILibComponent>> m_libComponents;
 };
 
 }

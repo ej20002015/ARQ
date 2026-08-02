@@ -17,7 +17,7 @@ Stabilise the existing reference-data and market-data foundations before extendi
    - [x] Select greater-effective-time observations, resolve equal-effective-time observations by later observation-stream order and retain logical inactive current records so older observations cannot resurrect deleted state.
    - [x] Enforce stable key-to-partition routing for each market object.
    - [x] Make `MktDataLiveProjector` consume only current-state topics, atomically project current records and current-topic watermarks into Redis, and fan out those current changes through NATS.
-7. [ ] Remove the `ARQCore`/`ARQMarket` dependency cycle.
+7. [x] Remove the `ARQCore`/`ARQMarket` dependency cycle.
 8. [ ] Fix code-generation invalidation so definition changes regenerate every affected artifact.
 9.0 [ ] Ensure as many parts of the coddebase as possible (within reason) are convered by unit tests
 9. [ ] Add integration tests for duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, restarts, rebalances and projection replay.
