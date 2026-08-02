@@ -6,10 +6,11 @@
 ## Contains all the mktdata entity kafka topics
 
 # ===================================
-#           Update Topics
+#         Observation Topics
 # ===================================
 # - 4 partitions
-# - Compact keys after 24 hours
+# - Retain authoritative observations for the downstream recovery window
+# - Permanent history belongs in the audit projection
 # - 3 replicas and 2 in-sync for strong durability
 # ===================================
 
@@ -22,16 +23,49 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaTopic
 metadata:
-  name: arq-mktdata-updates-{{ entity.name | lower }}
+  name: arq-mktdata-observations-{{ entity.name | lower }}
   labels:
     strimzi.io/cluster: kafka-cluster
 spec:
-  topicName: ARQ.MktData.Updates.{{ entity.type_string }}
+  topicName: ARQ.MktData.Observations.{{ entity.type_string }}
   partitions: 4
   replicas: 3
   config:
-    min.compaction.lag.ms: 86400000
-    segment.ms: 86400000
+    retention.ms: 604800000
+    cleanup.policy: delete
+    min.insync.replicas: 2
+{% endfor %}
+
+---
+
+# ===================================
+#           Current Topics
+# ===================================
+# - 4 partitions, matching the corresponding observation topic
+# - Compact current state by the stable market/type/id key
+# - Make superseded values eligible for compaction promptly
+# - 3 replicas and 2 in-sync for strong durability
+# ===================================
+
+{% for entity in entities %}
+{% if not loop.first %}
+
+---
+
+{% endif %}
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: arq-mktdata-current-{{ entity.name | lower }}
+  labels:
+    strimzi.io/cluster: kafka-cluster
+spec:
+  topicName: ARQ.MktData.Current.{{ entity.type_string }}
+  partitions: 4
+  replicas: 3
+  config:
+    max.compaction.lag.ms: 3600000
+    segment.ms: 3600000
     cleanup.policy: compact
     min.insync.replicas: 2
 {% endfor %}

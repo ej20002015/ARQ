@@ -193,12 +193,12 @@ TEST( RedisMktDataCommonTest, LaterActiveRecordReplacesEarlierValue )
 TEST( RedisMktDataCommonTest, PrepareOffsetUpdateProducesExpectedTopicPartitionField )
 {
 	const StreamTopicPartitionOffset sourcePosition{
-		.tp     = StreamTopicPartition{ "ARQ.MktData.Updates.EQP", 1 },
+		.tp     = StreamTopicPartition{ "ARQ.MktData.Current.EQP", 1 },
 		.offset = 1'234
 	};
 
 	const auto [field, value] = Redis::MD::prepareOffsetUpdate( sourcePosition );
 
-	EXPECT_EQ( field, "ARQ.MktData.Updates.EQP-1" );
+	EXPECT_EQ( field, "ARQ.MktData.Current.EQP-1" );
 	EXPECT_EQ( value, "1234" );
 }

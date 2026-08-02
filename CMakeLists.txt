@@ -331,6 +331,10 @@ endfunction()
 function(ARQ_define_dynalib_tests DYNALIB_NAME)
     file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/test/*.cpp")
     file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/test/*.h")
+    set(TEST_MAIN_SOURCE "${CMAKE_SOURCE_DIR}/ARQLib/${DYNALIB_NAME}/test/main.cpp")
+    if(NOT EXISTS "${TEST_MAIN_SOURCE}")
+        message(FATAL_ERROR "Tests for ${DYNALIB_NAME} must define ${TEST_MAIN_SOURCE}")
+    endif()
 
     set(TESTS_TARGET_NAME "t_${DYNALIB_NAME}")
 
@@ -338,7 +342,7 @@ function(ARQ_define_dynalib_tests DYNALIB_NAME)
                    ${SOURCES}
                    ${HEADERS})
 
-    target_link_libraries(${TESTS_TARGET_NAME} PRIVATE ${DYNALIB_NAME} GTest::gtest_main GTest::gmock_main)
+    target_link_libraries(${TESTS_TARGET_NAME} PRIVATE ${DYNALIB_NAME} GTest::gtest GTest::gmock)
     target_include_directories(${TESTS_TARGET_NAME} PRIVATE ${MASTER_INC_DIR})
 
     set_target_properties(${TESTS_TARGET_NAME} PROPERTIES FOLDER "tests")
@@ -379,27 +383,110 @@ function(ARQ_define_dynalib_bench DYNALIB_NAME)
 endfunction()
 
 function(ARQ_define_tools_exe EXE_NAME)
-    ARQ_define_exe(${EXE_NAME} "tools/${EXE_NAME}" "tools")
+    ARQ_define_exe(${EXE_NAME} "tools/${EXE_NAME}" "tools" ${ARGN})
 endfunction()
 
 function(ARQ_define_services_exe EXE_NAME SUB_FOLDER)
-    ARQ_define_exe(${EXE_NAME} "services/${SUB_FOLDER}/${EXE_NAME}" "services/${SUB_FOLDER}")
+    ARQ_define_exe(${EXE_NAME} "services/${SUB_FOLDER}/${EXE_NAME}" "services/${SUB_FOLDER}" ${ARGN})
+endfunction()
+
+function(ARQ_define_tools_exe_tests EXE_NAME)
+    ARQ_define_exe_tests(${EXE_NAME} "tools/${EXE_NAME}")
+endfunction()
+
+function(ARQ_define_services_exe_tests EXE_NAME SUB_FOLDER)
+    ARQ_define_exe_tests(${EXE_NAME} "services/${SUB_FOLDER}/${EXE_NAME}")
 endfunction()
 
 function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
+    cmake_parse_arguments(ARG "" "" "LIBRARIES" ${ARGN})
+    if(ARG_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown arguments passed to ARQ_define_exe(${EXE_NAME}): ${ARG_UNPARSED_ARGUMENTS}")
+    endif()
+
     file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/*.cpp")
     file(GLOB HEADERS "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/*.h")
 
-    add_executable(${EXE_NAME}
-                   ${SOURCES}
-                   ${HEADERS})
+    set(MAIN_SOURCE "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src/main.cpp")
+    if(NOT EXISTS "${MAIN_SOURCE}")
+        message(FATAL_ERROR "Executable ${EXE_NAME} must define ${MAIN_SOURCE}")
+    endif()
+    list(REMOVE_ITEM SOURCES "${MAIN_SOURCE}")
 
+    add_executable(${EXE_NAME} ${MAIN_SOURCE})
+    target_include_directories(${EXE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src" ${MASTER_INC_DIR})
+
+    if(SOURCES)
+        set(OBJECT_TARGET_NAME "${EXE_NAME}Objects")
+        add_library(${OBJECT_TARGET_NAME} OBJECT ${SOURCES} ${HEADERS})
+        target_include_directories(${OBJECT_TARGET_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src" ${MASTER_INC_DIR})
+        if(ARG_LIBRARIES)
+            target_link_libraries(${OBJECT_TARGET_NAME} PUBLIC ${ARG_LIBRARIES})
+        endif()
+        set_target_properties(${OBJECT_TARGET_NAME} PROPERTIES FOLDER ${FOLDER_NAME})
+        source_group("src" FILES ${SOURCES} ${HEADERS})
+
+        target_link_libraries(${EXE_NAME} PRIVATE ${OBJECT_TARGET_NAME})
+        set_property(TARGET ${EXE_NAME} PROPERTY ARQ_OBJECT_TARGET "${OBJECT_TARGET_NAME}")
+    else()
+        target_sources(${EXE_NAME} PRIVATE ${HEADERS})
+        if(ARG_LIBRARIES)
+            target_link_libraries(${EXE_NAME} PRIVATE ${ARG_LIBRARIES})
+        endif()
+    endif()
+
+    set_property(TARGET ${EXE_NAME} PROPERTY ARQ_EXE_LIBRARIES "${ARG_LIBRARIES}")
+
+    ARQ_configure_exe(${EXE_NAME} ${EXE_ROOT_DIR} ${FOLDER_NAME})
+    source_group("src" FILES ${MAIN_SOURCE} ${HEADERS})
+endfunction()
+
+function(ARQ_define_exe_tests EXE_NAME EXE_ROOT_DIR)
+    if(NOT TARGET ${EXE_NAME})
+        message(FATAL_ERROR "ARQ_define_exe_tests(${EXE_NAME}) must be called after defining the executable")
+    endif()
+
+    file(GLOB TEST_SOURCES "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/test/*.cpp")
+    file(GLOB TEST_HEADERS "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/test/*.h")
+    set(TEST_MAIN_SOURCE "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/test/main.cpp")
+    if(NOT EXISTS "${TEST_MAIN_SOURCE}")
+        message(FATAL_ERROR "Tests for ${EXE_NAME} must define ${TEST_MAIN_SOURCE}")
+    endif()
+    if(NOT TEST_SOURCES)
+        message(FATAL_ERROR "No test sources found for ${EXE_NAME} in ${EXE_ROOT_DIR}/test")
+    endif()
+
+    set(TEST_TARGET_NAME "t_${EXE_NAME}")
+    add_executable(${TEST_TARGET_NAME} ${TEST_SOURCES} ${TEST_HEADERS})
+    target_include_directories(${TEST_TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src" ${MASTER_INC_DIR})
+
+    get_target_property(OBJECT_TARGET_NAME ${EXE_NAME} ARQ_OBJECT_TARGET)
+    if(OBJECT_TARGET_NAME)
+        target_link_libraries(${TEST_TARGET_NAME} PRIVATE ${OBJECT_TARGET_NAME})
+    else()
+        get_target_property(EXE_LIBRARIES ${EXE_NAME} ARQ_EXE_LIBRARIES)
+        if(EXE_LIBRARIES)
+            target_link_libraries(${TEST_TARGET_NAME} PRIVATE ${EXE_LIBRARIES})
+        endif()
+    endif()
+
+    target_link_libraries(${TEST_TARGET_NAME} PRIVATE GTest::gtest GTest::gmock)
+    if(NOT WIN32)
+        target_link_libraries(${TEST_TARGET_NAME} PRIVATE stdc++exp) # To enable usage of some c++23 features (e.g. stacktrace)
+    endif()
+
+    set_target_properties(${TEST_TARGET_NAME} PROPERTIES FOLDER "tests")
+    source_group("src" FILES ${TEST_SOURCES} ${TEST_HEADERS})
+
+    gtest_discover_tests(${TEST_TARGET_NAME})
+endfunction()
+
+function(ARQ_configure_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
     if(NOT WIN32)
         target_link_libraries(${EXE_NAME} PRIVATE stdc++exp) # To enable usage of some c++23 features (e.g. stacktrace)
     endif()
 
     set_target_properties(${EXE_NAME} PROPERTIES FOLDER ${FOLDER_NAME})
-    source_group("src" FILES ${SOURCES} FILES ${HEADERS})
 
     # ------------- ETC FILES -------------
 
@@ -524,6 +611,7 @@ add_subdirectory(ARQLib/ARQAdapt)
 # Add services subdirectories
 add_subdirectory(services/RefData/RefDataCmdExecutor)
 add_subdirectory(services/RefData/RefDataAuditProjector)
+add_subdirectory(services/MktData/MktDataCurrentProcessor)
 add_subdirectory(services/MktData/MktDataLiveProjector)
 add_subdirectory(services/MktFeed/FXFeed)
 

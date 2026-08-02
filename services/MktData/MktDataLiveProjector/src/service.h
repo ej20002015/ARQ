@@ -43,7 +43,7 @@ private:
 		std::string dbBackoffPolicy = "1s-3-1m-5";
 	} m_config;
 
-	static constexpr std::string_view UPDATES_PUB_TOPIC_PFX = "ARQ.MktData.Updates.";
+	static constexpr std::string_view CURRENT_PUB_TOPIC_PFX = "ARQ.MktData.Current.";
 
 	struct UpdateBatchKey
 	{
@@ -65,7 +65,7 @@ private:
 
 	std::shared_ptr<MD::ILiveMarketStore> m_liveMarketStore;
 
-	std::shared_ptr<IStreamConsumer> m_updateConsumer;
+	std::shared_ptr<IStreamConsumer> m_currentConsumer;
 	std::shared_ptr<IStreamProducer> m_dlqProducer;
 
 	std::shared_ptr<IMessagingService> m_messagingService;

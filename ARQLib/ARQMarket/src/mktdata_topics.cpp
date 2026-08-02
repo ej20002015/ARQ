@@ -6,21 +6,38 @@
 namespace ARQ::MD
 {
 
-Type getTypeFromUpdateTopic( const std::string_view topic )
+Type getTypeFromObservationTopic( const std::string_view topic )
 {
     switch( Str::constexprHash( topic ) )
     {
-        case Str::constexprHash( "ARQ.MktData.Updates.FXR" ):
-            if( topic == "ARQ.MktData.Updates.FXR" ) 
+        case Str::constexprHash( "ARQ.MktData.Observations.FXR" ):
+            if( topic == "ARQ.MktData.Observations.FXR" )
                 return Type::FXR;
             break;
-        case Str::constexprHash( "ARQ.MktData.Updates.EQP" ):
-            if( topic == "ARQ.MktData.Updates.EQP" ) 
+        case Str::constexprHash( "ARQ.MktData.Observations.EQP" ):
+            if( topic == "ARQ.MktData.Observations.EQP" )
                 return Type::EQP;
             break;
     }
 
-    throw ARQException( std::format( "Unknown MktData update topic [{}] - cannot map to entity type", topic ) );
+    throw ARQException( std::format( "Unknown MktData observation topic [{}] - cannot map to entity type", topic ) );
+}
+
+Type getTypeFromCurrentTopic( const std::string_view topic )
+{
+    switch( Str::constexprHash( topic ) )
+    {
+        case Str::constexprHash( "ARQ.MktData.Current.FXR" ):
+            if( topic == "ARQ.MktData.Current.FXR" )
+                return Type::FXR;
+            break;
+        case Str::constexprHash( "ARQ.MktData.Current.EQP" ):
+            if( topic == "ARQ.MktData.Current.EQP" )
+                return Type::EQP;
+            break;
+    }
+
+    throw ARQException( std::format( "Unknown MktData current topic [{}] - cannot map to entity type", topic ) );
 }
 
 }

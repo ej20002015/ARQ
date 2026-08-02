@@ -59,7 +59,7 @@ public:
 
 	[[nodiscard]] ARQMarket_API const std::shared_ptr<Market>& market() { return m_mkt; }
 
-	static constexpr std::string_view SUB_TOPIC_PFX = "ARQ.MktData.Updates.";
+	static constexpr std::string_view SUB_TOPIC_PFX = "ARQ.MktData.Current.";
 
 private: // ISubscriptionHandler implementation
 	ARQMarket_API void             onMsg( Message&& msg )       override;

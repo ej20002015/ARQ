@@ -15,25 +15,38 @@ struct Topics {};
 template<>
 struct Topics<FXRate>
 {
-    static constexpr std::string_view updateTopic() { return "ARQ.MktData.Updates.FXR"; }
+    static constexpr std::string_view observationTopic() { return "ARQ.MktData.Observations.FXR"; }
+    static constexpr std::string_view currentTopic()     { return "ARQ.MktData.Current.FXR"; }
 };
 
 template<>
 struct Topics<EQPrice>
 {
-    static constexpr std::string_view updateTopic() { return "ARQ.MktData.Updates.EQP"; }
+    static constexpr std::string_view observationTopic() { return "ARQ.MktData.Observations.EQP"; }
+    static constexpr std::string_view currentTopic()     { return "ARQ.MktData.Current.EQP"; }
 };
 
-inline std::string_view getUpdateTopic( const std::string_view entityName )
+inline std::string_view getObservationTopic( const std::string_view entityName )
 {
-    return dispatch( entityName, []<typename T>() { return Topics<T>::updateTopic(); } );
+    return dispatch( entityName, []<typename T>() { return Topics<T>::observationTopic(); } );
 }
 
-inline std::string_view getUpdateTopic( const Type type )
+inline std::string_view getObservationTopic( const Type type )
 {
-    return dispatch( type, []<typename T>() { return Topics<T>::updateTopic(); } );
+    return dispatch( type, []<typename T>() { return Topics<T>::observationTopic(); } );
 }
 
-ARQMarket_API Type getTypeFromUpdateTopic( const std::string_view topic );
+inline std::string_view getCurrentTopic( const std::string_view entityName )
+{
+    return dispatch( entityName, []<typename T>() { return Topics<T>::currentTopic(); } );
+}
+
+inline std::string_view getCurrentTopic( const Type type )
+{
+    return dispatch( type, []<typename T>() { return Topics<T>::currentTopic(); } );
+}
+
+ARQMarket_API Type getTypeFromObservationTopic( const std::string_view topic );
+ARQMarket_API Type getTypeFromCurrentTopic( const std::string_view topic );
 
 }

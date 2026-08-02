@@ -24,7 +24,9 @@ void RefDataCmdExecutorService::onStartup()
 	const auto commandTopics = getEntities()
 		| std::views::transform( [] ( const std::string_view entity ) { return std::format( "ARQ.RefData.Commands.{}", entity ); } )
 		| std::ranges::to<std::set>();
-	m_commandConsumer->subscribe( commandTopics, [this] ( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& topicPartitions ) { onRebalance( eventType, topicPartitions ); } );
+	m_commandConsumer->subscribe( commandTopics, [this] ( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& topicPartitions ) {
+		onRebalance( eventType, topicPartitions );
+	} );
 
 	StreamProducerOptions prodOpts( "RefDataCmdExecutor::UpdateProducer",
 									StreamProducerOptions::Preset::HighThroughput );

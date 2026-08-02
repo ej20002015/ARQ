@@ -1,4 +1,6 @@
-ARQ_define_tools_exe(rd_cmd_publisher)
-target_link_libraries(rd_cmd_publisher PRIVATE ARQCore)
+ARQ_define_tools_exe(
+    rd_cmd_publisher
+    LIBRARIES ARQCore
+)
 
 openssl_setup_runtime(rd_cmd_publisher)

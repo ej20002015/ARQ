@@ -10,19 +10,34 @@
 namespace ARQ::MD
 {
 
-Type getTypeFromUpdateTopic( const std::string_view topic )
+Type getTypeFromObservationTopic( const std::string_view topic )
 {
     switch( Str::constexprHash( topic ) )
     {
         {% for entity in entities %}
-        case Str::constexprHash( "ARQ.MktData.Updates.{{ entity.type_string }}" ):
-            if( topic == "ARQ.MktData.Updates.{{ entity.type_string }}" ) 
+        case Str::constexprHash( "ARQ.MktData.Observations.{{ entity.type_string }}" ):
+            if( topic == "ARQ.MktData.Observations.{{ entity.type_string }}" )
                 return Type::{{ entity.type_string }};
             break;
         {% endfor %}
     }
 
-    throw ARQException( std::format( "Unknown MktData update topic [{}] - cannot map to entity type", topic ) );
+    throw ARQException( std::format( "Unknown MktData observation topic [{}] - cannot map to entity type", topic ) );
+}
+
+Type getTypeFromCurrentTopic( const std::string_view topic )
+{
+    switch( Str::constexprHash( topic ) )
+    {
+        {% for entity in entities %}
+        case Str::constexprHash( "ARQ.MktData.Current.{{ entity.type_string }}" ):
+            if( topic == "ARQ.MktData.Current.{{ entity.type_string }}" )
+                return Type::{{ entity.type_string }};
+            break;
+        {% endfor %}
+    }
+
+    throw ARQException( std::format( "Unknown MktData current topic [{}] - cannot map to entity type", topic ) );
 }
 
 }

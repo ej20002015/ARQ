@@ -13,18 +13,19 @@ void MktDataLiveProjectorService::onStartup()
 
 	m_liveMarketStore = MD::LiveMarketStoreFactory::inst().create( m_config.liveDSH );
 
-	StreamConsumerOptions opts( "MktDataLiveProjector::UpdateConsumer",
+	StreamConsumerOptions opts( "MktDataLiveProjector::CurrentConsumer",
 								"ARQ.MktData.LiveProjectors",
 								StreamConsumerOptions::FetchPreset::LowLatency,
 								StreamConsumerOptions::AutoCommitOffsets::Disabled,
-								StreamConsumerOptions::AutoOffsetReset::Earliest );
-	m_updateConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
+								StreamConsumerOptions::AutoOffsetReset::Earliest,
+								StreamConsumerOptions::IsolationLevel::ReadCommitted );
+	m_currentConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
 
 	const std::set<std::string_view> entities = Algos::makeEffectiveSet( m_config.entities, MD::Meta::getAllNames(), m_config.disabledEntities );
-	const auto updateTopics = entities
-		| std::views::transform( [] ( std::string_view name ) { return MD::getUpdateTopic( name ); } )
+	const auto currentTopics = entities
+		| std::views::transform( [] ( std::string_view name ) { return MD::getCurrentTopic( name ); } )
 		| std::ranges::to<std::set<std::string>>();
-	m_updateConsumer->subscribe( updateTopics );
+	m_currentConsumer->subscribe( currentTopics );
 
 	StreamProducerOptions prodOpts( "MktDataLiveProjector::DLQProducer" );
 	m_dlqProducer = StreamingServiceFactory::inst().createProducer( m_config.streamSvcDSH, prodOpts );
@@ -34,7 +35,7 @@ void MktDataLiveProjectorService::onStartup()
 
 void MktDataLiveProjectorService::onShutdown()
 {
-	m_updateConsumer.reset();
+	m_currentConsumer.reset();
 	m_dlqProducer.reset();
 	m_liveMarketStore.reset();
 	m_messagingService.reset();
@@ -48,14 +49,14 @@ void MktDataLiveProjectorService::run()
 	{
 		updateBatches.clear();
 
-		auto msgBatch = m_updateConsumer->poll( 5ms, StreamConsumerReadHeaders::SKIP_HEADERS );
+		auto msgBatch = m_currentConsumer->poll( 5ms, StreamConsumerReadHeaders::SKIP_HEADERS );
 		if( msgBatch->empty() )
 			continue;
 
 		processMsgBatch( std::move( msgBatch ), updateBatches );
 		insertIntoLiveMarketSource( updateBatches );
 		publishToMessagingService( updateBatches );
-		m_updateConsumer->commitOffsetsAsync();
+		m_currentConsumer->commitOffsetsAsync();
 	}
 }
 
@@ -72,7 +73,7 @@ void MktDataLiveProjectorService::registerConfigOptions( Cfg::ConfigWrangler& cf
 
 void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, UpdateBatches& updateBatches )
 {
-	Log( Module::EXE ).debug( "Processing {} update messages", msgBatch->size() );
+	Log( Module::EXE ).debug( "Processing {} current-market messages", msgBatch->size() );
 
 	bool anyDLQ = false;
 	for( const StreamConsumerMessageView& msg : *msgBatch )
@@ -82,7 +83,7 @@ void MktDataLiveProjectorService::processMsgBatch( std::unique_ptr<IStreamConsum
 			if( !msg.key.has_value() )
 				throw ARQException( "Message missing key - cannot determine market routing" );
 
-			const MD::Type entityType = MD::getTypeFromUpdateTopic( msg.topic );
+			const MD::Type entityType = MD::getTypeFromCurrentTopic( msg.topic );
 
 			MD::dispatch( entityType, [this, &msg, &updateBatches] <MD::c_MktData T> ()
 			{
@@ -190,7 +191,7 @@ void MktDataLiveProjectorService::publishToMessagingService( const UpdateBatches
 				Message msg{
 					.data = m_serialiser->serialise( updateBatch )
 				};
-				const std::string topic = std::string( UPDATES_PUB_TOPIC_PFX ) + updateBatch.marketName.str();
+				const std::string topic = std::string( CURRENT_PUB_TOPIC_PFX ) + updateBatch.marketName.str();
 
 				// Note: We assume that the publish message is small enough that it's below the max message size of the messaging service. If this is not the case, we would need to implement chunking logic here to split the batch into multiple messages.
 				m_messagingService->publish( topic, std::move( msg ) );

@@ -20,7 +20,7 @@ struct RecordMessageTraits
 {
 	static std::string_view type() noexcept
 	{
-		static const std::string_view typeStr = std::format( "MD::RecordMessage<{}>", Traits<T>::name() );
+		static const std::string typeStr = std::format( "MD::RecordMessage<{}>", Traits<T>::name() );
 		return typeStr;
 	}
 };
@@ -60,7 +60,7 @@ public:
 		Buffer      buf = m_config.serialiser->serialise( msg );
 		std::string key = std::format( "{0}|{1}#{2}", mktName.str(), Traits<T>::type(), record.header.id );
 
-		publishImpl( std::move( buf ), std::move( key ), Topics<T>::updateTopic(), RecordMessageTraits<T>::type(), errorCallback );
+		publishImpl( std::move( buf ), std::move( key ), Topics<T>::observationTopic(), RecordMessageTraits<T>::type(), errorCallback );
 	}
 
 	void flush() { m_streamProducer->flush(); }

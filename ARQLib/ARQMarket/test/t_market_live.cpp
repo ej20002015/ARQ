@@ -168,7 +168,7 @@ protected:
 
 TEST_F( LiveMarketUpdaterTest, SubscribesToCorrectTopic )
 {
-    EXPECT_CALL( *mockMsgSvc, subscribe( std::string_view( "ARQ.MktData.Updates.PROD_FX" ), _ ) )
+    EXPECT_CALL( *mockMsgSvc, subscribe( std::string_view( "ARQ.MktData.Current.PROD_FX" ), _ ) )
         .Times( 1 );
 
     auto updater = LiveMarketUpdater::create( LiveMarketUpdater::Params{
@@ -202,7 +202,7 @@ TEST_F( LiveMarketUpdaterTest, FiltersByMsgTIDSetInLiveMode )
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 1.08, 100 ) );
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "GBP", 1.29, 100 ) );
     this->nextBatchToReturn.sourcePosition = {
-        StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 },
+        StreamTopicPartition{ "ARQ.MktData.Current.FXR", 0 },
         10
     };
 
@@ -225,7 +225,7 @@ TEST_F( LiveMarketUpdaterTest, RejectsStaleOffsets )
 
     // 1. Send Batch 1 (Offset 100)
     this->nextBatchToReturn.sourcePosition = {
-        StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 },
+        StreamTopicPartition{ "ARQ.MktData.Current.FXR", 0 },
         100
     };
     this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 1.08, 100 ) );
@@ -253,7 +253,7 @@ TEST_F( LiveMarketUpdaterTest, TracksOffsetsIndependentlyAcrossPartitions )
     auto sendUpdate = [this] ( int32_t partition, int64_t offset, Record<FXRate> record )
     {
         this->nextBatchToReturn.sourcePosition = {
-            StreamTopicPartition{ "ARQ.MktData.Updates.FXR", partition },
+            StreamTopicPartition{ "ARQ.MktData.Current.FXR", partition },
             offset
         };
 
@@ -307,7 +307,7 @@ TEST_F( LiveMarketUpdaterTest, BuffersAndReconcilesDuringStartup )
 
     // 1. Setup the baseline data (Offset 100, Price 1.05)
     StreamTopicPartitionOffsets baselineOffsets;
-    baselineOffsets.emplace( std::make_pair( "ARQ.MktData.Updates.FXR", 0 ), 100 );
+    baselineOffsets.emplace( std::make_pair( "ARQ.MktData.Current.FXR", 0 ), 100 );
     EXPECT_CALL( *mockOffsetSrc, getOffsets( _ ) ).WillOnce( Return( baselineOffsets ) );
 
     RecordCollection baselineRecords;
@@ -318,7 +318,7 @@ TEST_F( LiveMarketUpdaterTest, BuffersAndReconcilesDuringStartup )
     {
         // Setup the incoming NATS payload (Offset 101, Price 1.08)
         this->nextBatchToReturn.sourcePosition = {
-            StreamTopicPartition{ "ARQ.MktData.Updates.FXR", 0 },
+            StreamTopicPartition{ "ARQ.MktData.Current.FXR", 0 },
             101
         };
         this->nextBatchToReturn.records.get<Record<FXRate>>().push_back( makeFXRecord( "EUR", 1.08, 150 ) );

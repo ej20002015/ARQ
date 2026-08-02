@@ -4,17 +4,23 @@ This roadmap is optimized for a small team and evolves the existing repository r
 
 ## Phase 0 — Repair current correctness defects
 
-Stabilise the existing reference-data and market-data foundations before extending them.
+Stabilise the existing reference-data and market-data foundations before extending them. For market data, establish the minimum durable separation between authoritative source observations and rebuildable current-state distribution; the common event envelope, complete temporal model and historical correction workflows remain in later phases.
 
 1. [x] Fix the ClickHouse `MktName`/`MarketName` mismatch.
 2. [x] Configure authoritative Kafka consumers with `read_committed`.
 3. [x] Make Redis market-state and offset updates atomic.
 4. [x] Fix market tombstones.
-5. [ ] Reconcile snapshot updates per partition without offset regression.
-6. [ ] Make late or equal-as-of market updates deterministic.
+5. [x] Reconcile snapshot updates per partition without offset regression.
+6. [ ] Separate authoritative market observations from current-state distribution so current-market selection is deterministic and restart-safe.
+   - [x] Publish automated feed output to durable, non-compacted `ARQ.MktData.Observations.<Entity>` topics, keyed by market, entity type and entity ID, with an explicit finite retention window defining the downstream projector recovery SLA; permanent history belongs in the ClickHouse observation projection.
+   - [x] Add `MktDataCurrentProcessor` to reconstruct per-key selection state from compacted `ARQ.MktData.Current.<Entity>` topics and transactionally publish current-state changes while committing consumed observation offsets.
+   - [x] Select greater-effective-time observations, resolve equal-effective-time observations by later observation-stream order and retain logical inactive current records so older observations cannot resurrect deleted state.
+   - [x] Enforce stable key-to-partition routing for each market object.
+   - [x] Make `MktDataLiveProjector` consume only current-state topics, atomically project current records and current-topic watermarks into Redis, and fan out those current changes through NATS.
 7. [ ] Remove the `ARQCore`/`ARQMarket` dependency cycle.
 8. [ ] Fix code-generation invalidation so definition changes regenerate every affected artifact.
-9. [ ] Add integration tests for duplicates, aborted transactions, restarts, rebalances and projection replay.
+9.0 [ ] Ensure as many parts of the coddebase as possible (within reason) are convered by unit tests
+9. [ ] Add integration tests for duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, restarts, rebalances and projection replay.
 10. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
 
 **Exit condition:** Existing reference and market pipelines can be replayed repeatedly and converge on the same state.
@@ -97,9 +103,10 @@ Add the minimum domain required for FX spot and forwards:
 10. Versioned reference and market snapshots.
 11. Manual correction workflow with effective and recorded times.
 12. Original-as-known and latest-corrected historical queries.
-13. Separate the durable market update/audit stream from compacted current-state distribution. Define when Kafka null tombstones may be emitted and garbage-collected so lagging consumers, audit replay and projection rebuilds cannot miss market deactivations.
-14. Durable official EOD market retention.
-15. Migrate reference-data commands away from NATS-only outcomes. Command results must be durable, idempotent and queryable; Kafka command ingress may remain, while NATS is used only to notify clients that status or projected state has changed.
+13. Build a replay-idempotent ClickHouse market-observation audit/time-series projection that consumes within the configured Kafka observation-retention window and permanently retains event and source identity, Kafka source position and original durable payloads where required.
+14. Define when Kafka null tombstones may replace logical inactive current records and be garbage-collected so lagging consumers, audit replay and projection rebuilds cannot miss market deactivations.
+15. Durable official EOD market retention.
+16. Migrate reference-data commands away from NATS-only outcomes. Command results must be durable, idempotent and queryable; Kafka command ingress may remain, while NATS is used only to notify clients that status or projected state has changed.
 
 All additions must exercise the schema-evolution process from Phase 1.
 
