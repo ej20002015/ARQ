@@ -11,17 +11,17 @@ Stabilise the existing reference-data and market-data foundations before extendi
 3. [x] Make Redis market-state and offset updates atomic.
 4. [x] Fix market tombstones.
 5. [x] Reconcile snapshot updates per partition without offset regression.
-6. [ ] Separate authoritative market observations from current-state distribution so current-market selection is deterministic and restart-safe.
+6. [x] Separate authoritative market observations from current-state distribution so current-market selection is deterministic and restart-safe.
    - [x] Publish automated feed output to durable, non-compacted `ARQ.MktData.Observations.<Entity>` topics, keyed by market, entity type and entity ID, with an explicit finite retention window defining the downstream projector recovery SLA; permanent history belongs in the ClickHouse observation projection.
    - [x] Add `MktDataCurrentProcessor` to reconstruct per-key selection state from compacted `ARQ.MktData.Current.<Entity>` topics and transactionally publish current-state changes while committing consumed observation offsets.
    - [x] Select greater-effective-time observations, resolve equal-effective-time observations by later observation-stream order and retain logical inactive current records so older observations cannot resurrect deleted state.
    - [x] Enforce stable key-to-partition routing for each market object.
    - [x] Make `MktDataLiveProjector` consume only current-state topics, atomically project current records and current-topic watermarks into Redis, and fan out those current changes through NATS.
 7. [x] Remove the `ARQCore`/`ARQMarket` dependency cycle.
-8. [ ] Fix code-generation invalidation so definition changes regenerate every affected artifact.
-9.0 [ ] Ensure as many parts of the coddebase as possible (within reason) are convered by unit tests
-9. [ ] Add integration tests for duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, restarts, rebalances and projection replay.
-10. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
+8. [x] Fix code-generation invalidation so definition changes regenerate every affected artifact.
+9. [ ] Ensure as many parts of the codebase as possible (within reason) are covered by unit tests
+10. [ ] Add integration tests for duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, restarts, rebalances and projection replay.
+11. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
 
 **Exit condition:** Existing reference and market pipelines can be replayed repeatedly and converge on the same state.
 

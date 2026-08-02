@@ -6,7 +6,7 @@
 # ===================================
 # - 4 partitions
 # - Retain authoritative observations for the downstream recovery window
-# - Permanent history belongs in the ClickHouse audit projection
+# - Permanent history belongs in the audit projection
 # - 3 replicas and 2 in-sync for strong durability
 # ===================================
 

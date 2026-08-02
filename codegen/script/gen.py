@@ -7,7 +7,7 @@ for specific types or all types at once.
 """
 
 import tomli
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, meta
 import os
 import argparse
 import sys
@@ -15,6 +15,7 @@ from pathlib import Path
 import re
 from typing import List, Dict, Optional, Tuple, Any
 import json
+import hashlib
 import time
 
 
@@ -145,15 +146,20 @@ class TemplateMetadata:
 class CodeGenerator:
     """Main code generator class that orchestrates the generation process."""
     
-    def __init__(self, definitions_dir: Path, template_dir: Path, output_dir: Path):
+    def __init__(
+        self,
+        definitions_dir: Path,
+        template_dir: Path,
+        output_dir: Path,
+        cache_file: Optional[Path] = None,
+    ):
         self.definitions_dir = definitions_dir
         self.template_dir = template_dir
         self.output_dir = output_dir
         self.types_data = {}
         self.entities_by_type: Dict[str, List[EntityDefinition]] = {}
         self.jinja_env = None
-        # cache file to track template mtimes so we only regenerate changed outputs
-        self.cache_file = Path(__file__).parent.resolve() / '.codegen_cache.json'
+        self.cache_file = cache_file or Path(__file__).parent.resolve() / '.codegen_cache.json'
         self._cache: Dict[str, Any] = {}
         self._load_cache()
     
@@ -314,19 +320,14 @@ class CodeGenerator:
             if not metadata.is_valid:
                 print(f"  - Skipping {relative_template_path} (no 'output_path' defined in metadata)")
                 return
-            # decide whether to regenerate based on template mtime and cache
-            try:
-                template_mtime = template_path.stat().st_mtime
-            except OSError:
-                template_mtime = time.time()
 
             cache_entry = self._cache.get(relative_template_path, {})
-            cached_mtime = cache_entry.get('mtime', 0)
+            input_signature = self._calculate_input_signature(relative_template_path)
 
             output_path = self.output_dir / metadata.output_path
 
-            if template_mtime <= cached_mtime and output_path.exists():
-                print(f"  (-) Skipping {relative_template_path} (template unchanged, output exists)")
+            if cache_entry.get('input_signature') == input_signature and output_path.exists():
+                print(f"  (-) Skipping {relative_template_path} (inputs unchanged, output exists)")
                 return
 
             template = self.jinja_env.get_template(relative_template_path)
@@ -339,9 +340,9 @@ class CodeGenerator:
             with open(output_path, 'w', encoding='utf-8', newline='\n') as f:
                 f.write(output_content)
 
-            # update cache for this template
+            # Update the cache only after the output has been written
             self._cache[relative_template_path] = {
-                'mtime': template_mtime,
+                'input_signature': input_signature,
                 'output_path': metadata.output_path,
                 'written_at': time.time()
             }
@@ -349,6 +350,79 @@ class CodeGenerator:
                 
         except Exception as e:
             raise CodeGenerationError(f"Failed to process template {template_path}: {e}")
+
+    def _calculate_input_signature(self, relative_template_path: str) -> str:
+        """Hash every source input that can affect a generated artifact."""
+        hasher = hashlib.sha256()
+
+        script_dir = Path(__file__).parent.resolve()
+        generator_paths = sorted(
+            (path for path in script_dir.rglob('*.py') if path.is_file()),
+            key=lambda path: path.relative_to(script_dir).as_posix(),
+        )
+        definition_paths = sorted(
+            (path for path in self.definitions_dir.rglob('*.toml') if path.is_file()),
+            key=lambda path: path.relative_to(self.definitions_dir).as_posix(),
+        )
+        template_names = sorted(self._get_template_dependencies(relative_template_path))
+
+        self._update_signature(hasher, 'generator', script_dir, generator_paths)
+        self._update_signature(hasher, 'definition', self.definitions_dir, definition_paths)
+
+        for template_name in template_names:
+            template_path = self.template_dir / template_name
+            self._update_signature(
+                hasher,
+                'template',
+                self.template_dir,
+                [template_path],
+            )
+
+        return hasher.hexdigest()
+
+    def _get_template_dependencies(self, template_name: str) -> set[str]:
+        """Return the transitive set of statically referenced Jinja templates."""
+        dependencies: set[str] = set()
+        pending = [template_name]
+
+        while pending:
+            dependency = pending.pop()
+            if dependency in dependencies:
+                continue
+
+            dependencies.add(dependency)
+            source, _, _ = self.jinja_env.loader.get_source(self.jinja_env, dependency)
+            referenced = meta.find_referenced_templates(self.jinja_env.parse(source))
+
+            for referenced_template in referenced:
+                if referenced_template is None:
+                    # A dynamic include/import cannot be resolved statically, so
+                    # conservatively depend on every template.
+                    return {
+                        path.relative_to(self.template_dir).as_posix()
+                        for path in self.template_dir.rglob('*.j2')
+                        if path.is_file()
+                    }
+                pending.append(referenced_template)
+
+        return dependencies
+
+    @staticmethod
+    def _update_signature(
+        hasher: Any,
+        input_kind: str,
+        root: Path,
+        paths: List[Path],
+    ) -> None:
+        """Add paths and contents to a fingerprint without relying on mtimes."""
+        for path in paths:
+            relative_path = path.relative_to(root).as_posix()
+            hasher.update(input_kind.encode('utf-8'))
+            hasher.update(b'\0')
+            hasher.update(relative_path.encode('utf-8'))
+            hasher.update(b'\0')
+            hasher.update(path.read_bytes())
+            hasher.update(b'\0')
     
     def generate_all(self, target_entity_type: Optional[str] = None) -> None:
         """Generate code for all entity types or a specific one."""
