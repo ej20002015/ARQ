@@ -6,7 +6,6 @@
 void RefDataAuditProjectorService::onStartup()
 {
 	m_entities = Algos::makeEffectiveSet( m_config.entities, RD::Meta::getAllNames(), m_config.disabledEntities );
-	initTopicToEntityMap();
 
 	m_backoffPolicy = BackoffPolicy( m_config.dbBackoffPolicy );
 
@@ -21,7 +20,9 @@ void RefDataAuditProjectorService::onStartup()
 								StreamConsumerOptions::IsolationLevel::ReadCommitted );
 	m_updateConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
 
-	const auto updateTopics = m_updateTopicToEntity | std::views::keys | std::ranges::to<std::set>();
+	const auto updateTopics = m_entities
+		| std::views::transform( [] ( const std::string_view entityName ) { return std::string( RD::getUpdateTopic( entityName ) ); } )
+		| std::ranges::to<std::set>();
 	m_updateConsumer->subscribe( updateTopics );
 
 	StreamProducerOptions prodOpts( "RefDataAuditProjector::DLQProducer",
@@ -69,24 +70,6 @@ void RefDataAuditProjectorService::registerConfigOptions( Cfg::ConfigWrangler& c
 	cfg.add( m_config.dbBackoffPolicy,  "--dbBackoffPolicy",  "The backoff policy to use when retrying saves to the audit DB\n" + std::string( BackoffPolicy::HelpText ) );
 }
 
-void RefDataAuditProjectorService::initTopicToEntityMap()
-{
-	for( const std::string_view entityName : m_entities )
-	{
-		std::string updateTopic = std::format( "ARQ.RefData.Updates.{}", entityName );
-		m_updateTopicToEntity[std::move( updateTopic )] = entityName;
-	}
-}
-
-std::string_view RefDataAuditProjectorService::getEntityFromUpdateTopic( const std::string_view topic )
-{
-	auto it = m_updateTopicToEntity.find( topic );
-	if( it != m_updateTopicToEntity.end() )
-		return it->second;
-	else
-		throw ARQException( std::format( "Unknown RefData topic: {}", topic ) );
-}
-
 void RefDataAuditProjectorService::processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, RD::RecordCollection& rcdColl )
 {
 	Log( Module::EXE ).debug( "Processing {} update messages", msgBatch->size() );
@@ -96,7 +79,7 @@ void RefDataAuditProjectorService::processMsgBatch( std::unique_ptr<IStreamConsu
 	{
 		ARQ_DO_IN_TRY( arqExc, errMsg );
 		{
-			const std::string_view entityName = getEntityFromUpdateTopic( msg.topic );
+			const std::string_view entityName = RD::getEntityNameFromUpdateTopic( msg.topic );
 			RD::dispatch( entityName, [this, &msg, &rcdColl] <RD::c_RefData T> ( )
 			{
 				auto rcd = m_serialiser->deserialise<RD::Record<T>>( msg.data );

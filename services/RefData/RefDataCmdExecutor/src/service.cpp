@@ -9,8 +9,6 @@
 
 void RefDataCmdExecutorService::onStartup()
 {
-	buildTopicEntityMaps();
-
 	m_serialiser = SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf );
 	m_msgSvc     = MessagingServiceFactory::inst().create( m_config.msgSvcDSH );
 
@@ -22,7 +20,7 @@ void RefDataCmdExecutorService::onStartup()
 	m_commandConsumer = StreamingServiceFactory::inst().createConsumer( m_config.streamSvcDSH, opts );
 
 	const auto commandTopics = getEntities()
-		| std::views::transform( [] ( const std::string_view entity ) { return std::format( "ARQ.RefData.Commands.{}", entity ); } )
+		| std::views::transform( [] ( const std::string_view entity ) { return std::string( RD::getCommandTopic( entity ) ); } )
 		| std::ranges::to<std::set>();
 	m_commandConsumer->subscribe( commandTopics, [this] ( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& topicPartitions ) {
 		onRebalance( eventType, topicPartitions );
@@ -51,101 +49,119 @@ void RefDataCmdExecutorService::run()
 		if( msgBatch->empty() )
 			continue;
 
-		Log( Module::EXE ).debug( "Processing {} command messages", msgBatch->size() );
-
-		BatchOutput batchOutput;
-		batchOutput.recordUpdates.reserve( msgBatch->size() );
-		batchOutput.responses.reserve( msgBatch->size() );
-
-		try
-		{
-			StreamTopicPartitionOffsets offsetsToCommit;
-
-			m_updateProducer->beginTransaction();
-
-			for( const StreamConsumerMessageView& msg : *msgBatch )
-			{
-				Log( Module::EXE ).trace( "Processing command message: Topic={}, Partition={}, Offset={}, Key={}, Timestamp={}",
-					msg.topic,
-					msg.partition,
-					msg.offset,
-					msg.key.value_or( "N/A" ),
-					msg.timestamp.fmtISO8601()
-				);
-
-				ARQ_DO_IN_TRY( arqExc, errMsg );
-				{
-					const std::string_view entityName = getEntityFromCmdTopic( msg.topic );
-					const std::string_view cmdAction  = msg.tryGetHeaderValue( "ARQ_CmdAction" );
-
-					RD::dispatch( entityName, [this, &msg, &cmdAction, &batchOutput] <RD::c_RefData T> ()
-					{
-						if( cmdAction == "Upsert" )
-							processUpsertCmdMessage<T>( msg, batchOutput );
-						else if( cmdAction == "Deactivate" )
-							processDeactivateCmdMessage<T>( msg, batchOutput );
-						else
-							throw ARQException( std::format( "Received refdata command with unknown action [{}]", cmdAction ) );
-					} );
-				}
-				ARQ_END_TRY_AND_CATCH( arqExc, errMsg );
-
-				bool toDLQ = false;
-				if( arqExc.what().size() )
-				{
-					Log( Module::EXE ).error( arqExc, "Exception thrown when processing message so sending to DLQ [{}]", msg.idStr() );
-					toDLQ = true;
-				}
-				else if( errMsg.size() )
-				{
-					Log( Module::EXE ).error( "Exception thrown when processing message so sending to DLQ [{}] - what: ", msg.idStr() );
-					toDLQ = true;
-				}
-
-				if( toDLQ )
-				{
-					const std::string key = msg.key.has_value() ? msg.key->data() : "NO_KEY";
-					m_updateProducer->send( StreamProducerMessage{
-						.topic   = std::format( "{}.DLQ", msg.topic ),
-						.id      = msg.offset,
-						.key     = key,
-						.data    = msg.data
-					} );
-				}
-
-				offsetsToCommit[StreamTopicPartition{ msg.topic, msg.partition }] = msg.offset + 1;
-			}
-
-			m_updateProducer->sendOffsetsToTransaction( offsetsToCommit, m_commandConsumer->getGroupMetadata() );
-			m_updateProducer->commitTransaction();
-		}
-		catch( const ARQException& e )
-		{
-			Log( Module::EXE ).critical( e, "Exception thrown when processing batch of messages - aborting stream transaction and exiting early!" );
-			m_updateProducer->abortTransaction();
-			throw;
-		}
-		catch( const std::exception& e )
-		{
-			Log( Module::EXE ).critical( "std::exception thrown when processing batch of messages - aborting stream transaction and exiting early! what: {}", e.what() );
-			m_updateProducer->abortTransaction();
-			throw;
-		}
-		catch( ... )
-		{
-			Log( Module::EXE ).critical( "Unknown exception thrown when processing batch of messages - aborting stream transaction and exiting early!" );
-			m_updateProducer->abortTransaction();
-			throw;
-		}
-
-		// After batch successfully committed to update log, apply map updates and send responses
-
-		for( auto& [uuid, storedRecord] : batchOutput.recordUpdates )
-			m_records.insert_or_assign( uuid, std::move( storedRecord ) );
-
-		for( const auto& [resp, topic] : batchOutput.responses )
-			sendCommandResponse( resp, topic );
+		processCommandBatch( *msgBatch );
 	}
+}
+
+void RefDataCmdExecutorService::processCommandBatch( const IStreamConsumerMessageBatch& msgBatch )
+{
+	Log( Module::EXE ).debug( "Processing {} reference-data commands", msgBatch.size() );
+
+	BatchOutput batchOutput;
+	batchOutput.recordUpdates.reserve( msgBatch.size() );
+	batchOutput.responses.reserve( msgBatch.size() );
+
+	try
+	{
+		StreamTopicPartitionOffsets offsetsToCommit;
+		m_updateProducer->beginTransaction();
+
+		for( const StreamConsumerMessageView& msg : msgBatch )
+		{
+			processCommandMessage( msg, batchOutput );
+			offsetsToCommit[StreamTopicPartition{ std::string( msg.topic ), msg.partition }] = msg.offset + 1;
+		}
+
+		m_updateProducer->sendOffsetsToTransaction( offsetsToCommit, m_commandConsumer->getGroupMetadata() );
+		m_updateProducer->commitTransaction();
+	}
+	catch( const ARQException& e )
+	{
+		Log( Module::EXE ).critical( e, "Exception thrown when processing a batch of reference-data commands; aborting the Kafka transaction and stopping the service" );
+		m_updateProducer->abortTransaction();
+		throw;
+	}
+	catch( const std::exception& e )
+	{
+		Log( Module::EXE ).critical( "std::exception thrown when processing a batch of reference-data commands; aborting the Kafka transaction and stopping the service. What: {}", e.what() );
+		m_updateProducer->abortTransaction();
+		throw;
+	}
+	catch( ... )
+	{
+		Log( Module::EXE ).critical( "Unknown exception thrown when processing a batch of reference-data commands; aborting the Kafka transaction and stopping the service" );
+		m_updateProducer->abortTransaction();
+		throw;
+	}
+
+	for( auto& [uuid, storedRecord] : batchOutput.recordUpdates )
+		m_records.insert_or_assign( uuid, std::move( storedRecord ) );
+
+	for( const auto& [response, topic] : batchOutput.responses )
+		sendCommandResponse( response, topic );
+}
+
+void RefDataCmdExecutorService::processCommandMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
+{
+	Log( Module::EXE ).trace( "Processing command message: Topic={}, Partition={}, Offset={}, Key={}, Timestamp={}",
+		msg.topic,
+		msg.partition,
+		msg.offset,
+		msg.key.value_or( "N/A" ),
+		msg.timestamp.fmtISO8601()
+	);
+
+	if( !msg.key || msg.key->empty() )
+	{
+		Log( Module::EXE ).error( "Reference-data command {} has no routing key; sending it to the DLQ", msg.idStr() );
+		sendToDLQ( msg );
+		return;
+	}
+
+	std::string_view entityName;
+	std::string_view commandAction;
+	std::string_view responseTopic;
+	ID::UUID         corrID;
+	try
+	{
+		entityName    = RD::getEntityNameFromCommandTopic( msg.topic );
+		commandAction = msg.tryGetHeaderValue( "ARQ_CmdAction" );
+		responseTopic = msg.tryGetHeaderValue( "ARQ_ResponseTopic" );
+		corrID        = ID::uuidFromStr( msg.tryGetHeaderValue( "ARQ_CorrID" ) );
+		if( responseTopic.empty() )
+			throw ARQException( "Reference-data command response topic is empty" );
+	}
+	catch( const ARQException& e )
+	{
+		Log( Module::EXE ).error( e, "Invalid reference-data command envelope {}; sending it to the DLQ", msg.idStr() );
+		sendToDLQ( msg );
+		return;
+	}
+
+	if( commandAction != "Upsert" && commandAction != "Deactivate" )
+	{
+		Log( Module::EXE ).error( "Reference-data command {} has unknown action [{}]; sending it to the DLQ", msg.idStr(), commandAction );
+		sendToDLQ( msg );
+		return;
+	}
+
+	RD::dispatch( entityName, [this, &msg, &corrID, &responseTopic, &commandAction, &batchOutput] <RD::c_RefData T> ()
+	{
+		if( commandAction == "Upsert" )
+			processUpsertCmdMessage<T>( msg, corrID, responseTopic, batchOutput );
+		else
+			processDeactivateCmdMessage<T>( msg, corrID, responseTopic, batchOutput );
+	} );
+}
+
+void RefDataCmdExecutorService::sendToDLQ( const StreamConsumerMessageView& msg )
+{
+	m_updateProducer->send( StreamProducerMessage{
+		.topic = std::format( "{}.DLQ", msg.topic ),
+		.id    = msg.offset,
+		.key   = msg.key ? std::string( *msg.key ) : "NO_KEY",
+		.data  = SharedBuffer( msg.data.data, msg.data.size )
+	} );
 }
 
 void RefDataCmdExecutorService::registerConfigOptions( Cfg::ConfigWrangler& cfg )
@@ -156,37 +172,63 @@ void RefDataCmdExecutorService::registerConfigOptions( Cfg::ConfigWrangler& cfg 
 	cfg.add( m_config.disabledEntities, "--disabledEntities", "The set of reference data entities to NOT process commands for." );
 }
 
-template<RD::c_RefData T>
-void RefDataCmdExecutorService::processUpsertCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
+template<RD::Cmd::c_Command T>
+std::optional<T> RefDataCmdExecutorService::tryReadCommand( const StreamConsumerMessageView& msg )
 {
-	const RD::Cmd::Upsert<T> cmd = m_serialiser->deserialise<RD::Cmd::Upsert<T>>( msg.data );
-	const std::optional<std::uint32_t> currentVersion = getCurVer( cmd.targetUUID, batchOutput );
-	const RD::CommandDecision<T> decision = RD::RefDataCommandProcessor::process( cmd, currentVersion, Time::DateTime::nowUTC() );
-	stageCommandDecision( msg, decision, batchOutput );
+	std::optional<T> command;
+	try
+	{
+		command.emplace( m_serialiser->deserialise<T>( msg.data ) );
+	}
+	catch( const ARQException& e )
+	{
+		Log( Module::EXE ).error( e, "Unable to deserialise reference-data command {}; sending it to the DLQ", msg.idStr() );
+		sendToDLQ( msg );
+		return std::nullopt;
+	}
+
+	return command;
 }
 
 template<RD::c_RefData T>
-void RefDataCmdExecutorService::processDeactivateCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
+void RefDataCmdExecutorService::processUpsertCmdMessage( const StreamConsumerMessageView& msg, const ID::UUID& corrID,
+															std::string_view responseTopic, BatchOutput& batchOutput )
 {
-	const RD::Cmd::Deactivate<T> cmd = m_serialiser->deserialise<RD::Cmd::Deactivate<T>>( msg.data );
-	const std::optional<RD::Record<T>> currentRecord = getCurrentRecord<T>( cmd.targetUUID, batchOutput );
-	const RD::CommandDecision<T> decision = RD::RefDataCommandProcessor::process( cmd, currentRecord, Time::DateTime::nowUTC() );
-	stageCommandDecision( msg, decision, batchOutput );
+	const std::optional<RD::Cmd::Upsert<T>> command = tryReadCommand<RD::Cmd::Upsert<T>>( msg );
+	if( !command )
+		return;
+
+	const std::optional<std::uint32_t> currentVersion = getCurVer( command->targetUUID, batchOutput );
+	const RD::CommandDecision<T> decision = RD::RefDataCommandProcessor::process( *command, currentVersion, Time::DateTime::nowUTC() );
+	stageCommandDecision( msg, corrID, responseTopic, decision, batchOutput );
 }
 
 template<RD::c_RefData T>
-void RefDataCmdExecutorService::stageCommandDecision( const StreamConsumerMessageView& msg, const RD::CommandDecision<T>& decision, BatchOutput& batchOutput )
+void RefDataCmdExecutorService::processDeactivateCmdMessage( const StreamConsumerMessageView& msg, const ID::UUID& corrID,
+																std::string_view responseTopic, BatchOutput& batchOutput )
+{
+	const std::optional<RD::Cmd::Deactivate<T>> command = tryReadCommand<RD::Cmd::Deactivate<T>>( msg );
+	if( !command )
+		return;
+
+	const std::optional<RD::Record<T>> currentRecord = getCurrentRecord<T>( command->targetUUID, batchOutput );
+	const RD::CommandDecision<T> decision = RD::RefDataCommandProcessor::process( *command, currentRecord, Time::DateTime::nowUTC() );
+	stageCommandDecision( msg, corrID, responseTopic, decision, batchOutput );
+}
+
+template<RD::c_RefData T>
+void RefDataCmdExecutorService::stageCommandDecision( const StreamConsumerMessageView& msg, const ID::UUID& corrID,
+														 std::string_view responseTopic, const RD::CommandDecision<T>& decision, BatchOutput& batchOutput )
 {
 	RD::CommandResponse resp;
-	resp.corrID = ID::uuidFromStr( msg.tryGetHeaderValue( "ARQ_CorrID" ) );
-	const std::string_view respTopic = msg.tryGetHeaderValue( "ARQ_ResponseTopic" );
+	resp.corrID = corrID;
 
 	if( const auto* newRecord = std::get_if<RD::Record<T>>( &decision ) )
 	{
 		SharedBuffer payload = m_serialiser->serialise<RD::Record<T>>( *newRecord );
 
 		m_updateProducer->send( StreamProducerMessage{
-			.topic = std::format( "ARQ.RefData.Updates.{}", RD::Traits<T>::name() ),
+			.topic = std::string( RD::Topics<T>::updateTopic() ),
 			.id    = msg.offset,
 			.key   = newRecord->header.uuid.toString(),
 			.data  = payload
@@ -207,7 +249,7 @@ void RefDataCmdExecutorService::stageCommandDecision( const StreamConsumerMessag
 		Log( Module::EXE ).warn( "Rejecting reference-data command from message {}: {}", msg.idStr(), *resp.message );
 	}
 
-	batchOutput.responses.push_back( std::make_pair( resp, respTopic ) );
+	batchOutput.responses.push_back( std::make_pair( resp, responseTopic ) );
 }
 
 template<RD::c_RefData T>
@@ -295,9 +337,10 @@ void RefDataCmdExecutorService::hydrateState( const std::set<StreamTopicPartitio
 std::set<StreamTopicPartition> RefDataCmdExecutorService::mapToUpdatePartitions( const std::set<StreamTopicPartition>& cmdTPs )
 {
 	return cmdTPs
-		| std::views::transform( [this] ( const auto& tp )
+		| std::views::transform( [] ( const auto& tp )
 		  {
-		      return std::make_pair( std::format( "ARQ.RefData.Updates.{}", getEntityFromCmdTopic( tp.first ) ), tp.second );
+		      const std::string_view entityName = RD::getEntityNameFromCommandTopic( tp.first );
+		      return std::make_pair( std::string( RD::getUpdateTopic( entityName ) ), tp.second );
 		  } )
 		| std::ranges::to<std::set>();
 }
@@ -328,7 +371,7 @@ void RefDataCmdExecutorService::processHydrationMessage( const StreamConsumerMes
 {
 	ARQ_DO_IN_TRY( arqExc, errMsg );
 	{
-		const std::string_view entityName = getEntityFromUpdateTopic( msg.topic );
+		const std::string_view entityName = RD::getEntityNameFromUpdateTopic( msg.topic );
 		RD::dispatch( entityName, [this, &msg] <RD::c_RefData T> ( )
 		{
 			const auto record = m_serialiser->deserialise<RD::Record<T>>( msg.data );
@@ -382,34 +425,4 @@ const std::set<std::string_view>& RefDataCmdExecutorService::getEntities()
 		entities = Algos::makeEffectiveSet( m_config.entities, RD::Meta::getAllNames(), m_config.disabledEntities );
 
 	return entities;
-}
-
-void RefDataCmdExecutorService::buildTopicEntityMaps()
-{
-	for( const auto& meta : RD::Meta::getAll() )
-	{
-		std::string cmdTopic = std::format( "ARQ.RefData.Commands.{}", meta.name.data() );
-		m_cmdTopicToEntity[cmdTopic] = meta.name;
-		std::string updateTopic = std::format( "ARQ.RefData.Updates.{}", meta.name.data() );
-		m_updateTopicToEntity[updateTopic] = meta.name;
-	}
-}
-
-static std::string_view getEntityFromTopic( const std::unordered_map<std::string, std::string_view, TransparentStringHash, std::equal_to<>>& topicToEntity, const std::string_view topic )
-{
-	auto it = topicToEntity.find(  topic );
-	if( it != topicToEntity.end() )
-		return it->second;
-	else
-		throw ARQException( std::format( "Unknown RefData topic: {}", topic ) );
-}
-
-std::string_view RefDataCmdExecutorService::getEntityFromUpdateTopic( const std::string_view topic )
-{
-	return getEntityFromTopic( m_updateTopicToEntity, topic );
-}
-
-std::string_view RefDataCmdExecutorService::getEntityFromCmdTopic( const std::string_view topic )
-{
-	return getEntityFromTopic( m_cmdTopicToEntity, topic );
 }

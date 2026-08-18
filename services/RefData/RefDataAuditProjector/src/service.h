@@ -1,8 +1,8 @@
 #include <ARQUtils/backoff_policy.h>
-#include <ARQUtils/hashers.h>
 #include <ARQCore/service_base.h>
 #include <ARQCore/serialiser.h>
 #include <ARQCore/refdata_source.h>
+#include <ARQCore/refdata_topics.h>
 #include <ARQCore/streaming_service.h>
 
 #include <set>
@@ -36,10 +36,6 @@ private:
 	} m_config;
 
 private:
-
-	void initTopicToEntityMap();
-	std::string_view getEntityFromUpdateTopic( const std::string_view topic );
-
 	void processMsgBatch( std::unique_ptr<IStreamConsumerMessageBatch> msgBatch, RD::RecordCollection& rcdColl );
 	bool insertIntoAuditDB( const RD::RecordCollection& rcdColl );
 
@@ -51,8 +47,6 @@ private:
 	std::shared_ptr<IStreamProducer> m_dlqProducer;
 
 	std::set<std::string_view> m_entities;
-
-	std::unordered_map<std::string, std::string_view, TransparentStringHash, std::equal_to<>> m_updateTopicToEntity;
 
 	BackoffPolicy m_backoffPolicy;
 };

@@ -6,6 +6,7 @@
 #include <ARQCore/streaming_service.h>
 #include <ARQCore/refdata_command_manager.h>
 #include <ARQCore/refdata_command_processor.h>
+#include <ARQCore/refdata_topics.h>
 
 using namespace ARQ;
 
@@ -51,16 +52,23 @@ private:
 	};
 
 private: // Command processing
+	void processCommandBatch( const IStreamConsumerMessageBatch& msgBatch );
+	void processCommandMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput );
+	void sendToDLQ( const StreamConsumerMessageView& msg );
+
+	template<RD::Cmd::c_Command T>
+	std::optional<T> tryReadCommand( const StreamConsumerMessageView& msg );
 	template<RD::c_RefData T>
-	void processUpsertCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput );
+	void processUpsertCmdMessage( const StreamConsumerMessageView& msg, const ID::UUID& corrID, std::string_view responseTopic, BatchOutput& batchOutput );
 	template<RD::c_RefData T>
-	void processDeactivateCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput );
+	void processDeactivateCmdMessage( const StreamConsumerMessageView& msg, const ID::UUID& corrID, std::string_view responseTopic, BatchOutput& batchOutput );
 	template<RD::c_RefData T>
-	void stageCommandDecision( const StreamConsumerMessageView& msg, const RD::CommandDecision<T>& decision, BatchOutput& batchOutput );
+	void stageCommandDecision( const StreamConsumerMessageView& msg, const ID::UUID& corrID, std::string_view responseTopic,
+							   const RD::CommandDecision<T>& decision, BatchOutput& batchOutput );
 	template<RD::c_RefData T>
-	std::optional<RD::Record<T>> getCurrentRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
-	std::optional<uint32_t>  getCurVer( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
-	const StoredRecord*      findCurrentStoredRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
+	std::optional<RD::Record<T>>  getCurrentRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
+	std::optional<uint32_t>       getCurVer( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
+	const StoredRecord*           findCurrentStoredRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
 
 private: // Rebalance/hydration
 	void                           onRebalance( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& cmdTPs );
@@ -74,9 +82,6 @@ private: // Helpers
 	void sendCommandResponse( const RD::CommandResponse& cmdRes, std::string_view topic );
 
 	const std::set<std::string_view>& getEntities();
-	void                              buildTopicEntityMaps();
-	std::string_view                  getEntityFromUpdateTopic( const std::string_view topic );
-	std::string_view                  getEntityFromCmdTopic( const std::string_view topic );
 
 private:
 	std::shared_ptr<Serialiser>        m_serialiser;
@@ -86,7 +91,4 @@ private:
 	std::shared_ptr<IStreamProducer> m_updateProducer;
 
 	StoredRecordMap m_records;
-
-	std::unordered_map<std::string, std::string_view, TransparentStringHash, std::equal_to<>> m_cmdTopicToEntity;
-	std::unordered_map<std::string, std::string_view, TransparentStringHash, std::equal_to<>> m_updateTopicToEntity;
 };

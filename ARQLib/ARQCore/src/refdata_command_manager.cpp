@@ -1,6 +1,7 @@
 #include <ARQCore/refdata_command_manager.h>
 
 #include <ARQCore/messaging_service.h>
+#include <ARQCore/refdata_topics.h>
 
 #include <ARQUtils/enum.h>
 #include <ARQUtils/logger.h>
@@ -134,7 +135,7 @@ StreamProducerMessage CommandManager::formStreamMsg( Buffer&& buf, const std::st
 
 std::string CommandManager::getStreamTopic( const std::string_view cmdEntity ) const
 {
-	return std::format( "ARQ.RefData.Commands.{}", cmdEntity );
+	return std::string( getCommandTopic( cmdEntity ) );
 }
 
 void RD::CommandManager::createInFlightCommand( const ID::UUID& corrID, const CommandCallback& callback, const Time::Milliseconds timeout )
