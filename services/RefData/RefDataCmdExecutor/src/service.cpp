@@ -54,7 +54,7 @@ void RefDataCmdExecutorService::run()
 		Log( Module::EXE ).debug( "Processing {} command messages", msgBatch->size() );
 
 		BatchOutput batchOutput;
-		batchOutput.versionMapUpdates.reserve( msgBatch->size() );
+		batchOutput.recordUpdates.reserve( msgBatch->size() );
 		batchOutput.responses.reserve( msgBatch->size() );
 
 		try
@@ -138,12 +138,10 @@ void RefDataCmdExecutorService::run()
 			throw;
 		}
 
-		// After batch successfully commited to update log, apply map updates and send responses
+		// After batch successfully committed to update log, apply map updates and send responses
 
-		for( const auto& [uuid, newVer] : batchOutput.versionMapUpdates )
-			m_versionMap[uuid] = newVer;
-		for( const auto& [uuid, payload] : batchOutput.latestSerialisedRecordUpdates )
-			m_latestSerialisedRecordMap[uuid] = payload;
+		for( auto& [uuid, storedRecord] : batchOutput.recordUpdates )
+			m_records.insert_or_assign( uuid, std::move( storedRecord ) );
 
 		for( const auto& [resp, topic] : batchOutput.responses )
 			sendCommandResponse( resp, topic );
@@ -161,110 +159,86 @@ void RefDataCmdExecutorService::registerConfigOptions( Cfg::ConfigWrangler& cfg 
 template<RD::c_RefData T>
 void RefDataCmdExecutorService::processUpsertCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
 {
-	processCmdMessage<RD::Cmd::Upsert<T>>( msg, batchOutput,
-		[] ( std::optional<uint32_t> curVer, const uint32_t expected ) -> bool
-		{
-			return ( !curVer && expected == 0 ) ||     // Valid new entity
-				   (  curVer && expected == *curVer ); // Or existing entity with correct expected version
-		},
-		[] ( const RD::Cmd::Upsert<T>& cmd, const uint32_t newVer ) -> RD::Record<T>
-		{
-			RD::Record<T> newRecord;
-			newRecord.data                 = cmd.data;
-			newRecord.header.isActive      = true;
-			newRecord.header.lastUpdatedBy = cmd.updatedBy;
-			newRecord.header.lastUpdatedTs = Time::DateTime::nowUTC();
-			newRecord.header.version       = newVer;
-			newRecord.header.uuid          = cmd.targetUUID;
-			return newRecord;
-		}
-	);
+	const RD::Cmd::Upsert<T> cmd = m_serialiser->deserialise<RD::Cmd::Upsert<T>>( msg.data );
+	const std::optional<std::uint32_t> currentVersion = getCurVer( cmd.targetUUID, batchOutput );
+	const RD::CommandDecision<T> decision = RD::RefDataCommandProcessor::process( cmd, currentVersion, Time::DateTime::nowUTC() );
+	stageCommandDecision( msg, decision, batchOutput );
 }
 
 template<RD::c_RefData T>
 void RefDataCmdExecutorService::processDeactivateCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput )
 {
-	processCmdMessage<RD::Cmd::Deactivate<T>>( msg, batchOutput,
-		[] ( std::optional<uint32_t> curVer, const uint32_t expected ) -> bool
-		{
-			return curVer && expected == *curVer; // Existing entity with correct expected version
-		},
-		[this, &batchOutput] ( const RD::Cmd::Deactivate<T>& cmd, const uint32_t newVer ) -> RD::Record<T>
-		{
-			RD::Record<T> newRecord;
-			LatestSerialisedRecordMap::iterator it;
-			if( it = batchOutput.latestSerialisedRecordUpdates.find( cmd.targetUUID ); it != batchOutput.latestSerialisedRecordUpdates.end() )
-				newRecord.data = m_serialiser->deserialise<RD::Record<T>>( it->second ).data;
-			else if( it = m_latestSerialisedRecordMap.find( cmd.targetUUID ); it != m_latestSerialisedRecordMap.end() )
-				newRecord.data = m_serialiser->deserialise<RD::Record<T>>( it->second ).data;
-			else
-				throw ARQException( std::format( "Unable to find latest record for existing {} with UUID {}", RD::Traits<T>::name(), cmd.targetUUID ) );
-			newRecord.header.isActive      = false;
-			newRecord.header.lastUpdatedBy = cmd.updatedBy;
-			newRecord.header.lastUpdatedTs = Time::DateTime::nowUTC();
-			newRecord.header.version       = newVer;
-			newRecord.header.uuid          = cmd.targetUUID;
-			return newRecord;
-		}
-	);
+	const RD::Cmd::Deactivate<T> cmd = m_serialiser->deserialise<RD::Cmd::Deactivate<T>>( msg.data );
+	const std::optional<RD::Record<T>> currentRecord = getCurrentRecord<T>( cmd.targetUUID, batchOutput );
+	const RD::CommandDecision<T> decision = RD::RefDataCommandProcessor::process( cmd, currentRecord, Time::DateTime::nowUTC() );
+	stageCommandDecision( msg, decision, batchOutput );
 }
 
-template<RD::Cmd::c_Command T>
-void RefDataCmdExecutorService::processCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput,
-							std::function<bool( std::optional<uint32_t> version, const uint32_t expected )> versionCheckFunc,
-							std::function<RD::Record<typename RD::Cmd::Traits<T>::EntityType>( const T& cmd, const uint32_t newVer )> recordBuilderFunc )
+template<RD::c_RefData T>
+void RefDataCmdExecutorService::stageCommandDecision( const StreamConsumerMessageView& msg, const RD::CommandDecision<T>& decision, BatchOutput& batchOutput )
 {
-	using EntityType = typename RD::Cmd::Traits<T>::EntityType;
-
-	const auto cmd = m_serialiser->deserialise<T>( msg.data );
-
-	std::optional<uint32_t> curVer = getCurVer( cmd.targetUUID, batchOutput );
-	const bool isValid = versionCheckFunc( curVer, cmd.expectedVersion );
-
 	RD::CommandResponse resp;
 	resp.corrID = ID::uuidFromStr( msg.tryGetHeaderValue( "ARQ_CorrID" ) );
+	const std::string_view respTopic = msg.tryGetHeaderValue( "ARQ_ResponseTopic" );
 
-	if( isValid )
+	if( const auto* newRecord = std::get_if<RD::Record<T>>( &decision ) )
 	{
-		const uint32_t newVersion = curVer.value_or( 0 ) + 1;
-		RD::Record<EntityType> newRecord = recordBuilderFunc( cmd, newVersion );
-		batchOutput.versionMapUpdates[cmd.targetUUID] = newVersion;
-
-		SharedBuffer payload = m_serialiser->serialise<RD::Record<EntityType>>( newRecord );
-		batchOutput.latestSerialisedRecordUpdates[cmd.targetUUID] = payload;
+		SharedBuffer payload = m_serialiser->serialise<RD::Record<T>>( *newRecord );
 
 		m_updateProducer->send( StreamProducerMessage{
-			.topic = std::format( "ARQ.RefData.Updates.{}", RD::Traits<EntityType>::name() ),
+			.topic = std::format( "ARQ.RefData.Updates.{}", RD::Traits<T>::name() ),
 			.id    = msg.offset,
-			.key   = newRecord.header.uuid.toString(),
+			.key   = newRecord->header.uuid.toString(),
 			.data  = payload
 		} );
 
+		batchOutput.recordUpdates.insert_or_assign( newRecord->header.uuid, StoredRecord{
+			.version          = newRecord->header.version,
+			.serialisedRecord = std::move( payload )
+		} );
 		resp.status = RD::CommandResponse::SUCCESS;
 	}
 	else
 	{
+		const RD::CommandRejection& rejection = std::get<RD::CommandRejection>( decision );
 		resp.status = RD::CommandResponse::REJECTED;
-		resp.message = std::format( "Version mismatch for UUID {}: CurrentVersion={}, VersionExpectedByCommand={}",
-									cmd.targetUUID, curVer ? std::to_string( *curVer ) : "None", cmd.expectedVersion );
+		resp.message = rejection.message;
 
-		Log( Module::EXE ).warn( "Rejecting {} command from message {}: {}", RD::Cmd::Traits<T>::name(), msg.idStr(), *resp.message );
+		Log( Module::EXE ).warn( "Rejecting reference-data command from message {}: {}", msg.idStr(), *resp.message );
 	}
 
-	const std::string_view respTopic = msg.tryGetHeaderValue( "ARQ_ResponseTopic" );
 	batchOutput.responses.push_back( std::make_pair( resp, respTopic ) );
+}
+
+template<RD::c_RefData T>
+std::optional<RD::Record<T>> RefDataCmdExecutorService::getCurrentRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const
+{
+	const StoredRecord* storedRecord = findCurrentStoredRecord( targetUUID, batchOutput );
+	if( !storedRecord )
+		return std::nullopt;
+
+	RD::Record<T> record = m_serialiser->deserialise<RD::Record<T>>( storedRecord->serialisedRecord );
+	// Minor validation
+	if( record.header.uuid != targetUUID || record.header.version != storedRecord->version )
+		throw ARQException( std::format( "Inconsistent command state for existing {} with UUID {}", RD::Traits<T>::name(), targetUUID ) );
+
+	return record;
 }
 
 std::optional<uint32_t> RefDataCmdExecutorService::getCurVer( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const
 {
-	std::optional<uint32_t> curVer;
-	VersionMap::const_iterator it;
-	if( it = batchOutput.versionMapUpdates.find( targetUUID ); it != batchOutput.versionMapUpdates.end() )
-		curVer = it->second;
-	else if( it = m_versionMap.find( targetUUID ); it != m_versionMap.end() )
-		curVer = it->second;
+	const StoredRecord* storedRecord = findCurrentStoredRecord( targetUUID, batchOutput );
+	return storedRecord ? std::optional<uint32_t>( storedRecord->version ) : std::nullopt;
+}
 
-	return curVer;
+const RefDataCmdExecutorService::StoredRecord* RefDataCmdExecutorService::findCurrentStoredRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const
+{
+	if( const auto it = batchOutput.recordUpdates.find( targetUUID ); it != batchOutput.recordUpdates.end() )
+		return &it->second;
+	else if( const auto it = m_records.find( targetUUID ); it != m_records.end() )
+		return &it->second;
+	else
+		return nullptr;
 }
 
 void RefDataCmdExecutorService::onRebalance( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& cmdTPs )
@@ -276,8 +250,7 @@ void RefDataCmdExecutorService::onRebalance( StreamRebalanceEventType eventType,
 
 	Log( Module::EXE ).info( "Rebalance event occurred: {} ON {}", Enum::enum_name( eventType ), Str::join( cmdTPs ) );
 
-	m_versionMap.clear();
-	m_latestSerialisedRecordMap.clear();
+	m_records.clear();
 
 	if( eventType == StreamRebalanceEventType::PARTITIONS_REVOKED || cmdTPs.empty() )
 		return;
@@ -316,7 +289,7 @@ void RefDataCmdExecutorService::hydrateState( const std::set<StreamTopicPartitio
 		updateHydrationProgress( *updateConsumer, highWatermarks );
 	}
 
-	Log( Module::EXE ).info( "Finished hydration of update partitions. Loaded {} entities.", m_versionMap.size() );
+	Log( Module::EXE ).info( "Finished hydration of update partitions. Loaded {} entities.", m_records.size() );
 }
 
 std::set<StreamTopicPartition> RefDataCmdExecutorService::mapToUpdatePartitions( const std::set<StreamTopicPartition>& cmdTPs )
@@ -358,9 +331,11 @@ void RefDataCmdExecutorService::processHydrationMessage( const StreamConsumerMes
 		const std::string_view entityName = getEntityFromUpdateTopic( msg.topic );
 		RD::dispatch( entityName, [this, &msg] <RD::c_RefData T> ( )
 		{
-			auto record = m_serialiser->deserialise<RD::Record<T>>( msg.data );
-			m_versionMap[record.header.uuid] = record.header.version;
-			m_latestSerialisedRecordMap[record.header.uuid] = Buffer( msg.data.data, msg.data.size );
+			const auto record = m_serialiser->deserialise<RD::Record<T>>( msg.data );
+			m_records.insert_or_assign( record.header.uuid, StoredRecord{
+				.version          = record.header.version,
+				.serialisedRecord = Buffer( msg.data.data, msg.data.size )
+			} );
 		} );
 	}
 	ARQ_END_TRY_AND_CATCH( arqExc, errMsg );

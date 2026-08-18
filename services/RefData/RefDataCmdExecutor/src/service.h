@@ -5,6 +5,7 @@
 #include <ARQCore/messaging_service.h>
 #include <ARQCore/streaming_service.h>
 #include <ARQCore/refdata_command_manager.h>
+#include <ARQCore/refdata_command_processor.h>
 
 using namespace ARQ;
 
@@ -33,15 +34,19 @@ private:
 		std::set<std::string> disabledEntities;
 	} m_config;
 
-	using VersionMap                = std::unordered_map<ID::UUID, uint32_t>;
-	using LatestSerialisedRecordMap = std::unordered_map<ID::UUID, SharedBuffer>;
+	struct StoredRecord
+	{
+		uint32_t     version;
+		SharedBuffer serialisedRecord;
+	};
+
+	using StoredRecordMap = std::unordered_map<ID::UUID, StoredRecord>;
 
 	struct BatchOutput
 	{
 		using CommandResponseAndTopic = std::pair<RD::CommandResponse, std::string_view>;
 
-		VersionMap                           versionMapUpdates;
-		LatestSerialisedRecordMap            latestSerialisedRecordUpdates;
+		StoredRecordMap                      recordUpdates;
 		std::vector<CommandResponseAndTopic> responses;
 	};
 
@@ -50,11 +55,12 @@ private: // Command processing
 	void processUpsertCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput );
 	template<RD::c_RefData T>
 	void processDeactivateCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput );
-	template<RD::Cmd::c_Command T>
-	void processCmdMessage( const StreamConsumerMessageView& msg, BatchOutput& batchOutput,
-							std::function<bool( std::optional<uint32_t> version, const uint32_t expected )> versionCheckFunc,
-							std::function<RD::Record<typename RD::Cmd::Traits<T>::EntityType>( const T& cmd, const uint32_t newVer )> recordBuilderFunc );
-	std::optional<uint32_t> getCurVer( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
+	template<RD::c_RefData T>
+	void stageCommandDecision( const StreamConsumerMessageView& msg, const RD::CommandDecision<T>& decision, BatchOutput& batchOutput );
+	template<RD::c_RefData T>
+	std::optional<RD::Record<T>> getCurrentRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
+	std::optional<uint32_t>  getCurVer( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
+	const StoredRecord*      findCurrentStoredRecord( const ID::UUID& targetUUID, const BatchOutput& batchOutput ) const;
 
 private: // Rebalance/hydration
 	void                           onRebalance( StreamRebalanceEventType eventType, const std::set<StreamTopicPartition>& cmdTPs );
@@ -79,8 +85,7 @@ private:
 	std::shared_ptr<IStreamConsumer> m_commandConsumer;
 	std::shared_ptr<IStreamProducer> m_updateProducer;
 
-	VersionMap                m_versionMap;
-	LatestSerialisedRecordMap m_latestSerialisedRecordMap;
+	StoredRecordMap m_records;
 
 	std::unordered_map<std::string, std::string_view, TransparentStringHash, std::equal_to<>> m_cmdTopicToEntity;
 	std::unordered_map<std::string, std::string_view, TransparentStringHash, std::equal_to<>> m_updateTopicToEntity;
