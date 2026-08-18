@@ -40,8 +40,7 @@ public:
 
 using LibComponentFactory = std::function<std::unique_ptr<ILibComponent>()>;
 
-/**	
-
+/**
  * @brief Represents a registered ARQ library component.
  * @details Components are registered with a name, initialization order and factory function.
 */

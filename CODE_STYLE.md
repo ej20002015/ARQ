@@ -14,6 +14,34 @@ extended as additional conventions are agreed.
 
 ## C++
 
+### Variable naming
+
+- Prefix non-static class member variables with `m_`.
+- Name struct data members using lower camel case without an `m_` prefix.
+- Prefix static member variables and function-local static variables with
+  `s_`.
+- Name `static constexpr` variables using upper snake case.
+- Prefix thread-local variables with `t_`.
+- Prefix namespace-scope and file-scope global variables with `g_`.
+
+```cpp
+class RetryPolicy
+{
+private:
+    uint32_t                  m_retryCount = 0;
+    static uint32_t           s_instanceCount;
+    static constexpr uint32_t MAX_RETRIES = 3;
+};
+
+struct RetryConfig
+{
+    uint32_t retryCount = 0;
+};
+
+thread_local RequestContext t_requestContext;
+Registry                    g_registry;
+```
+
 ### Prefer fixed-width integer types
 
 Prefer the fixed-width integer types from `<cstdint>` (for example,
@@ -47,3 +75,10 @@ not intended to modify state.
 Do not add `const` where it has no useful effect, such as a top-level `const` on
 a non-reference return type. Avoid it where it would prevent an intended move
 or introduce unnecessary copying or another material performance cost.
+
+## Tests
+
+- Name a test source after the production header it primarily tests: tests for
+  `foo.h` belong in `t_foo.cpp`.
+- Keep tests for different production headers in separate files, even when the
+  implementations collaborate at runtime.

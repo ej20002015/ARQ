@@ -21,7 +21,8 @@ Stabilise the existing reference-data and market-data foundations before extendi
 8. [x] Fix code-generation invalidation so definition changes regenerate every affected artifact.
 9. [ ] Ensure as many parts of the codebase as possible (within reason) are covered by unit tests
 10. [ ] Add integration tests for duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, restarts, rebalances and projection replay.
-11. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
+11. [ ] Look for places where target microbenchmarks would be useful and benchmark using google benchmark (cmake infra already set up for this)
+12. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
 
 **Exit condition:** Existing reference and market pipelines can be replayed repeatedly and converge on the same state.
 
