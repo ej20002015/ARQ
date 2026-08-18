@@ -97,7 +97,8 @@ public: // Optional overrides
 protected:
 	struct BaseConfig
 	{
-		int32_t     adminPort = 8080;
+		bool    adminServerEnabled = true;
+		int32_t adminPort          = 8080;
 	} m_baseConfig;
 
 protected:

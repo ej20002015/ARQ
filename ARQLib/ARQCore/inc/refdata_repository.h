@@ -29,10 +29,20 @@ public:
 public:
     explicit Cache( std::vector<Record<T>>&& records )
     {
-        for( const auto& record : records )
-            m_map.emplace( record.header.uuid, std::move( record ) );
+		for( auto& record : records )
+		{
+			const ID::UUID id = record.header.uuid;
+			if( !m_map.emplace( id, std::move( record ) ).second )
+				throw ARQException( std::format( "Cannot build {} cache: duplicate UUID [{}]", Traits<T>::name(), id ) );
+		}
 
 		buildCacheIndexes<T>( *this );
+
+		for( const auto& [indexName, index] : m_uniqueIndices )
+		{
+			if( index.size() != m_map.size() )
+				throw ARQException( std::format( "Cannot build {} cache: duplicate value in unique index [{}]", Traits<T>::name(), indexName ) );
+		}
     }
 
 	[[nodiscard]] const RecordMap& getMap() const
@@ -117,16 +127,17 @@ public:
     {
         auto records = getRecordsByNonUniqIndex( indexName, indexValue );
 
-        std::vector<std::reference_wrapper<const T>> results;
+		std::vector<OptConstRef<T>> results;
+		results.reserve( records.size() );
 		for( const auto& recordRef : records )
-			results.push_back( *( recordRef.data ) );
+			results.emplace_back( &( recordRef->data ) );
 
 		return results;
     }
 
 private:
-    using UniqueIndexMap    = ankerl::unordered_dense::map<std::string_view, ID::UUID, AnkerlTransparentStringHash, std::equal_to<>>;
-    using NonUniqueIndexMap = ankerl::unordered_dense::map<std::string_view, std::vector<ID::UUID>, AnkerlTransparentStringHash, std::equal_to<>>;
+	using UniqueIndexMap    = ankerl::unordered_dense::map<std::string, ID::UUID, AnkerlTransparentStringHash, std::equal_to<>>;
+	using NonUniqueIndexMap = ankerl::unordered_dense::map<std::string, std::vector<ID::UUID>, AnkerlTransparentStringHash, std::equal_to<>>;
     using UniqueIndices     = std::vector<std::pair<std::string_view, UniqueIndexMap>>;
     using NonUniqueIndices  = std::vector<std::pair<std::string_view, NonUniqueIndexMap>>;
 

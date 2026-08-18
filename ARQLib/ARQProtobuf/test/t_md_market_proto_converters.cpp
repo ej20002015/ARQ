@@ -34,8 +34,9 @@ protected:
         // Add source position 
         cppBatch.sourcePosition = { ARQ::StreamTopicPartition{ "NYSE.Equities", 0 }, 10045 };
 
-        return cppBatch;
-    }
+		return cppBatch;
+	}
+
 };
 
 TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_LValue_Conversions )
@@ -107,5 +108,5 @@ TEST_F( MktDataBatchConvertersTest, MarketUpdateBatch_RValue_Conversions )
 
     EXPECT_EQ( parsedBatchMove.sourcePosition.offset, 10045 );
     EXPECT_EQ( parsedBatchMove.sourcePosition.tp.first, "NYSE.Equities" );
-    EXPECT_EQ( parsedBatchMove.sourcePosition.tp.second, 0 );
+	EXPECT_EQ( parsedBatchMove.sourcePosition.tp.second, 0 );
 }

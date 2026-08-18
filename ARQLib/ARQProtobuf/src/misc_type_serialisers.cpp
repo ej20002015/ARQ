@@ -30,7 +30,8 @@ Buffer ProtobufTypeSerialiser_RDCommandResponse::serialise( const ARQ::RD::Comma
 void ProtobufTypeSerialiser_RDCommandResponse::deserialise( const BufferView buf, ARQ::RD::CommandResponse& objOut ) const
 {
 	ARQ::Proto::RefDataCommandResponse resp;
-	resp.ParseFromArray( buf.data, buf.size );
+	if( !resp.ParseFromArray( buf.data, buf.size ) )
+		throw ARQException( "Cannot deserialise buffer into RefData CommandResponse" );
 
 	objOut = fromProto( std::move( resp ) );
 }

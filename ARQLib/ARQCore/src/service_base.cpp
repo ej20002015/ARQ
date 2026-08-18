@@ -57,13 +57,18 @@ int ServiceRunner::runImpl( int argc, char* argv[] )
 
 	// Set up and start admin HTTP server
 
-	setUpAdminServer();
-
-	if( !runAdminServer() )
+	if( m_service.m_baseConfig.adminServerEnabled )
 	{
-		Log( Module::EXE ).critical( "Exiting after failure to start and run admin HTTP server" );
-		return SvcExitCodes::ADMIN_SRV_ERROR;
+		setUpAdminServer();
+
+		if( !runAdminServer() )
+		{
+			Log( Module::EXE ).critical( "Exiting after failure to start and run admin HTTP server" );
+			return SvcExitCodes::ADMIN_SRV_ERROR;
+		}
 	}
+	else
+		Log( Module::EXE ).info( "Admin HTTP server is disabled" );
 
 	// Start service
 
@@ -105,7 +110,8 @@ void ServiceRunner::registerSignalHandlers()
 void ServiceRunner::addConfigOptions()
 {
 	// Add common config options
-	m_cfgWrangler.add( m_service.m_baseConfig.adminPort, "--svc.adminServer.port", "Set the port used by the http admin server", "ARQ_svc_adminServer_port" );
+	m_cfgWrangler.add( m_service.m_baseConfig.adminServerEnabled, "--svc.adminServer.enabled", "Enable the http admin server", "ARQ_svc_adminServer_enabled" );
+	m_cfgWrangler.add( m_service.m_baseConfig.adminPort,          "--svc.adminServer.port",    "Set the port used by the http admin server", "ARQ_svc_adminServer_port" );
 
 	// Add service-specific config options
 	m_service.registerConfigOptions( m_cfgWrangler );
@@ -257,11 +263,19 @@ bool ServiceRunner::runAdminServer()
 		return false;
 	}
 
-	m_adminServerThread = std::thread( [this, port] ()
+	Log( Module::EXE ).info( "Starting admin HTTP server on port {}", port );
+	m_adminServerThread = std::thread( [this] ()
 	{
-		Log( Module::EXE ).info( "Starting admin HTTP server on port {}", port );
 		m_adminServer.listen_after_bind();
 	} );
+	m_adminServer.wait_until_ready();
+	if( !m_adminServer.is_running() )
+	{
+		if( m_adminServerThread.joinable() )
+			m_adminServerThread.join();
+		Log( Module::EXE ).error( "Admin HTTP server stopped while starting on port {}", port );
+		return false;
+	}
 
 	Log( Module::EXE ).debug( "Finished starting up admin HTTP server" );
 
@@ -270,6 +284,9 @@ bool ServiceRunner::runAdminServer()
 
 void ServiceRunner::shutdownAdminServer()
 {
+	if( !m_service.m_baseConfig.adminServerEnabled )
+		return;
+
 	Log( Module::EXE ).debug( "Shutting down admin HTTP server..." );
 
 	m_adminServer.stop();

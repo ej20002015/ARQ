@@ -6,6 +6,7 @@
 #include <utility>
 #include <algorithm>
 #include <string>
+#include <type_traits>
 
 namespace ARQ
 {
@@ -77,13 +78,7 @@ struct Buffer
 	Buffer& operator=( const Buffer& other )
 	{
 		if( this != &other )
-		{
-			size = other.size;
-
-			data.release();
-			if( other.data )
-				std::copy_n( other.data.get(), size, data.get() );
-		}
+			*this = Buffer( other );
 
 		return *this;
 	}
@@ -105,21 +100,38 @@ struct Buffer
 		return *this;
 	}
 
-	operator BufferView() const { return BufferView( data.get(), size ); }
+	operator BufferView() const & { return BufferView( data.get(), size ); }
+	operator BufferView() const && = delete;
 
-	uint8_t* getDataPtr() const noexcept
+	uint8_t* getDataPtr() noexcept
 	{
 		return data.get();
 	}
 
 	template<typename T>
-	T getDataPtrAs() const noexcept
+	requires std::is_pointer_v<T>
+	T getDataPtrAs() noexcept
 	{
 		return reinterpret_cast<T>( data.get() );
 	}
 
-	std::string toString() const noexcept
+	const uint8_t* getDataPtr() const noexcept
 	{
+		return data.get();
+	}
+
+	template<typename T>
+	requires ( std::is_pointer_v<T> && std::is_const_v<std::remove_pointer_t<T>> )
+	T getDataPtrAs() const noexcept
+	{
+		return reinterpret_cast<T>( static_cast<const uint8_t*>( data.get() ) );
+	}
+
+	std::string toString() const
+	{
+		if( !size )
+			return {};
+
 		return std::string( getDataPtrAs<const char*>(), size );
 	}
 
@@ -169,24 +181,55 @@ struct SharedBuffer
 
 	SharedBuffer( const SharedBuffer& other ) = default;
 	SharedBuffer& operator=( const SharedBuffer& other ) = default;
-	SharedBuffer( SharedBuffer&& other ) noexcept = default;
-	SharedBuffer& operator=( SharedBuffer&& other ) noexcept = default;
+	SharedBuffer( SharedBuffer&& other ) noexcept
+		: data( std::move( other.data ) )
+		, size( std::exchange( other.size, 0 ) )
+	{
+	}
 
-	operator BufferView() const { return BufferView( data.get(), size ); }
+	SharedBuffer& operator=( SharedBuffer&& other ) noexcept
+	{
+		if( this != &other )
+		{
+			data = std::move( other.data );
+			size = std::exchange( other.size, 0 );
+		}
 
-	uint8_t* getDataPtr() const noexcept
+		return *this;
+	}
+
+	operator BufferView() const & { return BufferView( data.get(), size ); }
+	operator BufferView() const && = delete;
+
+	uint8_t* getDataPtr() noexcept
 	{
 		return data.get();
 	}
 
 	template<typename T>
-	T getDataPtrAs() const noexcept
+	requires std::is_pointer_v<T>
+	T getDataPtrAs() noexcept
 	{
 		return reinterpret_cast<T>( data.get() );
 	}
 
-	std::string toString() const noexcept
+	const uint8_t* getDataPtr() const noexcept
 	{
+		return data.get();
+	}
+
+	template<typename T>
+	requires ( std::is_pointer_v<T> && std::is_const_v<std::remove_pointer_t<T>> )
+	T getDataPtrAs() const noexcept
+	{
+		return reinterpret_cast<T>( static_cast<const uint8_t*>( data.get() ) );
+	}
+
+	std::string toString() const
+	{
+		if( !size )
+			return {};
+
 		return std::string( getDataPtrAs<const char*>(), size );
 	}
 };
