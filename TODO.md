@@ -16,4 +16,7 @@
 - Create FXSpot trade class and valuation class?
 - Get it to a place where there is PV code
 - Create required mkt data structs
-- Hook up RefData into messaging service (both subscribed to reload, and publish to get others to reload)
+- Provide a coherent live-update or invalidation path for reference-data read caches
+  - Hook RefData into the messaging service so caches can subscribe for reloads and publishers can notify other processes to reload.
+  - Revisit live-data replay and watermark semantics, including whether Redis should conditionally reject stale writes and whether that should use Lua or `WATCH`/`MULTI`/`EXEC`.
+  - Define notification behaviour for newly applied, duplicate and stale updates.

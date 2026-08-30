@@ -8,6 +8,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <atomic>
+#include <memory>
 
 namespace ARQ
 {
@@ -15,8 +16,9 @@ namespace ARQ
 class NatsSubscription : public ISubscription
 {
 public:
-	NatsSubscription( natsSubscription* const natsSub )
+	NatsSubscription( natsSubscription* const natsSub, std::shared_ptr<ISubscriptionHandler> subHandler )
 		: m_natsSub( natsSub )
+		, m_subHandler( std::move( subHandler ) )
 	{
 	}
 	~NatsSubscription();
@@ -32,7 +34,8 @@ private:
 	void checkPtr() const;
 
 private:
-	natsSubscription* m_natsSub;
+	natsSubscription*                     m_natsSub;
+	std::shared_ptr<ISubscriptionHandler> m_subHandler;
 };
 
 class NatsMessagingService : public IMessagingService

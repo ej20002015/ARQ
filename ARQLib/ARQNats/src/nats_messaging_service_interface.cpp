@@ -76,6 +76,11 @@ void natsLameDuckCB( natsConnection* nc, void* closure )
 	nms.onNatsLameDuck();
 }
 
+void natsSubscriptionCompleteCB( void* closure )
+{
+	delete reinterpret_cast<std::shared_ptr<ISubscriptionHandler>*>( closure );
+}
+
 void onNatsMsg( natsConnection* nc, natsSubscription* sub, natsMsg* msg, void* closure )
 {
 	ISubscriptionHandler& subHandler = *reinterpret_cast<ISubscriptionHandler*>( closure );
@@ -167,6 +172,10 @@ void NatsMessagingService::publish( const std::string_view topic, const Message&
 	if( rc = natsMsg_Create( &natsMsg, topic.data(), nullptr, msg.data.getDataPtrAs<const char*>(), msg.data.size ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to publish nats message - natsMsg_Create() call failed with error: {}", formatNatsError( rc ) ) );
 
+	ARQDefer{
+		natsMsg_Destroy( natsMsg );
+	});
+
 	if( msg.headers.size() )
 	{
 		for( const auto& [key, vals] : msg.headers )
@@ -187,15 +196,34 @@ void NatsMessagingService::publish( const std::string_view topic, const Message&
 
 std::unique_ptr<ISubscription> NatsMessagingService::subscribe( const std::string_view topicPattern, std::shared_ptr<ISubscriptionHandler> subHandler )
 {
+	if( !subHandler )
+		throw ARQException( "Failed to create nats subscriber - subscription handler is nullptr" );
+
 	natsStatus        rc;
 	natsSubscription* sub;
 	
 	if( rc = natsConnection_Subscribe( &sub, m_natsConn, topicPattern.data(), onNatsMsg, subHandler.get() ); rc != NATS_OK )
 		throw ARQException( std::format("Failed to create nats subscriber - natsConnection_Subscribe() call failed with error: {}", formatNatsError( rc ) ) );
 
+	// Create shared reference to subscription handler that survives until the subscription is complete
+	auto completionHandlerOwner = std::make_unique<std::shared_ptr<ISubscriptionHandler>>( subHandler );
+	auto* completionHandler = completionHandlerOwner.release();
+	if( rc = natsSubscription_SetOnCompleteCB( sub, natsSubscriptionCompleteCB, completionHandler ); rc != NATS_OK )
+	{
+		const std::string errMsg = formatNatsError( rc );
+		if( natsSubscription_Unsubscribe( sub ) == NATS_OK )
+		{
+			natsSubscription_WaitForDrainCompletion( sub, 0 );
+			delete completionHandler;
+		}
+		natsSubscription_Destroy( sub );
+
+		throw ARQException( std::format( "Failed to create nats subscriber - natsSubscription_SetOnCompleteCB() call failed with error: {}", errMsg ) );
+	}
+
 	Log( Module::NATS ).info( "NatsMessagingService: Created subscription on topic [{}], with handler [{}], and nats subscription ID [{}]", topicPattern, subHandler->getDesc(), natsSubscription_GetID( sub ) );
 
-	return std::make_unique<NatsSubscription>( sub );
+	return std::make_unique<NatsSubscription>( sub, std::move( subHandler ) );
 }
 
 void NatsMessagingService::registerEventCallback( const MessagingEventCallbackFunc& eventCallbackFunc )
@@ -403,7 +431,7 @@ void NatsMessagingService::invokeUserEventCallbacks( const MessagingEvent e, con
 NatsSubscription::~NatsSubscription()
 {
 	if( m_natsSub )
-		unsubscribe();
+		natsSubscription_Destroy( m_natsSub );
 }
 
 int64_t NatsSubscription::getID()
@@ -451,7 +479,10 @@ void NatsSubscription::unsubscribe()
 	if( const natsStatus rc = natsSubscription_Unsubscribe( m_natsSub ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to unsubscribe nats subscription - natsSubscription_Unsubscribe() call failed with error: {}", formatNatsError( rc ) ) );
 
+	natsSubscription_Destroy( m_natsSub );
+
 	m_natsSub = nullptr;
+	m_subHandler.reset();
 }
 
 void NatsSubscription::drain( const std::chrono::milliseconds timeout )
@@ -461,7 +492,16 @@ void NatsSubscription::drain( const std::chrono::milliseconds timeout )
 	if( const natsStatus rc = natsSubscription_DrainTimeout( m_natsSub, timeout.count() ); rc != NATS_OK )
 		throw ARQException( std::format( "Failed to drain nats subscription - natsSubscription_DrainTimeout() call failed with error: {}", formatNatsError( rc ) ) );
 
+	if( const natsStatus rc = natsSubscription_WaitForDrainCompletion( m_natsSub, timeout.count() ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to drain nats subscription - natsSubscription_WaitForDrainCompletion() call failed with error: {}", formatNatsError( rc ) ) );
+
+	if( const natsStatus rc = natsSubscription_DrainCompletionStatus( m_natsSub ); rc != NATS_OK )
+		throw ARQException( std::format( "Failed to drain nats subscription - drain completed with error: {}", formatNatsError( rc ) ) );
+
+	natsSubscription_Destroy( m_natsSub );
+
 	m_natsSub = nullptr;
+	m_subHandler.reset();
 }
 
 void NatsSubscription::checkPtr() const

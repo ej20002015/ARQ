@@ -187,6 +187,22 @@ TEST_F( LiveMarketUpdaterTest, StartsInLiveModeWithoutBaseline )
     ASSERT_NE( activeHandler, nullptr ); // Verifies it connected
 }
 
+TEST_F( LiveMarketUpdaterTest, SubscriptionHandlerDoesNotExtendUpdaterLifetime )
+{
+    auto updater = LiveMarketUpdater::create( LiveMarketUpdater::Params{
+        market, "", "MOCK_NATS", MarketName( "PROD_FX" ), TIDSet(), TIDSet()
+    } );
+    std::weak_ptr<LiveMarketUpdater> weakUpdater = updater;
+
+    updater->start();
+    ASSERT_NE( activeHandler, nullptr );
+
+    updater.reset();
+
+    EXPECT_TRUE( weakUpdater.expired() );
+    EXPECT_NO_THROW( activeHandler->onMsg( Message{} ) );
+}
+
 TEST_F( LiveMarketUpdaterTest, FiltersByMsgTIDSetInLiveMode )
 {
     // Setup TIDSet to only allow GBP

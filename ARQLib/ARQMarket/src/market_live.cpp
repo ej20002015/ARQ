@@ -11,7 +11,8 @@ void LiveMarketUpdater::start()
 	m_state = hasBaseline ? State::BUFFERING : State::LIVE;
 
 	const std::string mktNameStr = m_mktName.str();
-	m_msgSub = m_msgSvc->subscribe( std::string( SUB_TOPIC_PFX ) + mktNameStr, shared_from_this() );
+	auto subHandler = std::make_shared<SubHandler>( weak_from_this(), "LiveMarketUpdater for Mkt: " + mktNameStr );
+	m_msgSub = m_msgSvc->subscribe( std::string( SUB_TOPIC_PFX ) + mktNameStr, std::move( subHandler ) );
 
 	if( hasBaseline )
 	{

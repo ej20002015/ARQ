@@ -11,8 +11,7 @@
 namespace ARQ::MD
 {
 
-class LiveMarketUpdater : public ISubscriptionHandler,
-	                      public std::enable_shared_from_this<LiveMarketUpdater>
+class LiveMarketUpdater : public std::enable_shared_from_this<LiveMarketUpdater>
 {
 public:
 	struct Params
@@ -35,6 +34,28 @@ public:
 private:
 	struct Passkey {};
 
+	class SubHandler final : public ISubscriptionHandler
+	{
+	public:
+		SubHandler( std::weak_ptr<LiveMarketUpdater> owner, std::string desc )
+			: m_owner( std::move( owner ) )
+			, m_desc( std::move( desc ) )
+		{
+		}
+
+		void onMsg( Message&& msg ) override
+		{
+			if( const auto owner = m_owner.lock() )
+				owner->onMsg( std::move( msg ) );
+		}
+
+		[[nodiscard]] std::string_view getDesc() const override { return m_desc; }
+
+	private:
+		std::weak_ptr<LiveMarketUpdater> m_owner;
+		std::string                      m_desc;
+	};
+
 public:
 	LiveMarketUpdater( Passkey, Params&& params )
 		: m_mkt( params.mkt )
@@ -43,7 +64,6 @@ public:
 		, m_mktName( params.mktName )
 		, m_mktSrcTIDSet( params.mktSrcTIDSet )
 		, m_msgTIDSet( params.msgTIDSet )
-		, m_desc( "LiveMarketUpdater for Mkt: " + m_mktName.str() )
 		, m_state( State::INIT )
 		, m_serialiser( SerialiserFactory::inst().create( SerialiserFactory::SerialiserImpl::Protobuf ) )
 	{
@@ -61,11 +81,8 @@ public:
 
 	static constexpr std::string_view SUB_TOPIC_PFX = "ARQ.MktData.Current.";
 
-private: // ISubscriptionHandler implementation
-	ARQMarket_API void             onMsg( Message&& msg )       override;
-	              std::string_view getDesc()              const override { return m_desc; };
-
 private:
+	ARQMarket_API void onMsg( Message&& msg );
 	void applyUpdate( MarketUpdateBatch&& updateBatch );
 
 private:
@@ -75,7 +92,6 @@ private:
 	MarketName                         m_mktName;
 	TIDSet                             m_mktSrcTIDSet;
 	TIDSet                             m_msgTIDSet;
-	std::string                        m_desc;
 
 	std::atomic<State>                 m_state;
 	StreamTopicPartitionOffsets        m_offsets;

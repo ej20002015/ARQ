@@ -242,7 +242,7 @@ void KafkaStreamProducer::commitTransaction( std::chrono::milliseconds timeout )
 
 	try
 	{
-		m_kafkaProducer->commitTransaction();
+		m_kafkaProducer->commitTransaction( timeout );
 	}
 	catch( const kafka::KafkaException& e )
 	{
@@ -256,7 +256,7 @@ void KafkaStreamProducer::abortTransaction( std::chrono::milliseconds timeout )
 
 	try
 	{
-		m_kafkaProducer->abortTransaction();
+		m_kafkaProducer->abortTransaction( timeout );
 	}
 	catch( const kafka::KafkaException& e )
 	{

@@ -120,11 +120,8 @@ void RefDataAuditProjectorService::processMsgBatch( std::unique_ptr<IStreamConsu
 bool RefDataAuditProjectorService::insertIntoAuditDB( const RD::RecordCollection& rcdColl )
 {
 	bool allInserted = true;
-	rcdColl.visitVectors( [this, &allInserted] ( const auto& recordsVec )
+	rcdColl.visitVectors( [this, &allInserted] <RD::c_RefData T> ( const std::vector<RD::Record<T>>& recordsVec )
 	{
-		using VectorType = std::remove_cvref_t<decltype( recordsVec )>;
-		using EntityType = typename VectorType::value_type::EntityType;
-
 		if( recordsVec.empty() )
 			return;
 
@@ -134,7 +131,7 @@ bool RefDataAuditProjectorService::insertIntoAuditDB( const RD::RecordCollection
 		{
 			try
 			{
-				Log( Module::EXE ).debug( "Inserting {} {} refdata entities into the audit DB", recordsVec.size(), RD::Traits<EntityType>::name() );
+				Log( Module::EXE ).debug( "Inserting {} {} refdata entities into the audit DB", recordsVec.size(), RD::Traits<T>::name() );
 				m_auditRDSource->insert( recordsVec );
 				inserted = true;
 			}
@@ -144,13 +141,13 @@ bool RefDataAuditProjectorService::insertIntoAuditDB( const RD::RecordCollection
 				if( delayTimeOpt )
 				{
 					Log( Module::EXE ).error( e, "Exception thrown when inserting {} refdata entities into the audit DB - trying again in {}ms ({})",
-											  RD::Traits<EntityType>::name(), *delayTimeOpt, m_backoffPolicy.attemptStr() );
+											  RD::Traits<T>::name(), *delayTimeOpt, m_backoffPolicy.attemptStr() );
 					std::this_thread::sleep_for( *delayTimeOpt );
 				}
 				else
 				{
 					auto errMsg = std::format( "Exception thrown when inserting {} refdata entities into the audit DB - max save attempts exceeded - STOPPING SERVICE!",
-											   RD::Traits<EntityType>::name() );
+											   RD::Traits<T>::name() );
 					Log( Module::EXE ).critical( "{}", errMsg );
 					e.str() += " - " + errMsg;
 					throw;
