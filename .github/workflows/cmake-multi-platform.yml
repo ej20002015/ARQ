@@ -188,10 +188,13 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore .NET Gateway
-      run: dotnet restore dotnet/ARQ.Gateway/ARQ.Gateway.csproj
+      run: dotnet restore dotnet/ARQ.Gateway.slnf
 
     - name: Build .NET Gateway
-      run: dotnet build dotnet/ARQ.Gateway/ARQ.Gateway.csproj --configuration ${{ matrix.build_type }} --no-restore
+      run: dotnet build dotnet/ARQ.Gateway.slnf --configuration ${{ matrix.build_type }} --no-restore
+
+    - name: Test .NET Gateway
+      run: dotnet test dotnet/ARQ.Gateway.Tests/ARQ.Gateway.Tests.csproj --configuration ${{ matrix.build_type }} --no-build --no-restore
 
   # =========================================================
   # JOB 2: DOCKER PUBLISH (Only if tests pass)

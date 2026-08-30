@@ -3,6 +3,7 @@
     "path": "ARQ.slnx",
     "projects": [
       "ARQ.Gateway\\ARQ.Gateway.csproj",
+      "ARQ.Gateway.Tests\\ARQ.Gateway.Tests.csproj",
       "ARQ.NET\\ARQ.NET.csproj",
     ]
   }

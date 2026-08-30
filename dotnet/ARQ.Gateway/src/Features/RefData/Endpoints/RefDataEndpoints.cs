@@ -29,7 +29,7 @@ public static class RefDataEndpoints
         return builder;
     }
 
-    private static IResult GetRecords(string entityType, IRefDataRepository repo)
+    internal static IResult GetRecords(string entityType, IRefDataRepository repo)
     {
         ICache? cache = repo.getCache(entityType);
         if (cache == null)
@@ -39,7 +39,7 @@ public static class RefDataEndpoints
         return Results.Ok(records);
     }
 
-    private static IResult GetRecord(string entityType, string id, IRefDataRepository repo)
+    internal static IResult GetRecord(string entityType, string id, IRefDataRepository repo)
     {
         ICache? cache = repo.getCache(entityType);
         if (cache == null)
@@ -54,7 +54,7 @@ public static class RefDataEndpoints
         return Results.Ok(record);
     }
 
-    private static IResult GetMetadata(string entityType, IRefDataMetaRepository repo)
+    internal static IResult GetMetadata(string entityType, IRefDataMetaRepository repo)
     {
         try
         {
@@ -67,7 +67,7 @@ public static class RefDataEndpoints
         }
     }
 
-    private static IResult GetEntities(IRefDataMetaRepository repo)
+    internal static IResult GetEntities(IRefDataMetaRepository repo)
     {
         var entityTypes = repo.GetEntityTypes();
         return Results.Ok(entityTypes);
