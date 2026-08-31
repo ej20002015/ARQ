@@ -26,6 +26,11 @@ if(ARQ_ENABLE_COVERAGE)
             -fprofile-abs-path
     )
     target_link_options(ARQCoverage INTERFACE --coverage)
+
+    file(
+        WRITE "${CMAKE_BINARY_DIR}/arq-coverage-toolchain.txt"
+        "${CMAKE_CXX_COMPILER}\n${CMAKE_CXX_COMPILER_VERSION}\n"
+    )
 endif()
 
 function(ARQ_enable_coverage TARGET)

@@ -103,9 +103,9 @@ HTML, Cobertura XML, JSON and Markdown reports under
 `.build-coverage/coverage/`. The command installs its pinned gcovr dependency in
 a project-local virtual environment under `.build-coverage`; it does not modify
 the system Python environment. Creating that environment requires the
-`python3-venv` Ubuntu package. Additional arguments are forwarded to gcovr. The
-Windows wrapper reports that coverage is unsupported rather than attempting an
-MSVC build.
+`python3-venv` Ubuntu package. The matching versioned `gcov` executable is
+selected from the compiler recorded by CMake. Additional arguments are
+forwarded to gcovr.
 
 Typical Linux/macOS workflow:
 

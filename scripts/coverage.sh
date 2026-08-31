@@ -24,6 +24,7 @@ REPORT_DIR="$BUILD_DIR/coverage"
 GCOVR_VERSION="8.6"
 GCOVR_VENV="$BUILD_DIR/.gcovr-$GCOVR_VERSION-venv"
 GCOVR="$GCOVR_VENV/bin/gcovr"
+GCOVR_GCOV_OPTIONS=()
 
 pushd "$PROJECT_ROOT" > /dev/null
 
@@ -46,6 +47,59 @@ cmake \
     -G "Ninja Multi-Config" \
     -DARQ_ENABLE_COVERAGE=ON
 
+HAS_EXPLICIT_GCOV=false
+for argument in "$@"; do
+    if [[ "$argument" == "--gcov-executable" || "$argument" == --gcov-executable=* ]]; then
+        HAS_EXPLICIT_GCOV=true
+        break
+    fi
+done
+
+if [[ -z "${GCOV:-}" && "$HAS_EXPLICIT_GCOV" == false ]]; then
+    TOOLCHAIN_FILE="$BUILD_DIR/arq-coverage-toolchain.txt"
+    if [[ ! -f "$TOOLCHAIN_FILE" ]]; then
+        echo "CMake did not write the coverage toolchain information."
+        exit 1
+    fi
+
+    {
+        IFS= read -r CXX_COMPILER
+        IFS= read -r GCC_VERSION
+    } < "$TOOLCHAIN_FILE"
+
+    if [[ -z "$CXX_COMPILER" || ! -x "$CXX_COMPILER" ]]; then
+        echo "Unable to determine the GCC executable used by the coverage build."
+        exit 1
+    fi
+
+    if [[ -z "$GCC_VERSION" ]]; then
+        echo "Unable to determine the GCC version used by the coverage build."
+        exit 1
+    fi
+
+    GCC_MAJOR=${GCC_VERSION%%.*}
+    GCOV_EXECUTABLE=$(command -v "gcov-$GCC_MAJOR" || true)
+
+    if [[ -z "$GCOV_EXECUTABLE" ]]; then
+        DEFAULT_GCOV=$(command -v gcov || true)
+        if [[ -n "$DEFAULT_GCOV" ]] && [[ "$("$DEFAULT_GCOV" --version)" == *"$GCC_VERSION"* ]]; then
+            GCOV_EXECUTABLE="$DEFAULT_GCOV"
+        else
+            echo "Coverage was compiled with GCC $GCC_VERSION, but a matching gcov was not found."
+            echo "Install gcov-$GCC_MAJOR or pass: --gcov-executable /path/to/matching/gcov"
+            exit 1
+        fi
+    fi
+
+    if [[ "$("$GCOV_EXECUTABLE" --version)" != *"$GCC_VERSION"* ]]; then
+        echo "$GCOV_EXECUTABLE does not match the configured GCC version $GCC_VERSION."
+        exit 1
+    fi
+
+    echo "Using $GCOV_EXECUTABLE for coverage compiled with $CXX_COMPILER ($GCC_VERSION)."
+    GCOVR_GCOV_OPTIONS=(--gcov-executable "$GCOV_EXECUTABLE")
+fi
+
 cmake --build "$BUILD_DIR" --config Debug --parallel
 
 # Avoid merging data from an earlier local run into this report.
@@ -61,6 +115,7 @@ ctest \
 mkdir -p "$REPORT_DIR"
 
 "$GCOVR" \
+    "${GCOVR_GCOV_OPTIONS[@]}" \
     --root "$PROJECT_ROOT" \
     --object-directory "$BUILD_DIR" \
     --filter "$PROJECT_ROOT/ARQLib/" \

@@ -27,7 +27,7 @@ jobs:
           sudo apt-get install -y gcc-14 g++-14 ninja-build python3-venv
 
       - name: Generate coverage reports
-        run: ./bld.sh coverage --gcov-executable gcov-14
+        run: ./bld.sh coverage
 
       - name: Add coverage summary
         run: cat .build-coverage/coverage/summary.md >> "$GITHUB_STEP_SUMMARY"
