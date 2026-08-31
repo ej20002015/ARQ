@@ -1,5 +1,9 @@
 #!/bin/bash
+shift || true
+
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 pushd "$SCRIPT_DIR/.." > /dev/null
-docker build -t arq-web:latest -f infra/docker/arq-web/Dockerfile
+docker build -t arq-web:latest -f infra/docker/arq-web/Dockerfile "$@" .
+ec=$?
 popd > /dev/null
+exit $ec

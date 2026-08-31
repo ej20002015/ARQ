@@ -129,12 +129,6 @@ protected:
 
 // --- Test Cases ---
 
-TEST_F( LoggerTest, Initialization )
-{
-    // Verify that init and fini of logger work
-    SUCCEED();
-}
-
 TEST_F( LoggerTest, BasicLogging )
 {
     const std::string testMsg = "This is a basic info message.";

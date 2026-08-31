@@ -98,11 +98,6 @@ TEST( VariantTests, ReassignVariant )
     EXPECT_EQ( var.as<std::string>(), "Reassigned" );
 }
 
-TEST( VariantTests, VariantEquality )
-{
-    // TODO: Implement this test
-}
-
 // Test Variant Array Construction
 TEST( VariantArrTests, ArrayConstruction )
 {
@@ -181,4 +176,3 @@ TEST( VariantArrTests, OutOfBoundsAccessThrows )
     EXPECT_THROW( const auto& val = arr.at( 3, 0 ), ARQException );
     EXPECT_THROW( const auto& val = arr.at( 0, 2 ), ARQException );
 }
-

@@ -2,14 +2,15 @@
 
 CONFIG=Release
 
-if [[ "{$1,,}" == "dbg" || "${1,,}" == "debug" ]]; then
+if [[ "${1,,}" == "dbg" || "${1,,}" == "debug" ]]; then
     CONFIG=Debug
 fi
+shift || true
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
 pushd "$SCRIPT_DIR/.." > /dev/null
-cmake --build .build --config "$CONFIG" --parallel
+cmake --build .build --config "$CONFIG" --parallel "$@"
 ec=$?
 popd > /dev/null
 

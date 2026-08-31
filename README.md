@@ -84,6 +84,11 @@ Typical Windows workflow:
 .\bld.bat td      # Test Debug
 ```
 
+Arguments after the command are forwarded to the underlying operation. For
+example, `./bld.sh t -R BufferTest` or `.\bld.bat t -R BufferTest` forwards the
+filter to CTest, while `./bld.sh b --target ARQCore` forwards the target to the
+CMake build command.
+
 Typical Linux/macOS workflow:
 
 ```bash

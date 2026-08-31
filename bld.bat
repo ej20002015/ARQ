@@ -7,6 +7,15 @@ pushd "%ROOT%" || exit /B 1
 set CMD_RAW=%1
 shift
 
+set "FORWARD_ARGS="
+:collect_forward_args
+if "%~1"=="" goto forward_args_collected
+set "FORWARD_ARGS=!FORWARD_ARGS! "%~1""
+shift
+goto collect_forward_args
+
+:forward_args_collected
+
 if "%CMD_RAW%"=="" (
     echo Usage: bld ^<command[d^|r]^> [args...]
     exit /B 1
@@ -66,37 +75,45 @@ REM Dispatch
 REM ----------------------------
 
 :build
-call scripts\build.bat !MODE! %*
+call scripts\build.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :clean
-call scripts\clean.bat !MODE! %*
+call scripts\clean.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :test
-call scripts\test.bat !MODE! %*
+call scripts\test.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :install
-call scripts\install.bat !MODE! %*
+call scripts\install.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :configure
-call scripts\configure.bat !MODE! %*
+call scripts\configure.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :codegen
-call scripts\codegen.bat !MODE! %*
+call scripts\codegen.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :dockerbuild
-call scripts\dockerbuild.bat !MODE! %*
+call scripts\dockerbuild.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :dockerbuild-web
-call scripts\dockerbuild-web.bat !MODE! %*
+call scripts\dockerbuild-web.bat !MODE! !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
 goto end
 
 :end
 popd
-endlocal
+endlocal & exit /B %EC%

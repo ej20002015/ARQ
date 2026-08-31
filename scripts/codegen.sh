@@ -2,6 +2,8 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+shift || true
+
 # --- Configuration ---
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 PROJECT_ROOT="$SCRIPT_DIR/.."
@@ -32,7 +34,8 @@ echo "--- Running codegen script... ---"
 python3 codegen/script/gen.py \
   --definitions-dir codegen/definitions \
   --template-dir codegen/templates \
-  --output-dir .
+  --output-dir . \
+  "$@"
 
 echo "--- Deactivating virtual environment. ---"
 deactivate
