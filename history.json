@@ -1,0 +1,29 @@
+{
+  "runs": [
+    {
+      "benchmark_library_version": "v1.9.1",
+      "benchmarks": [
+        {
+          "cpu_cv": 0.022119554407241518,
+          "items_per_second": 189931.03424547857,
+          "median_cpu_time_ns": 5265.0689971368165,
+          "median_real_time_ns": 5299.342287179325,
+          "name": "LoggerBenchmark/InfoLogging",
+          "suite": "ARQUtils"
+        }
+      ],
+      "branch": "master",
+      "commit": "a7c6a9416a3585fa19e5cb52f54177a9b08560c9",
+      "compiler": "GCC 14.3.0",
+      "cpu_model": "Intel(R) Xeon(R) 6973P-C",
+      "mhz_per_cpu": 4201,
+      "num_cpus": 4,
+      "run_attempt": "1",
+      "run_id": "33411868840",
+      "run_url": "https://github.com/ej20002015/ARQ/actions/runs/33411868840",
+      "runner_image": "ubuntu-24.04",
+      "timestamp": "2026-08-31T16:05:01Z"
+    }
+  ],
+  "schema_version": 1
+}
