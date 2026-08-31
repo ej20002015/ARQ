@@ -85,9 +85,10 @@ std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( 
 	if( redisFields.empty() )
 		return std::nullopt;
 
+	StreamTopicPartitionOffsets offsets;
+
 	try
 	{
-		StreamTopicPartitionOffsets offsets;
 		for( const auto& [field, offsetStr] : redisFields )
 		{
 			const auto delimPos = field.rfind( '-' );
