@@ -95,7 +95,15 @@ CMake build command.
 Ordinary test runs exclude CTest cases labelled `benchmark`. Run benchmarks
 separately with `bld bm`; they execute serially to avoid distorting results
 through contention. Additional arguments are forwarded to CTest, so `bld bm -V`
-shows benchmark output.
+shows benchmark output. Benchmark JSON is written under
+`.build/benchmark-results/`.
+
+The `Weekly Benchmarks` GitHub Actions workflow runs every Monday at 03:17 UTC
+and can also be started manually. It runs repeated Release benchmarks on
+Ubuntu/GCC, uploads the raw JSON for 90 days and updates the private
+`benchmark-results` branch with the latest summary, complete Markdown history
+and machine-readable history. Performance changes are recorded but do not fail
+the workflow while the baseline is being established.
 
 C++ coverage is available on Linux with GCC. Run `./bld.sh coverage` to create
 an isolated Debug coverage build, execute the unit tests serially and write

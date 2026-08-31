@@ -1,0 +1,160 @@
+name: Weekly Benchmarks
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: arq-benchmark-history
+  cancel-in-progress: false
+
+jobs:
+  benchmark:
+    name: GCC Release benchmarks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+
+    outputs:
+      compiler: ${{ steps.metadata.outputs.compiler }}
+      cpu_model: ${{ steps.metadata.outputs.cpu_model }}
+      timestamp: ${{ steps.metadata.outputs.timestamp }}
+
+    env:
+      CC: gcc-14
+      CXX: g++-14
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install GCC and Ninja
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+          sudo apt-get update
+          sudo apt-get install -y gcc-14 g++-14 ninja-build
+
+      - name: Set up ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: weekly-benchmarks-gcc-14
+
+      - name: Configure CMake
+        run: |
+          cmake \
+            -B .build \
+            -S . \
+            -G "Ninja Multi-Config" \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+      - name: Build benchmarks
+        run: cmake --build .build --config Release --target ARQBenchmarks --parallel
+
+      - name: Run benchmarks
+        env:
+          BENCHMARK_CONTEXT: git_sha=${{ github.sha }},runner_image=ubuntu-24.04,compiler=gcc-14
+          BENCHMARK_DISPLAY_AGGREGATES_ONLY: 'true'
+          BENCHMARK_ENABLE_RANDOM_INTERLEAVING: 'true'
+          BENCHMARK_MIN_TIME: '1s'
+          BENCHMARK_MIN_WARMUP_TIME: '0.25'
+          BENCHMARK_REPETITIONS: '7'
+        run: ctest --test-dir .build -C Release -L benchmark --output-on-failure -V
+
+      - name: Collect run metadata
+        id: metadata
+        run: |
+          echo "compiler=GCC $(g++-14 -dumpfullversion -dumpversion)" >> "$GITHUB_OUTPUT"
+          echo "cpu_model=$(awk -F: '/model name/ { value=$2; sub(/^[[:space:]]+/, "", value); print value; exit }' /proc/cpuinfo)" >> "$GITHUB_OUTPUT"
+          echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload raw benchmark results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: arq-benchmarks-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .build/benchmark-results/
+          if-no-files-found: warn
+          retention-days: 90
+
+  publish:
+    name: Record benchmark history
+    needs: benchmark
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download raw benchmark results
+        uses: actions/download-artifact@v4
+        with:
+          name: arq-benchmarks-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .build/benchmark-results
+
+      - name: Prepare benchmark history branch
+        id: history
+        env:
+          HISTORY_BRANCH: benchmark-results
+        run: |
+          history_dir="$RUNNER_TEMP/arq-benchmark-history"
+          echo "path=$history_dir" >> "$GITHUB_OUTPUT"
+
+          if git ls-remote --exit-code --heads origin "$HISTORY_BRANCH" > /dev/null 2>&1; then
+            git fetch origin "$HISTORY_BRANCH:refs/remotes/origin/$HISTORY_BRANCH"
+            git worktree add -B "$HISTORY_BRANCH" "$history_dir" "refs/remotes/origin/$HISTORY_BRANCH"
+          else
+            git worktree add --detach "$history_dir" HEAD
+            git -C "$history_dir" switch --orphan "$HISTORY_BRANCH"
+            git -C "$history_dir" rm -rf --ignore-unmatch .
+          fi
+
+      - name: Update benchmark history
+        env:
+          HISTORY_DIR: ${{ steps.history.outputs.path }}
+        run: |
+          python3 scripts/benchmark_history.py \
+            --results-dir .build/benchmark-results \
+            --history-dir "$HISTORY_DIR" \
+            --repository "$GITHUB_REPOSITORY" \
+            --commit "$GITHUB_SHA" \
+            --branch "$GITHUB_REF_NAME" \
+            --run-id "$GITHUB_RUN_ID" \
+            --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --run-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            --timestamp "${{ needs.benchmark.outputs.timestamp }}" \
+            --runner-image "ubuntu-24.04" \
+            --compiler "${{ needs.benchmark.outputs.compiler }}" \
+            --cpu-model "${{ needs.benchmark.outputs.cpu_model }}" \
+            --summary-output "$RUNNER_TEMP/arq-benchmark-summary.md"
+
+      - name: Add benchmark summary
+        run: cat "$RUNNER_TEMP/arq-benchmark-summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish benchmark history
+        env:
+          HISTORY_BRANCH: benchmark-results
+          HISTORY_DIR: ${{ steps.history.outputs.path }}
+        run: |
+          git -C "$HISTORY_DIR" config user.name "github-actions[bot]"
+          git -C "$HISTORY_DIR" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$HISTORY_DIR" add README.md HISTORY.md history.json
+
+          if git -C "$HISTORY_DIR" diff --cached --quiet; then
+            echo "Benchmark history is already up to date."
+            exit 0
+          fi
+
+          git -C "$HISTORY_DIR" commit -m "Record benchmarks for ${GITHUB_SHA:0:12}"
+          git -C "$HISTORY_DIR" push origin "$HISTORY_BRANCH:$HISTORY_BRANCH"

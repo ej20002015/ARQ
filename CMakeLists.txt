@@ -236,6 +236,9 @@ FetchContent_MakeAvailable(benchmark)
 set_target_properties( benchmark PROPERTIES FOLDER "vendor/gbenchmark")
 set_target_properties( benchmark_main PROPERTIES FOLDER "vendor/gbenchmark")
 
+add_custom_target(ARQBenchmarks)
+set_target_properties(ARQBenchmarks PROPERTIES FOLDER "benchmarks")
+
 # Utility functions
 
 # Not using clang-tidy for now
@@ -412,14 +415,17 @@ function(ARQ_define_dynalib_bench DYNALIB_NAME)
 
     set_target_properties(${BENCH_TARGET_NAME} PROPERTIES FOLDER "benchmarks")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
+    add_dependencies(ARQBenchmarks ${BENCH_TARGET_NAME})
 
     set(BENCH_TEST_NAME "${DYNALIB_NAME}Benchmarks.All")
+    set(BENCH_RESULTS_DIR "${CMAKE_BINARY_DIR}/benchmark-results")
+    file(MAKE_DIRECTORY "${BENCH_RESULTS_DIR}")
 
     enable_testing()
     add_test(
         NAME "${BENCH_TEST_NAME}"
         COMMAND $<TARGET_FILE:${BENCH_TARGET_NAME}>
-                --benchmark_out=${BENCH_TARGET_NAME}_results.json
+                --benchmark_out=${BENCH_RESULTS_DIR}/${BENCH_TARGET_NAME}_results.json
                 --benchmark_out_format=json
     )
     set_tests_properties(
@@ -427,7 +433,7 @@ function(ARQ_define_dynalib_bench DYNALIB_NAME)
         PROPERTIES
             LABELS "benchmark"
             RUN_SERIAL TRUE
-            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+            WORKING_DIRECTORY "${BENCH_RESULTS_DIR}"
     )
 endfunction()
 

@@ -103,8 +103,6 @@ std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( 
 
 			offsets[{ topic, partition }] = offset;
 		}
-
-		return offsets;
 	}
 	catch( const std::exception& e )
 	{
@@ -112,6 +110,8 @@ std::optional<StreamTopicPartitionOffsets> RedisStreamOffsetSource::getOffsets( 
 	}
 
 	Log( Module::REDIS ).debug( "Got stream offsets for key [{}] from Redis in total: {} (conn: {}, prep: {}, net: {}, parse: {})", key, tmTotal.duration(), connTime, prepTime, netTime, tmParse.duration() );
+
+	return offsets;
 }
 
 }
