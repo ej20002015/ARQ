@@ -97,10 +97,13 @@ separately with `bld bm`; they execute serially to avoid distorting results
 through contention. Additional arguments are forwarded to CTest, so `bld bm -V`
 shows benchmark output.
 
-C++ coverage is available on Linux with GCC and gcovr. Run `./bld.sh coverage`
-to create an isolated Debug coverage build, execute the unit tests serially and
-write HTML, Cobertura XML, JSON and Markdown reports under
-`.build-coverage/coverage/`. Additional arguments are forwarded to gcovr. The
+C++ coverage is available on Linux with GCC. Run `./bld.sh coverage` to create
+an isolated Debug coverage build, execute the unit tests serially and write
+HTML, Cobertura XML, JSON and Markdown reports under
+`.build-coverage/coverage/`. The command installs its pinned gcovr dependency in
+a project-local virtual environment under `.build-coverage`; it does not modify
+the system Python environment. Creating that environment requires the
+`python3-venv` Ubuntu package. Additional arguments are forwarded to gcovr. The
 Windows wrapper reports that coverage is unsupported rather than attempting an
 MSVC build.
 
