@@ -24,6 +24,7 @@ if(ARQ_ENABLE_COVERAGE)
             -O0
             -g
             -fprofile-abs-path
+            -fprofile-update=atomic
     )
     target_link_options(ARQCoverage INTERFACE --coverage)
 

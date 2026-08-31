@@ -104,7 +104,9 @@ HTML, Cobertura XML, JSON and Markdown reports under
 a project-local virtual environment under `.build-coverage`; it does not modify
 the system Python environment. Creating that environment requires the
 `python3-venv` Ubuntu package. The matching versioned `gcov` executable is
-selected from the compiler recorded by CMake. Additional arguments are
+selected from the compiler recorded by CMake. Coverage counters use atomic
+updates for ARQ's multi-threaded code, and known gcov negative-hit records are
+reported as warnings rather than aborting the report. Additional arguments are
 forwarded to gcovr.
 
 Typical Linux/macOS workflow:

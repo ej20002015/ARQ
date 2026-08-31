@@ -122,6 +122,7 @@ mkdir -p "$REPORT_DIR"
     --filter "$PROJECT_ROOT/services/" \
     --exclude '.*/test/.*' \
     --exclude '.*/bench/.*' \
+    --gcov-ignore-parse-errors=negative_hits.warn_once_per_file \
     --exclude-throw-branches \
     --exclude-unreachable-branches \
     --txt-summary \
