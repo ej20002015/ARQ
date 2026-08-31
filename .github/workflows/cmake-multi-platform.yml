@@ -177,7 +177,7 @@ jobs:
 
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
-      run: ctest --build-config ${{ matrix.build_type }} --output-on-failure -C ${{ matrix.build_type }}
+      run: ctest --build-config ${{ matrix.build_type }} --output-on-failure -C ${{ matrix.build_type }} -LE benchmark
 
     # ----------------------------------------------------------------
     # SET-UP, BUILD AND TEST Dotnet

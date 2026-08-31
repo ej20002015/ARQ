@@ -51,6 +51,13 @@ if /I "!CMD!"=="clean" goto clean
 if /I "!CMD!"=="t" goto test
 if /I "!CMD!"=="test" goto test
 
+if /I "!CMD!"=="bm" goto benchmark
+if /I "!CMD!"=="bench" goto benchmark
+if /I "!CMD!"=="benchmark" goto benchmark
+
+if /I "!CMD!"=="cov" goto coverage
+if /I "!CMD!"=="coverage" goto coverage
+
 if /I "!CMD!"=="i" goto install
 if /I "!CMD!"=="install" goto install
 
@@ -85,8 +92,18 @@ set EC=!ERRORLEVEL!
 goto end
 
 :test
-call scripts\test.bat !MODE! !FORWARD_ARGS!
+call scripts\test.bat !MODE! unit !FORWARD_ARGS!
 set EC=!ERRORLEVEL!
+goto end
+
+:benchmark
+call scripts\test.bat !MODE! benchmark !FORWARD_ARGS!
+set EC=!ERRORLEVEL!
+goto end
+
+:coverage
+echo Code coverage is only supported on Linux with GCC. Run: ./bld.sh coverage
+set EC=1
 goto end
 
 :install

@@ -445,15 +445,3 @@ TEST_F( LoggerTest, MultiThreadedBasic )
     }
     EXPECT_TRUE( foundThread0Ctx ) << "Did not find context from thread 0 in logs.";
 }
-
-TEST_F( LoggerTest, PerfTest )
-{
-    auto tmStart = std::chrono::system_clock::now();
-    for( uint32_t i = 0; i < 1000; i++ )
-    {
-        Log( Module::CORE ).info( "Hello this is a test: num {0}", i );
-    }
-    auto tmEnd = std::chrono::system_clock::now();
-    auto dur = std::chrono::duration_cast<std::chrono::microseconds>( tmEnd - tmStart );
-    std::cout << dur.count() << "microseconds" << std::endl;
-}

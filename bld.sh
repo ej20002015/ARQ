@@ -34,10 +34,14 @@ fi
 # ----------------------------
 # Aliases
 # ----------------------------
+SCRIPT_ARGS=()
+SCRIPT_RUNNER=()
 case "$CMD" in
     b|build)             SCRIPT="scripts/build.sh" ;;
     cl|clean)            SCRIPT="scripts/clean.sh" ;;
-    t|test)              SCRIPT="scripts/test.sh" ;;
+    t|test)              SCRIPT="scripts/test.sh"; SCRIPT_ARGS=(unit) ;;
+    bm|bench|benchmark)  SCRIPT="scripts/test.sh"; SCRIPT_ARGS=(benchmark) ;;
+    cov|coverage)        SCRIPT="scripts/coverage.sh"; SCRIPT_RUNNER=(bash) ;;
     i|install)           SCRIPT="scripts/install.sh" ;;
     c|configure)         SCRIPT="scripts/configure.sh" ;;
     g|cg|codegen)        SCRIPT="scripts/codegen.sh" ;;
@@ -52,7 +56,7 @@ esac
 # ----------------------------
 # Execute
 # ----------------------------
-exec "$SCRIPT" "$MODE" "$@"
+exec "${SCRIPT_RUNNER[@]}" "$SCRIPT" "$MODE" "${SCRIPT_ARGS[@]}" "$@"
 EC=$?
 
 popd > /dev/null

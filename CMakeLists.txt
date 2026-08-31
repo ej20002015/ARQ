@@ -9,6 +9,31 @@ project(ARQ)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(ARQ_ENABLE_COVERAGE "Instrument first-party targets for GCC code coverage" OFF)
+
+if(ARQ_ENABLE_COVERAGE)
+    if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        message(FATAL_ERROR "ARQ_ENABLE_COVERAGE requires GCC. Use ./bld.sh coverage on Linux.")
+    endif()
+
+    add_library(ARQCoverage INTERFACE)
+    target_compile_options(
+        ARQCoverage
+        INTERFACE
+            --coverage
+            -O0
+            -g
+            -fprofile-abs-path
+    )
+    target_link_options(ARQCoverage INTERFACE --coverage)
+endif()
+
+function(ARQ_enable_coverage TARGET)
+    if(ARQ_ENABLE_COVERAGE)
+        target_link_libraries(${TARGET} PRIVATE ARQCoverage)
+    endif()
+endfunction()
+
 if (MSVC)
     add_compile_options("/Zc:__cplusplus")
     option(ENABLE_VCPKG OFF)
@@ -294,6 +319,8 @@ function(ARQ_define_dynalib TARGET)
                 ${HEADERS}
                 ${INCLUDES})
 
+    ARQ_enable_coverage(${TARGET})
+
     # Specify the library's include directories
     target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src ${MASTER_INC_DIR})
 
@@ -342,6 +369,8 @@ function(ARQ_define_dynalib_tests DYNALIB_NAME)
                    ${SOURCES}
                    ${HEADERS})
 
+    ARQ_enable_coverage(${TESTS_TARGET_NAME})
+
     target_link_libraries(${TESTS_TARGET_NAME} PRIVATE ${DYNALIB_NAME} GTest::gtest GTest::gmock)
     target_include_directories(${TESTS_TARGET_NAME} PRIVATE ${MASTER_INC_DIR})
 
@@ -350,7 +379,10 @@ function(ARQ_define_dynalib_tests DYNALIB_NAME)
 
     # gtest setup
     enable_testing()
-    gtest_discover_tests(${TESTS_TARGET_NAME})
+    gtest_discover_tests(
+        ${TESTS_TARGET_NAME}
+        PROPERTIES LABELS "unit"
+    )
 endfunction()
 
 function(ARQ_define_dynalib_bench DYNALIB_NAME)
@@ -375,10 +407,21 @@ function(ARQ_define_dynalib_bench DYNALIB_NAME)
     set_target_properties(${BENCH_TARGET_NAME} PROPERTIES FOLDER "benchmarks")
     source_group("src" FILES ${SOURCES} FILES ${HEADERS})
 
+    set(BENCH_TEST_NAME "${DYNALIB_NAME}Benchmarks.All")
+
     enable_testing()
     add_test(
-        NAME "Benchmarks.${BENCH_TARGET_NAME}"
-        COMMAND ${CMAKE_BINARY_DIR}/bin/Release/${BENCH_TARGET_NAME} --benchmark_out=benchmark_results.json --benchmark_out_format=json
+        NAME "${BENCH_TEST_NAME}"
+        COMMAND $<TARGET_FILE:${BENCH_TARGET_NAME}>
+                --benchmark_out=${BENCH_TARGET_NAME}_results.json
+                --benchmark_out_format=json
+    )
+    set_tests_properties(
+        "${BENCH_TEST_NAME}"
+        PROPERTIES
+            LABELS "benchmark"
+            RUN_SERIAL TRUE
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
     )
 endfunction()
 
@@ -414,11 +457,13 @@ function(ARQ_define_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)
     list(REMOVE_ITEM SOURCES "${MAIN_SOURCE}")
 
     add_executable(${EXE_NAME} ${MAIN_SOURCE})
+    ARQ_enable_coverage(${EXE_NAME})
     target_include_directories(${EXE_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src" ${MASTER_INC_DIR})
 
     if(SOURCES)
         set(OBJECT_TARGET_NAME "${EXE_NAME}Objects")
         add_library(${OBJECT_TARGET_NAME} OBJECT ${SOURCES} ${HEADERS})
+        ARQ_enable_coverage(${OBJECT_TARGET_NAME})
         target_include_directories(${OBJECT_TARGET_NAME} PUBLIC "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src" ${MASTER_INC_DIR})
         if(ARG_LIBRARIES)
             target_link_libraries(${OBJECT_TARGET_NAME} PUBLIC ${ARG_LIBRARIES})
@@ -458,6 +503,7 @@ function(ARQ_define_exe_tests EXE_NAME EXE_ROOT_DIR)
 
     set(TEST_TARGET_NAME "t_${EXE_NAME}")
     add_executable(${TEST_TARGET_NAME} ${TEST_SOURCES} ${TEST_HEADERS})
+    ARQ_enable_coverage(${TEST_TARGET_NAME})
     target_include_directories(${TEST_TARGET_NAME} PRIVATE "${CMAKE_SOURCE_DIR}/${EXE_ROOT_DIR}/src" ${MASTER_INC_DIR})
 
     get_target_property(OBJECT_TARGET_NAME ${EXE_NAME} ARQ_OBJECT_TARGET)
@@ -478,7 +524,10 @@ function(ARQ_define_exe_tests EXE_NAME EXE_ROOT_DIR)
     set_target_properties(${TEST_TARGET_NAME} PROPERTIES FOLDER "tests")
     source_group("src" FILES ${TEST_SOURCES} ${TEST_HEADERS})
 
-    gtest_discover_tests(${TEST_TARGET_NAME})
+    gtest_discover_tests(
+        ${TEST_TARGET_NAME}
+        PROPERTIES LABELS "unit"
+    )
 endfunction()
 
 function(ARQ_configure_exe EXE_NAME EXE_ROOT_DIR FOLDER_NAME)

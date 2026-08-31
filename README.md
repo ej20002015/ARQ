@@ -68,6 +68,8 @@ Release is the default build mode. Append `d` to select Debug or `r` to select R
 | Generate code | `codegen` | `g`, `cg` |
 | Build | `build` | `b` |
 | Run tests | `test` | `t` |
+| Run benchmarks | `benchmark` | `bm`, `bench` |
+| Generate C++ coverage (only available on linux) | `coverage` | `cov` |
 | Install | `install` | `i` |
 | Clean | `clean` | `cl` |
 | Build service Docker images | `dockerbuild` | `d` |
@@ -80,6 +82,7 @@ Typical Windows workflow:
 .\bld.bat cg      # Run schema/code generation
 .\bld.bat b       # Build Release
 .\bld.bat t       # Test Release
+.\bld.bat bm      # Benchmark Release
 .\bld.bat bd      # Build Debug
 .\bld.bat td      # Test Debug
 ```
@@ -89,6 +92,18 @@ example, `./bld.sh t -R BufferTest` or `.\bld.bat t -R BufferTest` forwards the
 filter to CTest, while `./bld.sh b --target ARQCore` forwards the target to the
 CMake build command.
 
+Ordinary test runs exclude CTest cases labelled `benchmark`. Run benchmarks
+separately with `bld bm`; they execute serially to avoid distorting results
+through contention. Additional arguments are forwarded to CTest, so `bld bm -V`
+shows benchmark output.
+
+C++ coverage is available on Linux with GCC and gcovr. Run `./bld.sh coverage`
+to create an isolated Debug coverage build, execute the unit tests serially and
+write HTML, Cobertura XML, JSON and Markdown reports under
+`.build-coverage/coverage/`. Additional arguments are forwarded to gcovr. The
+Windows wrapper reports that coverage is unsupported rather than attempting an
+MSVC build.
+
 Typical Linux/macOS workflow:
 
 ```bash
@@ -96,6 +111,8 @@ Typical Linux/macOS workflow:
 ./bld.sh cg        # Run schema/code generation
 ./bld.sh b         # Build Release
 ./bld.sh t         # Test Release
+./bld.sh bm        # Benchmark Release
+./bld.sh coverage  # Generate GCC coverage reports
 ./bld.sh bd        # Build Debug
 ./bld.sh td        # Test Debug
 ```
