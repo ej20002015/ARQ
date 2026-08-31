@@ -188,12 +188,21 @@ jobs:
         dotnet-version: '10.0.x'
 
     - name: Restore .NET Gateway
+      env:
+        Configuration: ${{ matrix.build_type }}
+        Platform: 'Any CPU'
       run: dotnet restore dotnet/ARQ.Gateway.slnf
 
     - name: Build .NET Gateway
+      env:
+        Configuration: ${{ matrix.build_type }}
+        Platform: 'Any CPU'
       run: dotnet build dotnet/ARQ.Gateway.slnf --configuration ${{ matrix.build_type }} --no-restore
 
     - name: Test .NET Gateway
+      env:
+        Configuration: ${{ matrix.build_type }}
+        Platform: AnyCPU
       run: dotnet test dotnet/ARQ.Gateway.Tests/ARQ.Gateway.Tests.csproj --configuration ${{ matrix.build_type }} --no-build --no-restore
 
   # =========================================================
