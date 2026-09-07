@@ -23,6 +23,30 @@
       "run_url": "https://github.com/ej20002015/ARQ/actions/runs/33411868840",
       "runner_image": "ubuntu-24.04",
       "timestamp": "2026-08-31T16:05:01Z"
+    },
+    {
+      "benchmark_library_version": "v1.9.1",
+      "benchmarks": [
+        {
+          "cpu_cv": 0.027248932158664113,
+          "items_per_second": 181600.76240956885,
+          "median_cpu_time_ns": 5506.584811272293,
+          "median_real_time_ns": 5550.855296525596,
+          "name": "LoggerBenchmark/InfoLogging",
+          "suite": "ARQUtils"
+        }
+      ],
+      "branch": "master",
+      "commit": "fe95b335bd352e952da7196bd9dd6446f2f2cbe2",
+      "compiler": "GCC 14.3.0",
+      "cpu_model": "Intel(R) Xeon(R) 6973P-C",
+      "mhz_per_cpu": 2600,
+      "num_cpus": 4,
+      "run_attempt": "1",
+      "run_id": "34100455899",
+      "run_url": "https://github.com/ej20002015/ARQ/actions/runs/34100455899",
+      "runner_image": "ubuntu-24.04",
+      "timestamp": "2026-09-07T08:26:57Z"
     }
   ],
   "schema_version": 1
