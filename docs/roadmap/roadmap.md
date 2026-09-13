@@ -19,12 +19,11 @@ Stabilise the existing reference-data and market-data foundations before extendi
    - [x] Make `MktDataLiveProjector` consume only current-state topics, atomically project current records and current-topic watermarks into Redis, and fan out those current changes through NATS.
 7. [x] Remove the `ARQCore`/`ARQMarket` dependency cycle.
 8. [x] Fix code-generation invalidation so definition changes regenerate every affected artifact.
-9. [ ] Ensure as many parts of the codebase as possible (within reason) are covered by unit tests
-10. [ ] Add integration tests for duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, restarts, rebalances and projection replay.
-11. [ ] Look for places where target microbenchmarks would be useful and benchmark using google benchmark (cmake infra already set up for this)
-12. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
+9. [x] Ensure as many parts of the codebase as possible (within reason) are covered by unit tests
+10. [x] Use Google Benchmark to measure `Market::update` across representative market and update-batch sizes, validating whether full immutable-snapshot copying is acceptable for the initial FX workload.
+11. [ ] Provide a coherent live-update or invalidation path for reference-data read caches.
 
-**Exit condition:** Existing reference and market pipelines can be replayed repeatedly and converge on the same state.
+**Exit condition:** Known correctness defects in the existing reference and market pipelines are repaired and their deterministic logic is covered by unit tests.
 
 ## Phase 1 — Establish schema evolution and compatibility
 
@@ -108,10 +107,11 @@ Add the minimum domain required for FX spot and forwards:
 14. Define when Kafka null tombstones may replace logical inactive current records and be garbage-collected so lagging consumers, audit replay and projection rebuilds cannot miss market deactivations.
 15. Durable official EOD market retention.
 16. Migrate reference-data commands away from NATS-only outcomes. Command results must be durable, idempotent and queryable; Kafka command ingress may remain, while NATS is used only to notify clients that status or projected state has changed.
+17. Establish nightly Kubernetes end-to-end regression coverage for the reference-data and market-data pipelines, reusing the production deployment configuration and covering duplicates, late and equal-effective-time observations, logical tombstones, aborted transactions, service restarts, consumer rebalances and repeatable projection replay.
 
 All additions must exercise the schema-evolution process from Phase 1.
 
-**Exit condition:** ARQ can construct a reproducible typed FX market for a supported valuation time and distinguish original from corrected historical knowledge.
+**Exit condition:** ARQ can construct a reproducible typed FX market for a supported valuation time, distinguish original from corrected historical knowledge and demonstrate that its deployed reference and market pipelines replay to a convergent state.
 
 ## Phase 4 — Implement the authoritative trade foundation
 
