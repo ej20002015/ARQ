@@ -367,6 +367,86 @@
       "run_url": "https://github.com/ej20002015/ARQ/actions/runs/36406413907",
       "runner_image": "ubuntu-24.04",
       "timestamp": "2026-09-28T09:59:49Z"
+    },
+    {
+      "benchmark_library_version": "v1.9.1",
+      "benchmarks": [
+        {
+          "cpu_cv": 0.004123506417973656,
+          "items_per_second": 92262352.0792681,
+          "median_cpu_time_ns": 10.83865712789156,
+          "median_real_time_ns": 10.839147715067748,
+          "name": "MarketBenchmark/AcquireSnapshotAndReadFXRate/MarketSize:32",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.009821088184860298,
+          "items_per_second": 101776236.35613143,
+          "median_cpu_time_ns": 9.825476317485734,
+          "median_real_time_ns": 9.826545078622463,
+          "name": "MarketBenchmark/AcquireSnapshotAndReadFXRate/MarketSize:512",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.003904456395360225,
+          "items_per_second": 101323625.78840621,
+          "median_cpu_time_ns": 9.86936651959432,
+          "median_real_time_ns": 9.870349008528539,
+          "name": "MarketBenchmark/AcquireSnapshotAndReadFXRate/MarketSize:8192",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.4668627782669609,
+          "items_per_second": 13811.190102400606,
+          "median_cpu_time_ns": 72405.05652197082,
+          "median_real_time_ns": 72197.25684017291,
+          "name": "MarketBenchmark/UpdateSnapshot/MarketSize:32/UpdateSize:1",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.01079321998788713,
+          "items_per_second": 13509.588810145244,
+          "median_cpu_time_ns": 74021.49791924338,
+          "median_real_time_ns": 73814.44212615643,
+          "name": "MarketBenchmark/UpdateSnapshot/MarketSize:512/UpdateSize:1",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.03994213176683869,
+          "items_per_second": 13599.62225472799,
+          "median_cpu_time_ns": 73531.45412934863,
+          "median_real_time_ns": 73318.94944764025,
+          "name": "MarketBenchmark/UpdateSnapshot/MarketSize:8192/UpdateSize:1",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.036269923906726086,
+          "items_per_second": 424377.2312910757,
+          "median_cpu_time_ns": 75404.61089923918,
+          "median_real_time_ns": 75218.74096209429,
+          "name": "MarketBenchmark/UpdateSnapshot/MarketSize:8192/UpdateSize:32",
+          "suite": "ARQMarket"
+        },
+        {
+          "cpu_cv": 0.11507006221003235,
+          "items_per_second": 160507.8679717571,
+          "median_cpu_time_ns": 6230.224179265528,
+          "median_real_time_ns": 6248.480668675912,
+          "name": "LoggerBenchmark/InfoLogging",
+          "suite": "ARQUtils"
+        }
+      ],
+      "branch": "master",
+      "commit": "66ba37ed526f5c480b1db10f54710a35549647d4",
+      "compiler": "GCC 14.3.0",
+      "cpu_model": "AMD EPYC 7763 64-Core Processor",
+      "mhz_per_cpu": 3245,
+      "num_cpus": 4,
+      "run_attempt": "1",
+      "run_id": "37297471012",
+      "run_url": "https://github.com/ej20002015/ARQ/actions/runs/37297471012",
+      "runner_image": "ubuntu-24.04",
+      "timestamp": "2026-10-05T10:48:27Z"
     }
   ],
   "schema_version": 1
